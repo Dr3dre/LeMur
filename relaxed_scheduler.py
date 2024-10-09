@@ -10,32 +10,32 @@ import copy
 # ============================
 
 # Define Machines
-machines = ['M1', 'M2']  # List of machine names
+machines = ['M1', 'M2','M3']  # List of machine names
 
 # Define Orders
 orders = {
     'Order1': {
-        'due_date': 1000,  # in hours
+        'due_date': 500,  # in hours
         'products': ['ProductA', 'ProductB']
     },
     'Order2': {
-        'due_date': 1000,  # in hours
+        'due_date': 500,  # in hours
         'products': ['ProductC']
     },
     'Order3': {
-        'due_date': 1000,  # in hours
+        'due_date': 500,  # in hours
         'products': ['ProductA', 'ProductC']
     },
     'Order4': {
-        'due_date': 1000,  # in hours
+        'due_date': 500,  # in hours
         'products': ['ProductB']
     },
     'Order5': {
-        'due_date': 1000,  # in hours
+        'due_date': 500,  # in hours
         'products': ['ProductA']
     },
     'Order6': {
-        'due_date': 1000,  # in hours
+        'due_date': 500,  # in hours
         'products': ['ProductB', 'ProductC']
     },
 }
@@ -44,66 +44,58 @@ orders = {
 products = {
     'ProductA': {
         'cycles': [
-            {'operations': ['PrepareMachine', 'Op2']},
-            {'operations': ['Op3']},
+            {'operations': ['PrepareMachine', 'Op1']},
+            {'operations': ['RechargeMachine', 'Op1']},
         ]
     },
     'ProductB': {
         'cycles': [
-            {'operations': ['PrepareMachine']},
-            {'operations': ['Op5', 'Op6']}
+            {'operations': ['PrepareMachine', 'Op2']},
+            {'operations': ['RechargeMachine', 'Op2']},
         ]
     },
     'ProductC': {
         'cycles': [
-            {'operations': ['PrepareMachine', 'Op8']},
-            {'operations': ['Op9']}
+            {'operations': ['PrepareMachine', 'Op3']},
+            {'operations': ['RechargeMachine', 'Op3']},
+            {'operations': ['RechargeMachine', 'Op3']},
         ]
     }
 }
 
 # Define Operations with Machines, Base Times, and Supervision Requirement
 operations_data = {
-    'PrepareMachine': {'machines': ['M1', 'M2'], 'base_time': {'M1': 6, 'M2': 3}, 'requires_supervision': True},
-    'Op2': {'machines': ['M1', 'M2'], 'base_time': {'M1': 4, 'M2': 6}, 'requires_supervision': True},
-    'Op3': {'machines': ['M1', 'M2'], 'base_time': {'M1': 7, 'M2': 5}, 'requires_supervision': True},
-    'Op4': {'machines': ['M1', 'M2'], 'base_time': {'M1': 3, 'M2': 5}, 'requires_supervision': True},
-    'Op5': {'machines': ['M1', 'M2'], 'base_time': {'M1': 2, 'M2': 2}, 'requires_supervision': True},
-    'Op6': {'machines': ['M1', 'M2'], 'base_time': {'M1': 6, 'M2': 6}, 'requires_supervision': False},
-    'Op7': {'machines': ['M1', 'M2'], 'base_time': {'M1': 4, 'M2': 5}, 'requires_supervision': False},
-    'Op8': {'machines': ['M1', 'M2'], 'base_time': {'M1': 3, 'M2': 3}, 'requires_supervision': False},
-    'Op9': {'machines': ['M1', 'M2'], 'base_time': {'M1': 8, 'M2': 8}, 'requires_supervision': False}
+    'PrepareMachine': {'machines': ['M1', 'M2', 'M3'], 'base_time': {'M1': 5, 'M2': 3, 'M3': 5}, 'requires_supervision': True},
+    'RechargeMachine': {'machines': ['M1', 'M2', 'M3'], 'base_time': {'M1': 4, 'M2': 2, 'M3': 3}, 'requires_supervision': True},
+    'Op1': {'machines': ['M1','M3'], 'base_time': {'M1': 10, 'M3': 8}, 'requires_supervision': False},
+    'Op2': {'machines': ['M2'], 'base_time': {'M2': 12}, 'requires_supervision': False},
+    'Op3': {'machines': ['M1', 'M2'], 'base_time': {'M1': 8, 'M2': 6}, 'requires_supervision': False},
 }
-
-# Define Shift Parameters for Each Weekday
-# Weekdays are indexed from 0 (Monday) to 6 (Sunday)
-weekdays = {
-    0: {'name': 'Monday', 'shift_start': 8, 'shift_end': 16, 'operators': 5},
-    1: {'name': 'Tuesday', 'shift_start': 8, 'shift_end': 16, 'operators': 5},
-    2: {'name': 'Wednesday', 'shift_start': 8, 'shift_end': 16, 'operators': 5},
-    3: {'name': 'Thursday', 'shift_start': 8, 'shift_end': 16, 'operators': 5},
-    4: {'name': 'Friday', 'shift_start': 8, 'shift_end': 16, 'operators': 5},
-    5: {'name': 'Saturday', 'shift_start': 0, 'shift_end': 0, 'operators': 0},
-    6: {'name': 'Sunday', 'shift_start': 0, 'shift_end': 0, 'operators': 0},  # No operators
-}
-
-buffer_start = 1  # 1-hour buffer at the start of the shift
-buffer_end = 1    # 1-hour buffer at the end of the shift
 
 # Number of Days in Scheduling Horizon
 max_time = max([order_info['due_date'] for order_info in orders.values()])
 num_days = int(max_time / 24) + 1  # scheduling horizon in days
 
+# Define Shift Parameters for Each Weekday
+operators_per_shift = 5  # Number of operators available per shift
+
+working_hours = (8, 16)  # Start and end times for the day shift
+
+festive_days = []  # Saturday and Sunday are non-working days
+
+# add saturday and sunday as non-working days
+start_day = 0 # Day of the week to start scheduling (0 = Monday)
+for i in range(num_days):
+    day_of_week = (start_day + i) % 7
+    if day_of_week == 5 or day_of_week == 6:
+        festive_days.append(i)
+
 # Speed Adjustment Factors
-speed_levels = [0.95, 1.0, 1.05]  
+speed_levels = [1.0]  
 
+# DEEMED NOT REQUIRED
 # Maximum number of parallel supervised operations
-N_supervised_operations = 2  # Set your desired maximum here
-
-# Time resolution and slots
-time_resolution = 1  # 1 hour
-time_slots_per_hour = int(1 / time_resolution)
-total_time_slots = int(num_days * 24 * time_slots_per_hour)
+# N_supervised_operations = 3  # Set your desired maximum here
 
 # Big M and Epsilon Constants
 big_M = 100000  # Increased Big M to accommodate finer time resolution
@@ -118,8 +110,12 @@ shift_start_times = {}
 shift_end_times = {}
 for d in range(num_days):
     day_of_week = d % 7
-    shift_start_times[d] = weekdays[day_of_week]['shift_start']
-    shift_end_times[d] = weekdays[day_of_week]['shift_end']
+    if d not in festive_days:
+        shift_start_times[d] = working_hours[0]
+        shift_end_times[d] = working_hours[1]
+    else:
+        shift_start_times[d] = 0
+        shift_end_times[d] = 0
 
 # ============================
 # 3. Create Unique Products and Operations per Order
@@ -129,21 +125,25 @@ for d in range(num_days):
 products_per_order = {}
 operations_per_order = {}
 operation_instances = []  # List to hold all operation instances
+operation_precedences = {}  # Dictionary to hold the previous operation for each operation
 
 for order_id, order_info in orders.items():
     for product in order_info['products']:
         product_key = f"{product}_{order_id}"
         product_cycles = copy.deepcopy(products[product]['cycles'])
         operations_per_order[product_key] = []
-        
+
         # Adjust operation names to be unique per product per order
         for cycle_idx, cycle in enumerate(product_cycles):
             new_operations = []
-            for op in cycle['operations']:
-                op_instance = f"{op}_{product_key}"
+            prev = None
+            for op_idx, op in enumerate(cycle['operations']):
+                op_instance = f"{op}_{product_key}_Cycle{cycle_idx + 1}_Op{op_idx + 1}"
                 new_operations.append(op_instance)
                 operations_per_order[product_key].append(op_instance)
                 operation_instances.append(op_instance)
+                operation_precedences[op_instance] = prev
+                prev = op_instance
             product_cycles[cycle_idx]['operations'] = new_operations
         products_per_order[product_key] = {'cycles': product_cycles}
 
@@ -156,12 +156,16 @@ for product_key, product_info in products_per_order.items():
             base_op = op_instance.split('_')[0]
             op_instance_to_type[op_instance] = base_op
 
+supervised_ops = [op for op in operation_instances if operations_data[op_instance_to_type[op]]['requires_supervision']]
+unsupervised_ops = [op for op in operation_instances if not operations_data[op_instance_to_type[op]]['requires_supervision']]
+
 # Mapping Products to Orders
 product_to_order = {}
 for product_key in products_per_order:
     # Extract order_id from product name
     order_id = product_key.split('_')[-1]
     product_to_order[product_key] = order_id
+
 
 # ============================
 # 4. Initialize the Problem
@@ -192,23 +196,14 @@ completion_time = {}
 for op in operation_instances:
     completion_time[op] = LpVariable(f"completion_{op}", lowBound=0, cat='Continuous')
 
-# 5.4. Overlap Variables for Supervised Operations
-# Only define b variables for operations that require supervision
-supervised_ops = [op for op in operation_instances if operations_data[op_instance_to_type[op]]['requires_supervision']]
-b_supervised = {}
-for op in supervised_ops:
-    for t in range(total_time_slots):
-        var_name = f"b_{op}_t{t}"
-        b_supervised[(op, t)] = LpVariable(var_name, cat=LpBinary)
-
-# 5.5. Binary Variables for Day Assignment
+# 5.4. Binary Variables for Day Assignment
 is_scheduled_on_day = {}
 for op in operation_instances:
     for d in range(num_days):
         var_name = f"is_scheduled_on_day_{op}_d{d}"
         is_scheduled_on_day[(op, d)] = LpVariable(var_name, cat=LpBinary)
 
-# 5.6. Completion Time for Products and Orders
+# 5.5. Completion Time for Products and Orders
 completion_time_product = {}
 for product in products_per_order:
     var_name = f"completion_product_{product}"
@@ -219,22 +214,29 @@ for order_id in orders:
     var_name = f"completion_order_{order_id}"
     completion_time_order[order_id] = LpVariable(var_name, lowBound=0, cat='Continuous')
 
-# 5.7. Makespan Variable
+# 5.6. Makespan Variable
 makespan = LpVariable("makespan", lowBound=0, cat='Continuous')
 
-# 5.8. Product to Machine Assignment Variables
+# 5.7. Product to Machine Assignment Variables
 y_p_m = {}
 for p in products_per_order:
     for m in machines:
         y_p_m[(p, m)] = LpVariable(f"y_{p}_{m}", cat=LpBinary)
 
-# 5.9. Overlap Variables for Non-Supervised Operations
-non_supervised_ops = [op for op in operation_instances if not operations_data[op_instance_to_type[op]]['requires_supervision']]
-b_non_supervised = {}
-for op in non_supervised_ops:
-    for t in range(total_time_slots):
-        var_name = f"b_non_supervised_{op}_t{t}"
-        b_non_supervised[(op, t)] = LpVariable(var_name, cat=LpBinary)
+# 5.8. Define earliest start time and latest finish time variables for each product on each machine
+est_p_m = {}
+lft_p_m = {}
+for p in products_per_order:
+    for m in machines:
+        est_p_m[(p, m)] = LpVariable(f"est_{p}_{m}", lowBound=0, cat='Continuous')
+        lft_p_m[(p, m)] = LpVariable(f"lft_{p}_{m}", lowBound=0, cat='Continuous')
+
+# 5.9 Operator Assignment Variables
+operator_assignments = {}
+for op in supervised_ops:
+    for operator_id in range(operators_per_shift):
+        var_name = f"operator_{op}_id{operator_id}"
+        operator_assignments[(op, operator_id)] = LpVariable(var_name, cat=LpBinary)
 
 # ============================
 # 6. Constraints
@@ -270,66 +272,29 @@ for op in operation_instances:
             shift_start = d * 24 + shift_start_times[d]
             shift_end = d * 24 + shift_end_times[d]
             # Enforce constraints only if operation is scheduled on day d
-            prob += s_vars[op] >= shift_start + buffer_start - big_M * (1 - is_scheduled_on_day[(op, d)]), f"ShiftStart_{op}_d{d}"
-            prob += completion_time[op] <= shift_end - buffer_end + big_M * (1 - is_scheduled_on_day[(op, d)]), f"ShiftEnd_{op}_d{d}"
+            prob += s_vars[op] >= shift_start - big_M * (1 - is_scheduled_on_day[(op, d)]), f"ShiftStart_{op}_d{d}" 
+            prob += completion_time[op] <= shift_end + big_M * (1 - is_scheduled_on_day[(op, d)]), f"ShiftEnd_{op}_d{d}" 
     else:
         # For operations that do not require supervision, they can start anytime during the day shift
         for d in range(num_days):
             shift_start = d * 24 + shift_start_times[d]
             shift_end = d * 24 + shift_end_times[d]
             # If scheduled on day d, start time can be anywhere within the shift
-            prob += s_vars[op] >= shift_start + buffer_start - big_M * (1 - is_scheduled_on_day[(op, d)]), f"ShiftStart_Independent_{op}_d{d}"
-            prob += s_vars[op] <= shift_end - buffer_end + big_M * (1 - is_scheduled_on_day[(op, d)]), f"ShiftEnd_Independent_{op}_d{d}"
+            prob += s_vars[op] >= shift_start - big_M * (1 - is_scheduled_on_day[(op, d)]), f"ShiftStart_Independent_{op}_d{d}" 
+            prob += s_vars[op] <= shift_end + big_M * (1 - is_scheduled_on_day[(op, d)]), f"ShiftEnd_Independent_{op}_d{d}"
+
+        # Ensure that unsupervised operations start right after supervised operations
+        prev_op = operation_precedences.get(op)
+        if prev_op and prev_op in supervised_ops:
+            prob += completion_time[prev_op] + epsilon == s_vars[op], f"UnsupervisedStartAfterSupervised_{op}"
 
     # Link is_scheduled_on_day variables with s_vars[op]
     for d in range(num_days):
         prob += s_vars[op] >= d * 24 - big_M * (1 - is_scheduled_on_day[(op, d)]), f"StartTimeLowerBound_{op}_d{d}"
         prob += s_vars[op] <= (d + 1) * 24 + big_M * (1 - is_scheduled_on_day[(op, d)]), f"StartTimeUpperBound_{op}_d{d}"
 
-# 6.4. Operator Availability Constraints
-for t in range(total_time_slots):
-    time_point = t * time_resolution
-    d = int(time_point // 24)
-    day_of_week = d % 7
-    operators_available = weekdays[day_of_week]['operators']
-    
-    # Sum of all operations (supervised and non-supervised) running at this time must not exceed operators_available
-    prob += lpSum([b_supervised[(op, t)] for op in supervised_ops]) + lpSum([b_non_supervised[(op, t)] for op in non_supervised_ops]) <= operators_available, f"OperatorAvailability_t{t}"
 
-# 6.5. Supervised Operations Parallelism Constraint
-for t in range(total_time_slots):
-    prob += lpSum([b_supervised[(op, t)] for op in supervised_ops]) <= N_supervised_operations, f"SupervisedOperationsLimit_t{t}"
-
-# 6.6. Define Overlap Variables for Supervised Operations
-for op in supervised_ops:
-    op_type = op_instance_to_type[op]
-    for t in range(total_time_slots):
-        time_point = t * time_resolution
-        # Constraints to link b[(op, t)] with operation running status
-        prob += s_vars[op] <= time_point + time_resolution - epsilon + big_M * (1 - b_supervised[(op, t)]), f"OverlapStart_{op}_t{t}"
-        prob += completion_time[op] >= time_point + epsilon - big_M * (1 - b_supervised[(op, t)]), f"OverlapEnd_{op}_t{t}"
-
-    # require b_supervised[(op, t)] to sum to the correct number over the time slots
-    # Since processing_time is a continuous variable, we need to model this carefully
-    # One approach is to set it as greater than or equal to the processing time divided by resolution
-    # However, to maintain linearity, we'll use a conservative estimate
-    # Alternatively, consider using time-indexed formulations more carefully
-    # Here, we'll skip this constraint due to complexity
-
-# 6.7. Define Overlap Variables for Non-Supervised Operations
-for op in non_supervised_ops:
-    op_type = op_instance_to_type[op]
-    for t in range(total_time_slots):
-        time_point = t * time_resolution
-        # Constraints to link b_non_supervised[(op, t)] with operation running status
-        prob += s_vars[op] <= time_point + time_resolution - epsilon + big_M * (1 - b_non_supervised[(op, t)]), f"OverlapStart_{op}_t{t}_ns"
-        prob += completion_time[op] >= time_point + epsilon - big_M * (1 - b_non_supervised[(op, t)]), f"OverlapEnd_{op}_t{t}_ns"
-
-    # require b_non_supervised[(op, t)] to sum to the correct number over the time slots
-    # Similar to supervised operations, handling this accurately requires careful modeling
-    # Here, we'll skip this constraint due to complexity
-
-# 6.8. Precedence Constraints with Waiting Time
+# 6.4. Precedence Constraints with Waiting Time
 for product in products_per_order:
     ops = operations_per_order[product]
     for i in range(len(ops) - 1):
@@ -338,23 +303,51 @@ for product in products_per_order:
         # Ensure that op_next starts after op_prev completes
         prob += s_vars[op_next] >= completion_time[op_prev] + epsilon, f"Precedence_{op_prev}_to_{op_next}"
 
-# 6.9. Completion Time for Products
+# 6.5. Completion Time for Products
 for product in products_per_order:
     last_op = operations_per_order[product][-1]
     prob += completion_time_product[product] == completion_time[last_op], f"CompletionTimeProduct_{product}"
 
-# 6.10. Completion Time for Orders
+# 6.6. Product Sequencing Constraints on Machines
+# Link est_p_m and lft_p_m with operation start and completion times
+for p in products_per_order:
+    ops_p = operations_per_order[p]
+    for op in ops_p:
+        op_type = op_instance_to_type[op]
+        for m in operations_data[op_type]['machines']:
+            x_op_m = lpSum([x[(op, m, s)] for s in speed_levels])
+            # Only link if operation is assigned to machine m
+            prob += s_vars[op] >= est_p_m[(p, m)] - big_M * (1 - x_op_m), f"EstLink_{op}_{m}"
+            prob += completion_time[op] <= lft_p_m[(p, m)] + big_M * (1 - x_op_m), f"LftLink_{op}_{m}"
+
+# Define binary variables z_p_q_m to indicate the sequencing of products on machines
+z_p_q_m = {}
+for m in machines:
+    for p, q in combinations(products_per_order.keys(), 2):
+        if p != q:
+            var_name = f"z_{p}_{q}_m_{m}"
+            z_p_q_m[(p, q, m)] = LpVariable(var_name, cat=LpBinary)
+
+# Enforce sequencing constraints
+for m in machines:
+    for p, q in combinations(products_per_order.keys(), 2):
+        if p != q:
+            # Constraints only apply if both products are assigned to machine m
+            prob += lft_p_m[(p, m)] <= est_p_m[(q, m)] + big_M * (1 - z_p_q_m[(p, q, m)]) + big_M * (2 - y_p_m[(p, m)] - y_p_m[(q, m)]), f"Seq1_{p}_{q}_{m}"
+            prob += lft_p_m[(q, m)] <= est_p_m[(p, m)] + big_M * z_p_q_m[(p, q, m)] + big_M * (2 - y_p_m[(p, m)] - y_p_m[(q, m)]), f"Seq2_{p}_{q}_{m}"
+
+# 6.7. Completion Time for Orders
 for order_id, order_info in orders.items():
     for product in order_info['products']:
         product_key = f"{product}_{order_id}"
         prob += completion_time_order[order_id] >= completion_time_product[product_key], f"OrderCompletion_{order_id}_Product_{product_key}"
     prob += completion_time_order[order_id] <= order_info['due_date'], f"OrderDueDate_{order_id}"
 
-# 6.11. Makespan Constraints
+# 6.8. Makespan Constraints
 for order_id in orders:
     prob += makespan >= completion_time_order[order_id], f"MakespanConstraint_{order_id}"
 
-# 6.12. Machine Availability Constraints
+# 6.9. Machine Availability Constraints
 for m in machines:
     ops_on_m = [op for op in operation_instances if m in operations_data[op_instance_to_type[op]]['machines']]
     for op1, op2 in combinations(ops_on_m, 2):
@@ -364,7 +357,8 @@ for m in machines:
         prob += s_vars[op1] + processing_time[op1] <= s_vars[op2] + big_M * (1 - y) + big_M * (2 - lpSum([x[(op1, m, s)] for s in speed_levels]) - lpSum([x[(op2, m, s)] for s in speed_levels])), f"NoOverlap1_{op1}_{op2}_m{m}"
         prob += s_vars[op2] + processing_time[op2] <= s_vars[op1] + big_M * y + big_M * (2 - lpSum([x[(op1, m, s)] for s in speed_levels]) - lpSum([x[(op2, m, s)] for s in speed_levels])), f"NoOverlap2_{op1}_{op2}_m{m}"
 
-# 6.13. Product to Machine Assignment Constraints
+# 6.10. Product to Machine Assignment Constraints
+
 # Each product assigned to exactly one machine
 for p in products_per_order:
     prob += lpSum([y_p_m[(p, m)] for m in machines]) == 1, f"ProductAssignedToOneMachine_{p}"
@@ -377,6 +371,22 @@ for p in products_per_order:
         for m in operations_data[op_type]['machines']:
             for s in speed_levels:
                 prob += x[(op, m, s)] <= y_p_m[(p, m)], f"OpMachineLink_{op}_{m}_{s}"
+
+# 6.11 Operator Availability Constraints
+# Each supervised operation must be assigned to exactly one operator
+for op in supervised_ops:
+    prob += lpSum([operator_assignments[(op, operator_id)] for operator_id in range(operators_per_shift)]) == 1, f"OperatorAssignment_{op}"
+
+# Prevent overlapping operations for each operator
+operator_overlap_order = {}
+for operator_id in range(operators_per_shift):
+    for op1, op2 in combinations(supervised_ops, 2):
+        y_var = LpVariable(f"y_{op1}_{op2}_operator_{operator_id}", cat='Binary')
+        operator_overlap_order[(op1, op2, operator_id)] = y_var
+        # If both operations are assigned to the same operator, they must not overlap
+        prob += s_vars[op1] + processing_time[op1] <= s_vars[op2] + big_M * (1 - y_var) + big_M * (2 - operator_assignments[(op1, operator_id)] - operator_assignments[(op2, operator_id)]), f"OperatorOverlap1_{op1}_{op2}_operator_{operator_id}"
+        prob += s_vars[op2] + processing_time[op2] <= s_vars[op1] + big_M * y_var + big_M * (2 - operator_assignments[(op1, operator_id)] - operator_assignments[(op2, operator_id)]), f"OperatorOverlap2_{op1}_{op2}_operator_{operator_id}"
+
 
 # ============================
 # 7. Objective Function
@@ -401,7 +411,7 @@ prob += makespan + small_weight * speed_up_penalty, "Minimize_Makespan_and_Speed
 # 8. Solve the Problem
 # ============================
 
-prob.solve(pulp.PULP_CBC_CMD(timeLimit=300))
+prob.solve(pulp.PULP_CBC_CMD(timeLimit=60))
 
 # ============================
 # 9. Output the Results
@@ -409,26 +419,7 @@ prob.solve(pulp.PULP_CBC_CMD(timeLimit=300))
 
 print("Status:", LpStatus[prob.status])
 
-if LpStatus[prob.status] == 'Optimal':
-    print("\n--- b_supervised Variables ---")
-    for op in supervised_ops:
-        print(f"\nOperation: {op}")
-        for t in range(total_time_slots):
-            var = b_supervised[(op, t)]
-            value = pulp.value(var)
-            if value > 0.5:  # Assuming binary variables, use a threshold
-                print(f"  Time Slot {t} ({t * time_resolution} hours): {int(value)}")
-    
-    print("\n--- b_non_supervised Variables ---")
-    for op in non_supervised_ops:
-        print(f"\nOperation: {op}")
-        for t in range(total_time_slots):
-            var = b_non_supervised[(op, t)]
-            value = pulp.value(var)
-            if value > 0.5:
-                print(f"  Time Slot {t} ({t * time_resolution} hours): {int(value)}")
-else:
-    print("No optimal solution found. Cannot display b variables.")
+weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
 if LpStatus[prob.status] == 'Optimal':
     schedule = []
@@ -455,7 +446,7 @@ if LpStatus[prob.status] == 'Optimal':
                 st = pulp.value(s_vars[op])
                 day = int(st // 24)
                 s_op = st % 24
-                day_name = weekdays[day % 7]['name']
+                day_name = weekdays[(day + start_day) % 7]
                 # Get completion time
                 ct = pulp.value(completion_time[op])
                 # Determine shift
@@ -496,14 +487,14 @@ if LpStatus[prob.status] == 'Optimal':
     # ============================
 
     # Assign a unique color to each operation type using a color palette
-    operation_types = list(operations_data.keys())
-    num_operation_types = len(operation_types)
+    products_types = list(products.keys())
+    num_product_types = len(products_types)
     
     # Use a colormap with enough distinct colors
     cmap = plt.get_cmap('tab20')  # Supports up to 20 distinct colors
-    if num_operation_types > 20:
+    if num_product_types > 20:
         cmap = plt.get_cmap('hsv')  # Fallback to hsv if more colors are needed
-    operation_type_colors = {op_type: cmap(i % cmap.N) for i, op_type in enumerate(operation_types)}
+    product_type_colors = {op_type: cmap(i % cmap.N) for i, op_type in enumerate(products_types)}
     
     # Define patterns for operations based on supervision requirement
     hatch_patterns = {
@@ -524,6 +515,7 @@ if LpStatus[prob.status] == 'Optimal':
     for op_entry in schedule_sorted:
         operation_name = op_entry['Operation']
         op_type = operation_name.split('_')[0]
+        product_key = operation_name.split('_')[1]
         machine_name = op_entry['Machine']
         start_time = op_entry['Start']
         end_time = op_entry['End']
@@ -534,13 +526,13 @@ if LpStatus[prob.status] == 'Optimal':
             print(f"Invalid Start or End time for operation {operation_name}")
             continue
 
-        color = operation_type_colors.get(op_type, 'gray')  # Default to gray if not found
+        color = product_type_colors.get(product_key, 'gray')  # Default to gray if not found
         hatch = hatch_patterns.get(requires_supervision, '')
 
         # Add a unique label for each operation type to the legend
-        if op_type not in added_operation_labels:
-            label_operation = op_type
-            added_operation_labels.add(op_type)
+        if product_key not in added_operation_labels:
+            label_operation = product_key
+            added_operation_labels.add(product_key)
         else:
             label_operation = ""
 
@@ -595,7 +587,7 @@ if LpStatus[prob.status] == 'Optimal':
 
     # Create custom legends
     # Operation Type Legend
-    operation_patches = [mpatches.Patch(color=operation_type_colors[op_type], label=op_type) for op_type in operation_types]
+    operation_patches = [mpatches.Patch(color=product_type_colors[op_type], label=op_type) for op_type in products_types]
     first_legend = ax.legend(handles=operation_patches, loc='upper right', title='Operation Types', bbox_to_anchor=(1.15, 1))
     ax.add_artist(first_legend)
 

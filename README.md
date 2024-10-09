@@ -7,6 +7,8 @@ This is an WORK IN PROGRESS VERSION.
 - Define the general structure on the *README* for understanding and navigate the scheduler file
 
 - Populate the lib folder with methods and data structures for improving the code clarity
+
+- fix the operations disconnection during the production scheduling. Insert a costraint on the operation that require certain operations to be made consecutively on the same machine
 ### TO ANALYZE
 - Change the orders "dict" data structure in to a list
 - Change the `cycles` attribute name in to `velata` inside `products` paramter
