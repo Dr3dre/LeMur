@@ -15,15 +15,15 @@ MACHINES = ['M1', 'M2', 'M3']  # List of machine names
 # Define Orders
 ORDERS = {
     'Order1': {
-        'due_date': 150,  # in hours
-        'products': ['ProductA', 'ProductA']
+        'due_date': 500,  # in hours
+        'products': ['ProductA', 'ProductB']
     },
     'Order2': {
-        'due_date': 380,  # in hours
+        'due_date': 500,  # in hours
         'products': ['ProductC']
     },
     'Order3': {
-        'due_date': 380,  # in hours
+        'due_date': 500,  # in hours
         'products': ['ProductA', 'ProductC']
     },
     # 'Order4': {
@@ -207,11 +207,14 @@ for op in operation_instances:
     max_time_op = operation_max_time[op]
     start_times[op] = model.NewIntVarFromDomain(cp_model.Domain.FromValues([t for t in working_shifts if t >= min_time and t <= max_time_op]), f"start_{op}")
 
+processing_time = {}
+for op in operation_instances:
+    processing_time[op] = model.NewIntVar(0, scheduling_horizon, f"processing_time_{op}")
 
 # 5.3. Completion Time Variables
 completion_time = {}
 for op in operation_instances:
-    completion_time[op] = model.NewIntVar(min_time, max_time_op, f"completion_{op}")
+    completion_time[op] = model.NewIntVar(0, scheduling_horizon, f"completion_{op}")
 
 # 5.5. Completion Time for Products and Orders
 completion_time_product = {}
@@ -264,10 +267,8 @@ for op in operation_instances:
     model.AddExactlyOne(possible_assignments)
 
 # 6.2. Define Processing Time Based on Machine and Speed
-processing_time = {}
 for op in operation_instances:
     op_type = op_instance_to_type[op]
-    processing_time[op] = model.NewIntVar(0, scheduling_horizon, f"processing_time_{op}")
 
     base_times = []
     for m in operation_specifications[op_type]['machines']:
@@ -302,8 +303,8 @@ for op in operation_instances:
         model.Add(day_start_op != day_end_op).OnlyEnforceIf(same_day.Not())
 
         within_shift_hours = model.NewBoolVar(f"within_shift_hours_{op}")
-        model.Add(time_end_op <= working_hours[1]).OnlyEnforceIf(within_shift_hours)
-        model.Add(time_end_op > working_hours[1]).OnlyEnforceIf(within_shift_hours.Not())
+        model.Add(time_end_op <= working_hours[1]).OnlyEnforceIf(within_shift_hours).OnlyEnforceIf(same_day)
+        model.Add(time_end_op > working_hours[1]).OnlyEnforceIf(within_shift_hours.Not()).OnlyEnforceIf(same_day)
 
         # Define 'in_shift' as the conjunction of 'same_day' and 'within_shift_hours'
         in_shift = model.NewBoolVar(f"in_shift_{op}")
@@ -373,15 +374,16 @@ for m in MACHINES:
 
 # 6.7. Completion Time for Orders
 for order_id, order_info in ORDERS.items():
+    products_order = []
     for product_id, product in enumerate(order_info['products']):
         product_key = f"{product}#{product_id}_{order_id}"
-        model.Add(completion_time_order[order_id] >= completion_time_product[product_key])
+        products_order.append(completion_time_product[product_key])
+    model.AddMaxEquality(completion_time_order[order_id], products_order)
     # The order should be completed before the due date
     model.Add(completion_time_order[order_id] <= order_info['due_date'])
 
 # 6.8. Makespan Constraints
-for order_id in ORDERS:
-    model.Add(makespan >= completion_time_order[order_id])
+model.AddMaxEquality(makespan, [completion_time_order[order_id] for order_id in ORDERS])
 
 # 6.9. Machine Availability Constraints
 # Prevent overlapping operations on the same machine
@@ -406,7 +408,7 @@ for op in operation_instances:
 for m in MACHINES:
     model.AddNoOverlap(intervals_machine[m])
 
-# 6.11 Operator Assignment Constraints
+# 6.10 Operator Assignment Constraints
 intervals_operator = [[] for _ in range(operators_groups_per_shift)]
 for op in supervised_ops:
     # If operation requires supervision, assign exactly one operator
@@ -422,7 +424,6 @@ for op in supervised_ops:
             name=f"interval_{op}_operator_{operator_id}"
         ))
 
-# 6.12. Operator Shift Constraints
 for operator_id in range(operators_groups_per_shift):
     model.AddNoOverlap(intervals_operator[operator_id])
 
@@ -437,11 +438,15 @@ speed_up_penalty = model.NewIntVar(0, scheduling_horizon, "speed_up_penalty")
 # If there were speed levels >1.0, you'd calculate penalties accordingly
 model.Add(speed_up_penalty == sum([(operation_machine_speed_assignment[(op, m, s)])*int(s*100-100) for op in operation_instances for m in operation_specifications[op_instance_to_type[op]]['machines'] for s in speed_levels]))
 
+total_sum = model.NewIntVar(0, scheduling_horizon*(len(ORDERS)), "total_sum")
+model.Add(total_sum == sum([completion_time_order[order_id] for order_id in ORDERS]))
+
 # Set a small weight for speed-up penalties to ensure they are only used when necessary
 small_weight = 0.1  # Adjusted since speed_up_penalty is zero
 
 # Objective: Minimize makespan + small_weight * speed_up_penalty
-model.Minimize(makespan + small_weight * speed_up_penalty)
+# model.Minimize(makespan + small_weight * speed_up_penalty)
+model.Minimize(total_sum + small_weight * speed_up_penalty)
 
 # ============================
 # 8. Solve the Problem
@@ -449,8 +454,7 @@ model.Minimize(makespan + small_weight * speed_up_penalty)
 
 # Create a solver and minimize the makespan
 solver = cp_model.CpSolver()
-# solver.parameters.log_search_progress = True
-# solver.parameters.log_to_stdout = True
+solver.parameters.log_search_progress = True
 solver.parameters.max_time_in_seconds = 60  # 10 minutes time limit
 # make verbose output
 
