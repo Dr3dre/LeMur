@@ -68,7 +68,7 @@ ORDERS = {
 PRODUCTS = {
     'ProductA': {
         'cycle': [
-            {'operations': ['PrepareMachine', 'Op1']},
+            {'operations': ['PrepareMachine', 'Op1']}, #this is a "levata"
             {'operations': ['RechargeMachine', 'Op1']},
         ]
     },

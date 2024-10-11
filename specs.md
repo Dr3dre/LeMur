@@ -53,11 +53,14 @@ Here the **JSP** definition:
 
 *In a general job scheduling problem, we are given n jobs J1, J2, ..., Jn of varying processing times, which need to be scheduled on m machines with varying processing power, while trying to minimize the makespan a.k.a. the total length of the schedule*.
 
+**Insert image of JSP**
+
 ### 2.1 Costraints
 
 1. **Due date**: Every product production has to be terminated *before* the given due date.
 2. **Machine preparation**: Has to occur *sequentially* before every production task
-3. ecc ecc
+3. **Work shifts**: All the operations that require supervision and all the machine operations must be done(for the supervised) or end (for the machines) during the work shifts given by the company.
+4. **Available workers**: There is a number of available operators that impose a maximum production capacity per day.   
 
 
 ## 3 Approaches
