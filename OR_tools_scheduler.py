@@ -12,19 +12,23 @@ from ortools.sat.python import cp_model
 # Define Machines
 MACHINES = ['M1', 'M2', 'M3']  # List of machine names
 
+PRIORITY_LEVELS = 3  # Number of priority levels
 # Define Orders
 ORDERS = {
     'Order1': {
         'due_date': 500,  # in hours
-        'products': ['ProductA', 'ProductB']
+        'products': ['ProductA', 'ProductB'],
+        'priority': 1
     },
     'Order2': {
         'due_date': 500,  # in hours
-        'products': ['ProductC']
+        'products': ['ProductC'],
+        'priority': 1
     },
     'Order3': {
         'due_date': 500,  # in hours
-        'products': ['ProductA', 'ProductC']
+        'products': ['ProductA', 'ProductC'],
+        'priority': 0
     },
     # 'Order4': {
     #     'due_date': 1000,  # in hours
@@ -112,7 +116,7 @@ working_hours = (8, 16)  # Start and end times for the day shift
 
 festive_days = []  # Saturday and Sunday are non-working days
 # add saturday and sunday as non-working days
-start_day = 0  # Day of the week to start scheduling (0 = Monday)
+start_day = 5  # Day of the week to start scheduling (0 = Monday)
 for i in range(scheduling_horizon_in_days):
     day_of_week = (start_day + i) % 7
     if day_of_week == 5 or day_of_week == 6:
@@ -432,21 +436,26 @@ for operator_id in range(operators_groups_per_shift):
 # ============================
 
 # Define Makespan Minimization
+
 # Penalize Speed-Up Usage to Minimize It
-# The objective is a weighted sum of makespan and total speed-up penalties
 speed_up_penalty = model.NewIntVar(0, scheduling_horizon, "speed_up_penalty")
-# If there were speed levels >1.0, you'd calculate penalties accordingly
-model.Add(speed_up_penalty == sum([(operation_machine_speed_assignment[(op, m, s)])*int(s*100-100) for op in operation_instances for m in operation_specifications[op_instance_to_type[op]]['machines'] for s in speed_levels]))
+model.Add(speed_up_penalty == sum([(operation_machine_speed_assignment[(op, m, s)])*int((s*100)**2-10000) for op in operation_instances for m in operation_specifications[op_instance_to_type[op]]['machines'] for s in speed_levels]))
+speed_weight = 0.01
 
-total_sum = model.NewIntVar(0, scheduling_horizon*(len(ORDERS)), "total_sum")
-model.Add(total_sum == sum([completion_time_order[order_id] for order_id in ORDERS]))
+# Define Total Sum of Completion Times for tighter optimization and some level of control on which orders are completed first
+num_orders = len(ORDERS)
+total_sum = model.NewIntVar(0, scheduling_horizon*num_orders*PRIORITY_LEVELS, "total_sum")
+model.Add(total_sum == sum([completion_time_order[order_id] * (PRIORITY_LEVELS-ORDERS[order_id]['priority']) for order_id in ORDERS]))
+order_priority_weight = 1 / sum([PRIORITY_LEVELS-ORDERS[order_id]['priority'] for order_id in ORDERS]) / 2
 
-# Set a small weight for speed-up penalties to ensure they are only used when necessary
-small_weight = 0.1  # Adjusted since speed_up_penalty is zero
+# product tightness variable
+num_products = len(products_per_order)
+product_tightness = model.NewIntVar(0, scheduling_horizon*num_products, "product_tightness")
+model.Add(product_tightness == sum([completion_time_product[p] for p in products_per_order]))
+weight_product_tightness = 0.1 / num_products 
 
-# Objective: Minimize makespan + small_weight * speed_up_penalty
-# model.Minimize(makespan + small_weight * speed_up_penalty)
-model.Minimize(total_sum + small_weight * speed_up_penalty)
+# Objective:
+model.Minimize(makespan + order_priority_weight * total_sum + speed_weight * speed_up_penalty + weight_product_tightness * product_tightness)
 
 # ============================
 # 8. Solve the Problem
@@ -596,15 +605,16 @@ if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
         )
 
         # Only add labels for bars that are wide enough to avoid overlap
-        if end_time - start_time > 2:  # Adjust this threshold as needed
+        if end_time - start_time > 0:  # Adjust this threshold as needed
             ax.text(
                 x=start_time + (end_time - start_time) / 2,
                 y=machine_name,
-                s=f"{op_type} ({op_entry['Order']})",
+                s=f"{op_type} {product_key} ({op_entry['Order']})",
                 va='center',
                 ha='center',
                 color='black',
-                fontsize=8
+                fontsize=8, 
+                rotation=90
             )
 
     # Add day and night shift backgrounds
