@@ -9,6 +9,8 @@ from ortools.sat.python import cp_model
 # 1. Data Definitions
 # ============================
 
+SOLVER_TIME_LIMIT = 300  # Time limit in seconds for the solver
+
 # Define Machines
 MACHINES = ['M1', 'M2', 'M3']  # List of machine names
 
@@ -21,59 +23,24 @@ ORDERS = {
             'ProductA': 200,
             'ProductB': 250
         },
-        'priority': 1
+        'priority': 0
     },
     'Order2': {
         'due_date': 500,  # in hours
         'products': {
             'ProductC': 450
         },
-        'priority': 1
+        'priority': 2
     },
     'Order3': {
         'due_date': 500,  # in hours
         'products': {
-            'ProductA': 400,
+            'ProductA': 200,
+            'ProductB': 250,
             'ProductC': 450
         },
-        'priority': 0
+        'priority': 1
     },
-    # 'Order4': {
-    #     'due_date': 1000,  # in hours
-    #     'products': ['ProductB']
-    # },
-    # 'Order5': {
-    #     'due_date': 1000,  # in hours
-    #     'products': ['ProductA']
-    # },
-    # 'Order6': {
-    #     'due_date': 1000,  # in hours
-    #     'products': ['ProductB', 'ProductC']
-    # },
-    # 'Order7': {
-    #     'due_date': 1000,  # in hours
-    #     'products': ['ProductA', 'ProductB']
-    # },
-    # 'Order8': {
-    #     'due_date': 1000,  # in hours
-    #     'products': ['ProductC']
-    # },
-    # 'Order9': {
-    #     'due_date': 1000,  # in hours
-    #     'products': ['ProductA', 'ProductC']
-    # },
-    # 'Order10': {
-    #     'due_date': 1000,  # in hours
-    #     'products': ['ProductB']
-    # },
-    # 'Order11': {
-    #     'due_date': 1000,  # in hours
-    #     'products': ['ProductA']
-    # },
-    # 'Order12': {
-    #     'due_date': 1000,  # in hours
-    #     'products': ['ProductB', 'ProductC']
-    # },
 }
 
 # Define Products with Cycles and Operations
@@ -103,13 +70,24 @@ PRODUCTS = {
 }
 
 # Define Operations with Machines, Base Times, and Supervision Requirement
-operation_specifications = {
+OPERATION_SPECIFICATIONS = {
     'PrepareMachine': {'machines': ['M1', 'M2', 'M3'], 'base_time': {'M1': 5, 'M2': 3, 'M3': 5}, 'requires_supervision': True},
     'RechargeMachine': {'machines': ['M1', 'M2', 'M3'], 'base_time': {'M1': 4, 'M2': 2, 'M3': 3}, 'requires_supervision': True},
     'Op1': {'machines': ['M1', 'M3'], 'base_time': {'M1': 35, 'M3': 35}, 'requires_supervision': False},
     'Op2': {'machines': ['M2'], 'base_time': {'M2': 35}, 'requires_supervision': False},
     'Op3': {'machines': ['M1', 'M2'], 'base_time': {'M1': 35, 'M2': 35}, 'requires_supervision': False},
 }
+
+# Speed Adjustment Factors
+SPEED_LEVELS = [0.95, 1.0, 1.05]
+
+WORKING_HOURS = (8, 16)  # Start and end times for the day shift
+START_DAY = 0  # Day of the week to start scheduling (0 = Monday)
+FESTIVE_DAYS = []  # Saturday and Sunday are already non-working days, add more if needed
+
+# Define Shift Parameters for Each Weekday
+OPERATOR_GROUPS_SHIFT = 2  # Number of operators available per shift (define the number of parallel operations allowed)
+OPERATORS_PER_GROUP = 1  # Number of operators in each group
 
 # ============================
 # 2. Preprocess Data
@@ -119,32 +97,17 @@ operation_specifications = {
 scheduling_horizon = max([order_info['due_date'] for order_info in ORDERS.values()])
 scheduling_horizon_in_days = int(scheduling_horizon / 24) + 1
 
-# Define Shift Parameters for Each Weekday
-operators_groups_per_shift = 2  # Number of operators available per shift (define the number of parallel operations allowed)
-number_of_operators = 1  # Number of operators in each group
-
-working_hours = (8, 16)  # Start and end times for the day shift
-
-festive_days = []  # Saturday and Sunday are non-working days
 # add saturday and sunday as non-working days
-start_day = 5  # Day of the week to start scheduling (0 = Monday)
 for i in range(scheduling_horizon_in_days):
-    day_of_week = (start_day + i) % 7
+    day_of_week = (START_DAY + i) % 7
     if day_of_week == 5 or day_of_week == 6:
-        festive_days.append(i)
-
-# Speed Adjustment Factors
-speed_levels = [0.95, 1.0, 1.05]
+        FESTIVE_DAYS.append(i)
 
 # Precompute shift start and end times for each day
 working_shifts = []
 for d in range(scheduling_horizon_in_days):
-    if d not in festive_days:
-        working_shifts.extend([d * 24 + h for h in range(working_hours[0], working_hours[1])])
-
-# ============================
-# 3. Create Unique Products and Operations per Order
-# ============================
+    if d not in FESTIVE_DAYS:
+        working_shifts.extend([d * 24 + h for h in range(WORKING_HOURS[0], WORKING_HOURS[1])])
 
 # Create unique products and operations per order
 product_instances = {} # Dictionary to hold all products of all orders
@@ -191,7 +154,7 @@ for order_id, order_info in ORDERS.items():
                     operation_max_time[op_instance] = order_info['due_date']
                     prev = op_instance
                     # Update time based on operation duration
-                    time += min([operation_specifications[op]['base_time'][m] / speed_levels[0] for m in operation_specifications[op]['machines']])
+                    time += min([OPERATION_SPECIFICATIONS[op]['base_time'][m] / SPEED_LEVELS[0] for m in OPERATION_SPECIFICATIONS[op]['machines']])
 
                 product_levate[levata_idx]['operations'] = new_operations
 
@@ -205,7 +168,7 @@ for order_id, order_info in ORDERS.items():
 
             for levate in range(num_partial_cycle_levate):
                 new_operations = []
-                for op_idx, op in enumerate(product_levate[0]['operations']):
+                for op_idx, op in enumerate(product_levate[levate]['operations']):
                     op_instance = f"{op}_{product_key}_Cycle{levate + 1}_Op{op_idx + 1}"
                     new_operations.append(op_instance)
                     operations_product[product_key].append(op_instance)
@@ -213,11 +176,9 @@ for order_id, order_info in ORDERS.items():
                     operation_time_shift[op_instance] = time
                     operation_max_time[op_instance] = order_info['due_date']
                     # Update time based on operation duration
-                    time += min([operation_specifications[op]['base_time'][m] / speed_levels[0] for m in operation_specifications[op]['machines']])
+                    time += min([OPERATION_SPECIFICATIONS[op]['base_time'][m] / SPEED_LEVELS[0] for m in OPERATION_SPECIFICATIONS[op]['machines']])
                 product_levate[levate]['operations'] = new_operations
             product_instances[product_key] = {'levate': product_levate}
-
-        # breakpoint()
 
 # Mapping Operations to Their Operation Type
 op_instance_to_type = {}
@@ -228,8 +189,8 @@ for product_key, product_info in product_instances.items():
             base_op = op_instance.split('_')[0]
             op_instance_to_type[op_instance] = base_op
 
-supervised_ops = [op for op in operation_instances if operation_specifications[op_instance_to_type[op]]['requires_supervision']]
-unsupervised_ops = [op for op in operation_instances if not operation_specifications[op_instance_to_type[op]]['requires_supervision']]
+supervised_ops = [op for op in operation_instances if OPERATION_SPECIFICATIONS[op_instance_to_type[op]]['requires_supervision']]
+unsupervised_ops = [op for op in operation_instances if not OPERATION_SPECIFICATIONS[op_instance_to_type[op]]['requires_supervision']]
 
 # Mapping Products to Orders
 product_to_order = {}
@@ -239,25 +200,25 @@ for product_key in product_instances:
     product_to_order[product_key] = order_id
 
 # ============================
-# 4. Initialize the Model
+# 3. Initialize the Model
 # ============================
 
 model = cp_model.CpModel()
 
 # ============================
-# 5. Decision Variables
+# 4. Decision Variables
 # ============================
 
-# 5.1. Machine and Speed Assignment Variables
+# 4.1. Machine and Speed Assignment Variables
 # x[(op, m, s)] = 1 if operation op is assigned to machine m with speed s
 operation_machine_speed_assignment = {}
 for op in operation_instances:
     op_type = op_instance_to_type[op]
-    for m in operation_specifications[op_type]['machines']:
-        for s in speed_levels:
+    for m in OPERATION_SPECIFICATIONS[op_type]['machines']:
+        for s in SPEED_LEVELS:
             operation_machine_speed_assignment[(op, m, s)] = model.NewBoolVar(f"Op_machine_speed_assignment_{op}_{m}_{int(s*100)}")
 
-# 5.2. Start Time Variables
+# 4.2. Start Time, Processing Time, and Completion Time Variables for Operations
 start_times = {}
 for op in operation_instances:
     min_time = int(operation_time_shift[op])
@@ -268,72 +229,68 @@ processing_time = {}
 for op in operation_instances:
     processing_time[op] = model.NewIntVar(0, scheduling_horizon, f"processing_time_{op}")
 
-# 5.3. Completion Time Variables
 completion_time = {}
 for op in operation_instances:
     completion_time[op] = model.NewIntVar(0, scheduling_horizon, f"completion_{op}")
 
-# 5.5. Completion Time for Products and Orders
-completion_time_product = {}
-for product in product_instances:
-    completion_time_product[product] = model.NewIntVar(0, scheduling_horizon, f"completion_product_{product}")
-
+# 4.3. Start Time and Completion Time for Products
 start_time_product = {}
 for product in product_instances:
     start_time_product[product] = model.NewIntVar(0, scheduling_horizon, f"start_product_{product}")
 
+completion_time_product = {}
+for product in product_instances:
+    completion_time_product[product] = model.NewIntVar(0, scheduling_horizon, f"completion_product_{product}")
+
+# 4.4. Completion Time for Orders
 completion_time_order = {}
 for order_id in ORDERS:
     completion_time_order[order_id] = model.NewIntVar(0, scheduling_horizon, f"completion_order_{order_id}")
 
-# 5.6. Makespan Variable
-makespan = model.NewIntVar(0, scheduling_horizon, "makespan")
-
-# 5.7. Product to Machine Assignment Variables
+# 4.5. Product to Machine Assignment Variables
 product_machine_assignment = {}
 for p in product_instances:
     for m in MACHINES:
         product_machine_assignment[(p, m)] = model.NewBoolVar(f"y_{p}_{m}")
 
-# 5.9 Operator Assignment Variables
+# 4.6. Operator Assignment Variables
 operator_operation_assignments = {}
 for op in supervised_ops:
-    for operator_id in range(operators_groups_per_shift):
+    for operator_id in range(OPERATOR_GROUPS_SHIFT):
         operator_operation_assignments[(op, operator_id)] = model.NewBoolVar(f"operator_{op}_id{operator_id}")
 
-# 5.10 Next shift days for operations that cannot finish in a single shift
+# 4.7. Next shift days for operations that cannot finish in a single shift
 next_shift_days = []
 for d in range(scheduling_horizon_in_days):
     next_shift_days.append(model.NewIntVar(0, scheduling_horizon_in_days, f"next_shift_day_{d}"))
     next_shift = 1
-    while next_shift+d in festive_days: next_shift += 1
+    while next_shift+d in FESTIVE_DAYS: next_shift += 1
     model.Add(next_shift_days[d] == next_shift)
 
-
 # ============================
-# 6. Constraints
+# 5. Constraints
 # ============================
 
-# 6.1. Each Operation Assigned to Exactly One (Machine, Speed)
+# 5.1. Each Operation Assigned to Exactly One (Machine, Speed)
 for op in operation_instances:
     op_type = op_instance_to_type[op]
     possible_assignments = []
-    for m in operation_specifications[op_type]['machines']:
-        for s in speed_levels:
+    for m in OPERATION_SPECIFICATIONS[op_type]['machines']:
+        for s in SPEED_LEVELS:
             possible_assignments.append(operation_machine_speed_assignment[(op, m, s)])
     model.AddExactlyOne(possible_assignments)
 
-# 6.2. Define Processing Time Based on Machine and Speed
+# 5.2. Define Processing Time Based on Machine and Speed
 for op in operation_instances:
     op_type = op_instance_to_type[op]
 
     base_times = []
-    for m in operation_specifications[op_type]['machines']:
-        for s in speed_levels:
+    for m in OPERATION_SPECIFICATIONS[op_type]['machines']:
+        for s in SPEED_LEVELS:
             if op in unsupervised_ops:
-                time = int(math.ceil(operation_specifications[op_type]['base_time'][m] / s))
+                time = int(math.ceil(OPERATION_SPECIFICATIONS[op_type]['base_time'][m] / s))
             else:
-                time = int(math.ceil(operation_specifications[op_type]['base_time'][m] / number_of_operators))
+                time = int(math.ceil(OPERATION_SPECIFICATIONS[op_type]['base_time'][m] / OPERATORS_PER_GROUP))
             base_times.append((operation_machine_speed_assignment[(op, m, s)], time))
 
     if op in unsupervised_ops:
@@ -360,8 +317,8 @@ for op in operation_instances:
         model.Add(day_start_op != day_end_op).OnlyEnforceIf(same_day.Not())
 
         within_shift_hours = model.NewBoolVar(f"within_shift_hours_{op}")
-        model.Add(time_end_op <= working_hours[1]).OnlyEnforceIf(within_shift_hours).OnlyEnforceIf(same_day)
-        model.Add(time_end_op > working_hours[1]).OnlyEnforceIf(within_shift_hours.Not()).OnlyEnforceIf(same_day)
+        model.Add(time_end_op <= WORKING_HOURS[1]).OnlyEnforceIf(within_shift_hours).OnlyEnforceIf(same_day)
+        model.Add(time_end_op > WORKING_HOURS[1]).OnlyEnforceIf(within_shift_hours.Not()).OnlyEnforceIf(same_day)
 
         # Define 'in_shift' as the conjunction of 'same_day' and 'within_shift_hours'
         in_shift = model.NewBoolVar(f"in_shift_{op}")
@@ -376,16 +333,14 @@ for op in operation_instances:
         model.AddElement(day_start_op, next_shift_days, next_shift)
         
         # base time + time to get to the next day + time to get to the next shift day + time to get to the next shift
-        model.Add(processing_time[op] == base_processing_time + (24-working_hours[1]) + (next_shift-1) * 24 + working_hours[0]).OnlyEnforceIf(in_shift.Not())
+        model.Add(processing_time[op] == base_processing_time + (24-WORKING_HOURS[1]) + (next_shift-1) * 24 + WORKING_HOURS[0]).OnlyEnforceIf(in_shift.Not())
 
-
-# model.Add(start_times[operation_instances[0]] == 8)
-# 6.3. Start Time and Completion Time Constraints
+# 5.3. Start Time and Completion Time Constraints
 for op in operation_instances:
     # Define completion_time = start_time + processing_time
     model.Add(completion_time[op] == start_times[op] + processing_time[op])
 
-# 6.4. Precedence Constraints
+# 5.4. Precedence Constraints
 for product in product_instances:
     ops = operations_product[product]
     for i in range(len(ops) - 1):
@@ -401,14 +356,14 @@ for product in product_instances:
         else:
             model.Add(start_times[op_next] >= completion_time[op_prev])
 
-# 6.5. Completion and Start Time for Products
+# 5.5. Completion and Start Time for Products
 for product in product_instances:
     last_op = operations_product[product][-1]
     model.Add(completion_time_product[product] == completion_time[last_op])
     first_op = operations_product[product][0]
     model.Add(start_time_product[product] == start_times[first_op])
 
-# 6.6. Product Sequencing Constraints on Machines
+# 5.6. Product Sequencing Constraints on Machines
 # Each product assigned to exactly one machine
 for p in product_instances:
     model.Add(sum([product_machine_assignment[(p, m)] for m in MACHINES]) == 1)
@@ -418,9 +373,9 @@ for p in product_instances:
     ops_p = operations_product[p]
     for op in ops_p:
         op_type = op_instance_to_type[op]
-        for m in operation_specifications[op_type]['machines']:
-            model.AddBoolOr([operation_machine_speed_assignment[(op, m, s)] for s in speed_levels]).OnlyEnforceIf(product_machine_assignment[(p, m)])
-            model.AddBoolAnd([operation_machine_speed_assignment[(op, m, s)].Not() for s in speed_levels]).OnlyEnforceIf(product_machine_assignment[(p, m)].Not())
+        for m in OPERATION_SPECIFICATIONS[op_type]['machines']:
+            model.AddBoolOr([operation_machine_speed_assignment[(op, m, s)] for s in SPEED_LEVELS]).OnlyEnforceIf(product_machine_assignment[(p, m)])
+            model.AddBoolAnd([operation_machine_speed_assignment[(op, m, s)].Not() for s in SPEED_LEVELS]).OnlyEnforceIf(product_machine_assignment[(p, m)].Not())
 
 # Before starting a new product, the previous product scheduled on the same machine must be completed
 for m in MACHINES:
@@ -429,7 +384,7 @@ for m in MACHINES:
         model.Add(completion_time_product[p1] <= start_time_product[p2]).OnlyEnforceIf(product_machine_assignment[(p1, m)]).OnlyEnforceIf(product_machine_assignment[(p2, m)]).OnlyEnforceIf(or_var)
         model.Add(completion_time_product[p2] <= start_time_product[p1]).OnlyEnforceIf(product_machine_assignment[(p1, m)]).OnlyEnforceIf(product_machine_assignment[(p2, m)]).OnlyEnforceIf(or_var.Not())
 
-# 6.7. Completion Time for Orders
+# 5.7. Completion Time for Orders
 for order_id, order_info in ORDERS.items():
     products_order = []
     for product in order_info['products'].keys():
@@ -440,19 +395,16 @@ for order_id, order_info in ORDERS.items():
     # The order should be completed before the due date
     model.Add(completion_time_order[order_id] <= order_info['due_date'])
 
-# 6.8. Makespan Constraints
-model.AddMaxEquality(makespan, [completion_time_order[order_id] for order_id in ORDERS])
-
-# 6.9. Machine Availability Constraints
+# 5.8. Machine Availability Constraints
 # Prevent overlapping operations on the same machine
 intervals_machine = {}  # Dictionary to hold interval variables for each operation on each machine
 for m in MACHINES: intervals_machine[m] = []
 for op in operation_instances:
-    for m in operation_specifications[op_instance_to_type[op]]['machines']:
+    for m in OPERATION_SPECIFICATIONS[op_instance_to_type[op]]['machines']:
         assigned = model.NewBoolVar(f"assigned_{op}_{m}")
         # If operation is assigned to machine m, assigned = 1
-        model.AddBoolOr([operation_machine_speed_assignment[(op, m, s)] for s in speed_levels]).OnlyEnforceIf(assigned)
-        model.AddBoolAnd([operation_machine_speed_assignment[(op, m, s)].Not() for s in speed_levels]).OnlyEnforceIf(assigned.Not())
+        model.AddBoolOr([operation_machine_speed_assignment[(op, m, s)] for s in SPEED_LEVELS]).OnlyEnforceIf(assigned)
+        model.AddBoolAnd([operation_machine_speed_assignment[(op, m, s)].Not() for s in SPEED_LEVELS]).OnlyEnforceIf(assigned.Not())
 
         interval = model.NewOptionalIntervalVar(
             start=start_times[op],
@@ -466,14 +418,15 @@ for op in operation_instances:
 for m in MACHINES:
     model.AddNoOverlap(intervals_machine[m])
 
-# 6.10 Operator Assignment Constraints
-intervals_operator = [[] for _ in range(operators_groups_per_shift)]
+# 6.9 Operator Assignment Constraints
+# Each operation that requires supervision must be assigned to exactly one operator group
+intervals_operator = [[] for _ in range(OPERATOR_GROUPS_SHIFT)]
 for op in supervised_ops:
     # If operation requires supervision, assign exactly one operator
-    model.AddExactlyOne([operator_operation_assignments[(op, operator_id)] for operator_id in range(operators_groups_per_shift)])
+    model.AddExactlyOne([operator_operation_assignments[(op, operator_id)] for operator_id in range(OPERATOR_GROUPS_SHIFT)])
 
     # Create intervals for each operator assignment
-    for operator_id in range(operators_groups_per_shift):
+    for operator_id in range(OPERATOR_GROUPS_SHIFT):
         intervals_operator[operator_id].append(model.NewOptionalIntervalVar(
             start=start_times[op],
             size=processing_time[op],  # Ensure this is correctly defined based on speed 's'
@@ -482,18 +435,20 @@ for op in supervised_ops:
             name=f"interval_{op}_operator_{operator_id}"
         ))
 
-for operator_id in range(operators_groups_per_shift):
+for operator_id in range(OPERATOR_GROUPS_SHIFT):
     model.AddNoOverlap(intervals_operator[operator_id])
 
 # ============================
-# 7. Objective Function
+# 6. Objective Function
 # ============================
 
 # Define Makespan Minimization
+makespan = model.NewIntVar(0, scheduling_horizon, "makespan")
+model.AddMaxEquality(makespan, [completion_time_order[order_id] for order_id in ORDERS])
 
 # Penalize Speed-Up Usage to Minimize It
 speed_up_penalty = model.NewIntVar(0, scheduling_horizon, "speed_up_penalty")
-model.Add(speed_up_penalty == sum([(operation_machine_speed_assignment[(op, m, s)])*int((s*100)**2-10000) for op in operation_instances for m in operation_specifications[op_instance_to_type[op]]['machines'] for s in speed_levels]))
+model.Add(speed_up_penalty == sum([(operation_machine_speed_assignment[(op, m, s)])*int((s*100)**2-10000) for op in operation_instances for m in OPERATION_SPECIFICATIONS[op_instance_to_type[op]]['machines'] for s in SPEED_LEVELS]))
 speed_weight = 0.01
 
 # Define Total Sum of Completion Times for tighter optimization and some level of control on which orders are completed first
@@ -512,19 +467,18 @@ weight_product_tightness = 0.1 / num_products
 model.Minimize(makespan + order_priority_weight * total_sum + speed_weight * speed_up_penalty + weight_product_tightness * product_tightness)
 
 # ============================
-# 8. Solve the Problem
+# 7. Solve the Problem
 # ============================
 
 # Create a solver and minimize the makespan
 solver = cp_model.CpSolver()
 solver.parameters.log_search_progress = True
-solver.parameters.max_time_in_seconds = 60  # 10 minutes time limit
-# make verbose output
+solver.parameters.max_time_in_seconds = SOLVER_TIME_LIMIT
 
 status = solver.Solve(model)
 
 # ============================
-# 9. Output the Results
+# 8. Output the Results
 # ============================
 
 print("Status:", solver.StatusName(status))
@@ -545,8 +499,8 @@ if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
                     # Find the machine and speed assignment
                     assigned_m = None
                     assigned_s = None
-                    for m in operation_specifications[op_instance_to_type[op]]['machines']:
-                        for s in speed_levels:
+                    for m in OPERATION_SPECIFICATIONS[op_instance_to_type[op]]['machines']:
+                        for s in SPEED_LEVELS:
                             if solver.Value(operation_machine_speed_assignment[(op, m, s)]) == 1:
                                 assigned_m = m
                                 assigned_s = s
@@ -557,11 +511,11 @@ if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
                     st = solver.Value(start_times[op])
                     day = st // 24
                     s_op = st % 24
-                    day_name = weekdays[(day + start_day) % 7]
+                    day_name = weekdays[(day + START_DAY) % 7]
                     # Get completion time
                     ct = solver.Value(completion_time[op])
                     # Determine shift
-                    if operation_specifications[op_instance_to_type[op]]['requires_supervision']:
+                    if OPERATION_SPECIFICATIONS[op_instance_to_type[op]]['requires_supervision']:
                         op_shift = 'Day'
                     else:
                         op_shift = 'Independent'
@@ -581,7 +535,7 @@ if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
                     print(f"      Speed Factor: {assigned_s}")
                     print(f"      Start Time: {st} hours (Day {day + 1} - {day_name} at {s_op} hours)")
                     print(f"      Completion Time: {ct} hours")
-                    print(f"      Requires Supervision: {operation_specifications[op_instance_to_type[op]]['requires_supervision']}")
+                    print(f"      Requires Supervision: {OPERATION_SPECIFICATIONS[op_instance_to_type[op]]['requires_supervision']}")
                 # Get product completion time
                 ct_product = solver.Value(completion_time_product[product_key])
                 print(f"  Completion Time for {product_key}: {ct_product} hours")
@@ -594,7 +548,7 @@ if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
     print("Total Speed-Up Penalty =", solver.Value(speed_up_penalty))
     
     # ============================
-    # 10. Graphical Visualization
+    # 9. Graphical Visualization
     # ============================
 
     # Assign a unique color to each operation type using a color palette
@@ -630,7 +584,7 @@ if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
         machine_name = op_entry['Machine']
         start_time = op_entry['Start']
         end_time = op_entry['End']
-        requires_supervision = operation_specifications[op_instance_to_type[operation_name]]['requires_supervision']
+        requires_supervision = OPERATION_SPECIFICATIONS[op_instance_to_type[operation_name]]['requires_supervision']
 
         # Check for valid start and end times
         if start_time is None or end_time is None:
@@ -675,10 +629,10 @@ if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
     # Add day and night shift backgrounds
     for d in range(scheduling_horizon_in_days):
         # Define the absolute start and end times for shifts
-        day_shift_start = d * 24 + working_hours[0]
-        day_shift_end = d * 24 + working_hours[1]
+        day_shift_start = d * 24 + WORKING_HOURS[0]
+        day_shift_end = d * 24 + WORKING_HOURS[1]
 
-        if d not in festive_days:
+        if d not in FESTIVE_DAYS:
             # Day shift background (yellow)
             ax.axvspan(day_shift_start, day_shift_end, color='yellow', alpha=0.3, zorder=0)
 
