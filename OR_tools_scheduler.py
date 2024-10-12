@@ -17,17 +17,25 @@ PRIORITY_LEVELS = 3  # Number of priority levels
 ORDERS = {
     'Order1': {
         'due_date': 500,  # in hours
-        'products': ['ProductA', 'ProductB'],
+        'products': {
+            'ProductA': 200,
+            'ProductB': 250
+        },
         'priority': 1
     },
     'Order2': {
         'due_date': 500,  # in hours
-        'products': ['ProductC'],
+        'products': {
+            'ProductC': 450
+        },
         'priority': 1
     },
     'Order3': {
         'due_date': 500,  # in hours
-        'products': ['ProductA', 'ProductC'],
+        'products': {
+            'ProductA': 400,
+            'ProductC': 450
+        },
         'priority': 0
     },
     # 'Order4': {
@@ -71,18 +79,21 @@ ORDERS = {
 # Define Products with Cycles and Operations
 PRODUCTS = {
     'ProductA': {
+        'Kg_prod_per_levata': 100,
         'cycle': [
             {'operations': ['PrepareMachine', 'Op1']}, #this is a "levata"
             {'operations': ['RechargeMachine', 'Op1']},
         ]
     },
     'ProductB': {
+        'Kg_prod_per_levata': 250,
         'cycle': [
             {'operations': ['PrepareMachine', 'Op2']},
             {'operations': ['RechargeMachine', 'Op2']},
         ]
     },
     'ProductC': {
+        'Kg_prod_per_levata': 150,
         'cycle': [
             {'operations': ['PrepareMachine', 'Op3']},
             {'operations': ['RechargeMachine', 'Op3']},
@@ -136,41 +147,83 @@ for d in range(scheduling_horizon_in_days):
 # ============================
 
 # Create unique products and operations per order
-products_per_order = {}
-operations_per_order = {}
+product_instances = {} # Dictionary to hold all products of all orders
+
+order_product_keys = {}  # Dictionary to hold all product instances of all orders
+operations_product = {} # Dictionary to hold all operations of all orders
 operation_instances = []  # List to hold all operation instances
+
 operation_max_time = {}  # Dictionary to hold the maximum time for each operation
 operation_time_shift = {}  # Dictionary to hold operation start times for each shift
 
 for order_id, order_info in ORDERS.items():
-    for product_id, product in enumerate(order_info['products']):
-        time = 0
-        product_key = f"{product}#{product_id}_{order_id}"
-        product_cycles = copy.deepcopy(PRODUCTS[product]['cycle'])
-        operations_per_order[product_key] = []
+    order_product_keys[order_id] = {}
+    for product, requested_quantity in order_info['products'].items():
+        full_cycles = requested_quantity // (PRODUCTS[product]['Kg_prod_per_levata'] * len(PRODUCTS[product]['cycle']))
+        remaining_quantity = requested_quantity % (PRODUCTS[product]['Kg_prod_per_levata'] * len(PRODUCTS[product]['cycle']))
+        num_partial_cycle_levate = 0
+        if remaining_quantity > 0.8 * (PRODUCTS[product]['Kg_prod_per_levata'] * len(PRODUCTS[product]['cycle'])):
+            full_cycles += 1
+        elif remaining_quantity > 0:
+            num_partial_cycle_levate = math.ceil(remaining_quantity / PRODUCTS[product]['Kg_prod_per_levata'])
 
-        # Adjust operation names to be unique per product per order
-        prev = None
-        for cycle_idx, cycle in enumerate(product_cycles):
-            new_operations = []
-            for op_idx, op in enumerate(cycle['operations']):
-                op_instance = f"{op}_{product_key}_Cycle{cycle_idx + 1}_Op{op_idx + 1}"
-                new_operations.append(op_instance)
-                operations_per_order[product_key].append(op_instance)
-                operation_instances.append(op_instance)
-                operation_time_shift[op_instance] = time
-                operation_max_time[op_instance] = order_info['due_date']
-                prev = op_instance
-                # Update time based on operation duration
-                time += min([operation_specifications[op]['base_time'][m] / speed_levels[0] for m in operation_specifications[op]['machines']])
-            product_cycles[cycle_idx]['operations'] = new_operations
-        products_per_order[product_key] = {'cycle': product_cycles}
+        order_product_keys[order_id][product] = []
+
+        for cycle_num in range(full_cycles):
+            time = 0
+            product_key = f"{product}#{cycle_num}_{order_id}"
+            order_product_keys[order_id][product].append(product_key)
+
+            product_levate = copy.deepcopy(PRODUCTS[product]['cycle'])
+            operations_product[product_key] = []
+
+            # Adjust operation names to be unique per product per order
+            prev = None
+            for levata_idx, levata_product in enumerate(product_levate):
+                new_operations = []
+
+                for op_idx, op in enumerate(levata_product['operations']):
+                    op_instance = f"{op}_{product_key}_Cycle{levata_idx + 1}_Op{op_idx + 1}"
+                    new_operations.append(op_instance)
+                    operations_product[product_key].append(op_instance)
+                    operation_instances.append(op_instance)
+                    operation_time_shift[op_instance] = time
+                    operation_max_time[op_instance] = order_info['due_date']
+                    prev = op_instance
+                    # Update time based on operation duration
+                    time += min([operation_specifications[op]['base_time'][m] / speed_levels[0] for m in operation_specifications[op]['machines']])
+
+                product_levate[levata_idx]['operations'] = new_operations
+
+            product_instances[product_key] = {'levate': product_levate}
+
+        if num_partial_cycle_levate > 0:
+            product_key = f"{product}#{full_cycles}_partial#{num_partial_cycle_levate}_{order_id}"
+            order_product_keys[order_id][product].append(product_key)
+            product_levate = copy.deepcopy(PRODUCTS[product]['cycle'])[0:num_partial_cycle_levate]
+            operations_product[product_key] = []
+
+            for levate in range(num_partial_cycle_levate):
+                new_operations = []
+                for op_idx, op in enumerate(product_levate[0]['operations']):
+                    op_instance = f"{op}_{product_key}_Cycle{levate + 1}_Op{op_idx + 1}"
+                    new_operations.append(op_instance)
+                    operations_product[product_key].append(op_instance)
+                    operation_instances.append(op_instance)
+                    operation_time_shift[op_instance] = time
+                    operation_max_time[op_instance] = order_info['due_date']
+                    # Update time based on operation duration
+                    time += min([operation_specifications[op]['base_time'][m] / speed_levels[0] for m in operation_specifications[op]['machines']])
+                product_levate[levate]['operations'] = new_operations
+            product_instances[product_key] = {'levate': product_levate}
+
+        # breakpoint()
 
 # Mapping Operations to Their Operation Type
 op_instance_to_type = {}
-for product_key, product_info in products_per_order.items():
-    for cycle in product_info['cycle']:
-        for op_instance in cycle['operations']:
+for product_key, product_info in product_instances.items():
+    for levata_product in product_info['levate']:
+        for op_instance in levata_product['operations']:
             # Extract the base operation name (e.g., Op1 from Op1_ProductA_Order1)
             base_op = op_instance.split('_')[0]
             op_instance_to_type[op_instance] = base_op
@@ -180,7 +233,7 @@ unsupervised_ops = [op for op in operation_instances if not operation_specificat
 
 # Mapping Products to Orders
 product_to_order = {}
-for product_key in products_per_order:
+for product_key in product_instances:
     # Extract order_id from product name
     order_id = product_key.split('_')[-1]
     product_to_order[product_key] = order_id
@@ -222,11 +275,11 @@ for op in operation_instances:
 
 # 5.5. Completion Time for Products and Orders
 completion_time_product = {}
-for product in products_per_order:
+for product in product_instances:
     completion_time_product[product] = model.NewIntVar(0, scheduling_horizon, f"completion_product_{product}")
 
 start_time_product = {}
-for product in products_per_order:
+for product in product_instances:
     start_time_product[product] = model.NewIntVar(0, scheduling_horizon, f"start_product_{product}")
 
 completion_time_order = {}
@@ -238,7 +291,7 @@ makespan = model.NewIntVar(0, scheduling_horizon, "makespan")
 
 # 5.7. Product to Machine Assignment Variables
 product_machine_assignment = {}
-for p in products_per_order:
+for p in product_instances:
     for m in MACHINES:
         product_machine_assignment[(p, m)] = model.NewBoolVar(f"y_{p}_{m}")
 
@@ -333,8 +386,8 @@ for op in operation_instances:
     model.Add(completion_time[op] == start_times[op] + processing_time[op])
 
 # 6.4. Precedence Constraints
-for product in products_per_order:
-    ops = operations_per_order[product]
+for product in product_instances:
+    ops = operations_product[product]
     for i in range(len(ops) - 1):
         op_prev = ops[i]
         op_next = ops[i + 1]
@@ -349,20 +402,20 @@ for product in products_per_order:
             model.Add(start_times[op_next] >= completion_time[op_prev])
 
 # 6.5. Completion and Start Time for Products
-for product in products_per_order:
-    last_op = operations_per_order[product][-1]
+for product in product_instances:
+    last_op = operations_product[product][-1]
     model.Add(completion_time_product[product] == completion_time[last_op])
-    first_op = operations_per_order[product][0]
+    first_op = operations_product[product][0]
     model.Add(start_time_product[product] == start_times[first_op])
 
 # 6.6. Product Sequencing Constraints on Machines
 # Each product assigned to exactly one machine
-for p in products_per_order:
+for p in product_instances:
     model.Add(sum([product_machine_assignment[(p, m)] for m in MACHINES]) == 1)
 
 # Link operation machine assignment with product machine assignment
-for p in products_per_order:
-    ops_p = operations_per_order[p]
+for p in product_instances:
+    ops_p = operations_product[p]
     for op in ops_p:
         op_type = op_instance_to_type[op]
         for m in operation_specifications[op_type]['machines']:
@@ -371,7 +424,7 @@ for p in products_per_order:
 
 # Before starting a new product, the previous product scheduled on the same machine must be completed
 for m in MACHINES:
-    for p1, p2 in combinations(products_per_order.keys(), 2):
+    for p1, p2 in combinations(product_instances.keys(), 2):
         or_var = model.NewBoolVar(f"precedence_product_{p1}_{p2}_{m}")
         model.Add(completion_time_product[p1] <= start_time_product[p2]).OnlyEnforceIf(product_machine_assignment[(p1, m)]).OnlyEnforceIf(product_machine_assignment[(p2, m)]).OnlyEnforceIf(or_var)
         model.Add(completion_time_product[p2] <= start_time_product[p1]).OnlyEnforceIf(product_machine_assignment[(p1, m)]).OnlyEnforceIf(product_machine_assignment[(p2, m)]).OnlyEnforceIf(or_var.Not())
@@ -379,9 +432,10 @@ for m in MACHINES:
 # 6.7. Completion Time for Orders
 for order_id, order_info in ORDERS.items():
     products_order = []
-    for product_id, product in enumerate(order_info['products']):
-        product_key = f"{product}#{product_id}_{order_id}"
-        products_order.append(completion_time_product[product_key])
+    for product in order_info['products'].keys():
+        for product_key in order_product_keys[order_id][product]:
+            products_order.append(completion_time_product[product_key])
+        
     model.AddMaxEquality(completion_time_order[order_id], products_order)
     # The order should be completed before the due date
     model.Add(completion_time_order[order_id] <= order_info['due_date'])
@@ -449,9 +503,9 @@ model.Add(total_sum == sum([completion_time_order[order_id] * (PRIORITY_LEVELS-O
 order_priority_weight = 1 / sum([PRIORITY_LEVELS-ORDERS[order_id]['priority'] for order_id in ORDERS]) / 2
 
 # product tightness variable
-num_products = len(products_per_order)
+num_products = len(product_instances)
 product_tightness = model.NewIntVar(0, scheduling_horizon*num_products, "product_tightness")
-model.Add(product_tightness == sum([completion_time_product[p] for p in products_per_order]))
+model.Add(product_tightness == sum([completion_time_product[p] for p in product_instances]))
 weight_product_tightness = 0.1 / num_products 
 
 # Objective:
@@ -482,54 +536,55 @@ if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
     for order_id, order_info in ORDERS.items():
         print(f"\nOrder: {order_id}")
         print(f"Due Date: {order_info['due_date']} hours")
-        for product_id, product in enumerate(order_info['products']):
-            product_key = f"{product}#{product_id}_{order_id}"
-            print(f"  Product: {product_key}")
-            ops = operations_per_order[product_key]
-            for op in ops:
-                # Find the machine and speed assignment
-                assigned_m = None
-                assigned_s = None
-                for m in operation_specifications[op_instance_to_type[op]]['machines']:
-                    for s in speed_levels:
-                        if solver.Value(operation_machine_speed_assignment[(op, m, s)]) == 1:
-                            assigned_m = m
-                            assigned_s = s
+        for product in order_info['products'].keys():
+            for product_key in order_product_keys[order_id][product]:
+
+                print(f"  Product: {product_key}")
+                ops = operations_product[product_key]
+                for op in ops:
+                    # Find the machine and speed assignment
+                    assigned_m = None
+                    assigned_s = None
+                    for m in operation_specifications[op_instance_to_type[op]]['machines']:
+                        for s in speed_levels:
+                            if solver.Value(operation_machine_speed_assignment[(op, m, s)]) == 1:
+                                assigned_m = m
+                                assigned_s = s
+                                break
+                        if assigned_m is not None:
                             break
-                    if assigned_m is not None:
-                        break
-                # Get start time and day
-                st = solver.Value(start_times[op])
-                day = st // 24
-                s_op = st % 24
-                day_name = weekdays[(day + start_day) % 7]
-                # Get completion time
-                ct = solver.Value(completion_time[op])
-                # Determine shift
-                if operation_specifications[op_instance_to_type[op]]['requires_supervision']:
-                    op_shift = 'Day'
-                else:
-                    op_shift = 'Independent'
-                schedule.append({
-                    'Operation': op,
-                    'Product': product,
-                    'Order': order_id,
-                    'Machine': assigned_m,
-                    'Speed': assigned_s,
-                    'Start': st,
-                    'End': ct,
-                    'Day': day + 1,  # Days are 1-indexed for display
-                    'Shift': op_shift
-                })
-                print(f"    Operation: {op}")
-                print(f"      Assigned Machine: {assigned_m}")
-                print(f"      Speed Factor: {assigned_s}")
-                print(f"      Start Time: {st} hours (Day {day + 1} - {day_name} at {s_op} hours)")
-                print(f"      Completion Time: {ct} hours")
-                print(f"      Requires Supervision: {operation_specifications[op_instance_to_type[op]]['requires_supervision']}")
-            # Get product completion time
-            ct_product = solver.Value(completion_time_product[product_key])
-            print(f"  Completion Time for {product_key}: {ct_product} hours")
+                    # Get start time and day
+                    st = solver.Value(start_times[op])
+                    day = st // 24
+                    s_op = st % 24
+                    day_name = weekdays[(day + start_day) % 7]
+                    # Get completion time
+                    ct = solver.Value(completion_time[op])
+                    # Determine shift
+                    if operation_specifications[op_instance_to_type[op]]['requires_supervision']:
+                        op_shift = 'Day'
+                    else:
+                        op_shift = 'Independent'
+                    schedule.append({
+                        'Operation': op,
+                        'Product': product,
+                        'Order': order_id,
+                        'Machine': assigned_m,
+                        'Speed': assigned_s,
+                        'Start': st,
+                        'End': ct,
+                        'Day': day + 1,  # Days are 1-indexed for display
+                        'Shift': op_shift
+                    })
+                    print(f"    Operation: {op}")
+                    print(f"      Assigned Machine: {assigned_m}")
+                    print(f"      Speed Factor: {assigned_s}")
+                    print(f"      Start Time: {st} hours (Day {day + 1} - {day_name} at {s_op} hours)")
+                    print(f"      Completion Time: {ct} hours")
+                    print(f"      Requires Supervision: {operation_specifications[op_instance_to_type[op]]['requires_supervision']}")
+                # Get product completion time
+                ct_product = solver.Value(completion_time_product[product_key])
+                print(f"  Completion Time for {product_key}: {ct_product} hours")
         # Get order completion time
         for order_id_inner in ORDERS:
             if order_id_inner == order_id:
