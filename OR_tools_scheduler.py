@@ -19,7 +19,7 @@ PRIORITY_LEVELS = 3  # Number of priority levels
 # Define Orders
 ORDERS = {
     'Order1': {
-        'due_date': 300,  # in hours
+        'due_date': 500,  # in hours
         'products': {
             'ProductA': 200,
             'ProductB': 250
@@ -27,14 +27,14 @@ ORDERS = {
         'priority': 0
     },
     'Order2': {
-        'due_date': 300,  # in hours
+        'due_date': 500,  # in hours
         'products': {
             'ProductC': 450
         },
         'priority': 2
     },
     'Order3': {
-        'due_date': 300,  # in hours
+        'due_date': 500,  # in hours
         'products': {
             'ProductA': 200,
             'ProductB': 250,
@@ -83,6 +83,7 @@ OPERATION_SPECIFICATIONS = {
 SPEED_LEVELS = [0.95, 1.0, 1.05]
 
 WORKING_HOURS = (8, 16)  # Start and end times for the day shift
+START_HOUR = 0  # Hour to start scheduling (probably unnecessary, since scheduling changes are done for the next day)
 START_DAY = 0  # Day of the week to start scheduling (0 = Monday)
 FESTIVE_DAYS = []  # Saturday and Sunday are already non-working days, add more if needed
 
@@ -98,7 +99,7 @@ ALREADY_EXECUTING = [
         'Operation': 1,
         'Machine': 'M1',
         'Speed': 1.0,
-        'Completion': 5,
+        'Completion': 15,
         'DueDate': 500
     }
 ]
@@ -118,10 +119,13 @@ for i in range(scheduling_horizon_in_days):
         FESTIVE_DAYS.append(i)
 
 # Precompute shift start and end times for each day
-working_shifts = []
+working_shifts = [0]
 for d in range(scheduling_horizon_in_days):
     if d not in FESTIVE_DAYS:
-        working_shifts.extend([d * 24 + h for h in range(WORKING_HOURS[0], WORKING_HOURS[1])])
+        if d == 0:
+            working_shifts.extend([h for h in range(max(START_HOUR,WORKING_HOURS[0]), WORKING_HOURS[1])])
+        else:
+            working_shifts.extend([d * 24 + h for h in range(WORKING_HOURS[0], WORKING_HOURS[1])])
 
 # Create unique products and operations per order
 product_instances = {} # Dictionary to hold all products of all orders
@@ -421,8 +425,8 @@ for op in operation_instances:
     model.Add(completion_time[op] == start_times[op] + processing_time[op])
 
 # 5.5. Start Time for already executing operations
-# for idx, op_id in enumerate(started_operations):
-#     model.Add(start_times[op_id] == ALREADY_EXECUTING[idx]['Start'])
+for idx, op_id in enumerate(started_operations):
+    model.Add(start_times[op_id] == 0)
 
 # 5.6. Precedence Constraints
 for product in product_instances:
