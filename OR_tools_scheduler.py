@@ -48,24 +48,24 @@ ORDERS = {
 PRODUCTS = {
     'ProductA': {
         'Kg_prod_per_levata': 100,
-        'cycle': [
-            {'operations': ['PrepareMachine', 'Op1']}, #this is a "levata"
-            {'operations': ['RechargeMachine', 'Op1']},
+        'levate': [
+            ['PrepareMachine', 'Op1'], #this is a "levata"
+            ['RechargeMachine', 'Op1'],
         ]
     },
     'ProductB': {
         'Kg_prod_per_levata': 250,
-        'cycle': [
-            {'operations': ['PrepareMachine', 'Op2']},
-            {'operations': ['RechargeMachine', 'Op2']},
+        'levate': [
+            ['PrepareMachine', 'Op2'],
+            ['RechargeMachine', 'Op2'],
         ]
     },
     'ProductC': {
         'Kg_prod_per_levata': 150,
-        'cycle': [
-            {'operations': ['PrepareMachine', 'Op3']},
-            {'operations': ['RechargeMachine', 'Op3']},
-            {'operations': ['RechargeMachine', 'Op3']},
+        'levate': [
+            ['PrepareMachine', 'Op3'],
+            ['RechargeMachine', 'Op3'],
+            ['RechargeMachine', 'Op3'],
         ]
     }
 }
@@ -136,10 +136,10 @@ operation_time_shift = {}  # Dictionary to hold operation start times for each s
 for order_id, order_info in ORDERS.items():
     order_product_keys[order_id] = {}
     for product, requested_quantity in order_info['products'].items():
-        full_cycles = requested_quantity // (PRODUCTS[product]['Kg_prod_per_levata'] * len(PRODUCTS[product]['cycle']))
-        remaining_quantity = requested_quantity % (PRODUCTS[product]['Kg_prod_per_levata'] * len(PRODUCTS[product]['cycle']))
+        full_cycles = requested_quantity // (PRODUCTS[product]['Kg_prod_per_levata'] * len(PRODUCTS[product]['levate']))
+        remaining_quantity = requested_quantity % (PRODUCTS[product]['Kg_prod_per_levata'] * len(PRODUCTS[product]['levate']))
         num_partial_cycle_levate = 0
-        if remaining_quantity > 0.8 * (PRODUCTS[product]['Kg_prod_per_levata'] * len(PRODUCTS[product]['cycle'])):
+        if remaining_quantity > 0.8 * (PRODUCTS[product]['Kg_prod_per_levata'] * len(PRODUCTS[product]['levate'])):
             full_cycles += 1
         elif remaining_quantity > 0:
             num_partial_cycle_levate = math.ceil(remaining_quantity / PRODUCTS[product]['Kg_prod_per_levata'])
@@ -151,7 +151,7 @@ for order_id, order_info in ORDERS.items():
             product_key = f"{product}#{cycle_num}_{order_id}"
             order_product_keys[order_id][product].append(product_key)
 
-            product_levate = copy.deepcopy(PRODUCTS[product]['cycle'])
+            product_levate = copy.deepcopy(PRODUCTS[product]['levate'])
             operations_product[product_key] = []
 
             # Adjust operation names to be unique per product per order
@@ -159,7 +159,7 @@ for order_id, order_info in ORDERS.items():
             for levata_idx, levata_product in enumerate(product_levate):
                 new_operations = []
 
-                for op_idx, op in enumerate(levata_product['operations']):
+                for op_idx, op in enumerate(levata_product):
                     op_instance = f"{op}_{product_key}_Cycle{levata_idx + 1}_Op{op_idx + 1}"
                     new_operations.append(op_instance)
                     operations_product[product_key].append(op_instance)
@@ -170,19 +170,19 @@ for order_id, order_info in ORDERS.items():
                     # Update time based on operation duration
                     time += min([OPERATION_SPECIFICATIONS[op]['base_time'][m] / SPEED_LEVELS[0] for m in OPERATION_SPECIFICATIONS[op]['machines']])
 
-                product_levate[levata_idx]['operations'] = new_operations
+                product_levate[levata_idx] = new_operations
 
-            product_instances[product_key] = {'levate': product_levate}
+            product_instances[product_key] = product_levate
 
         if num_partial_cycle_levate > 0:
             product_key = f"{product}#{full_cycles}_partial#{num_partial_cycle_levate}_{order_id}"
             order_product_keys[order_id][product].append(product_key)
-            product_levate = copy.deepcopy(PRODUCTS[product]['cycle'])[0:num_partial_cycle_levate]
+            product_levate = copy.deepcopy(PRODUCTS[product]['levate'])[0:num_partial_cycle_levate]
             operations_product[product_key] = []
 
             for levate in range(num_partial_cycle_levate):
                 new_operations = []
-                for op_idx, op in enumerate(product_levate[levate]['operations']):
+                for op_idx, op in enumerate(product_levate[levate]):
                     op_instance = f"{op}_{product_key}_Cycle{levate + 1}_Op{op_idx + 1}"
                     new_operations.append(op_instance)
                     operations_product[product_key].append(op_instance)
@@ -191,8 +191,8 @@ for order_id, order_info in ORDERS.items():
                     operation_max_time[op_instance] = order_info['due_date']
                     # Update time based on operation duration
                     time += min([OPERATION_SPECIFICATIONS[op]['base_time'][m] / SPEED_LEVELS[0] for m in OPERATION_SPECIFICATIONS[op]['machines']])
-                product_levate[levate]['operations'] = new_operations
-            product_instances[product_key] = {'levate': product_levate}
+                product_levate[levate] = new_operations
+            product_instances[product_key] = product_levate
 
 # Create operations that are already executing
 started_operations = []
@@ -210,12 +210,12 @@ for idx, op_info in enumerate(ALREADY_EXECUTING):
     product_key = f"{product}#Started{idx}_{order_id}"
 
     order_product_keys[order_id] = {product: [product_key]}
-    product_instances[product_key] = {'levate': []}
+    product_instances[product_key] = []
     operations_product[product_key] = []
     
     # Set current operation to the last operation of the current levata
     levata_operations = []
-    op_type = PRODUCTS[product]['cycle'][current_levata]['operations'][operation]
+    op_type = PRODUCTS[product]['levate'][current_levata][operation]
     operation_key = f"{op_type}_{product_key}_Cycle{current_levata}_Op{0}"
     started_operations.append(operation_key)
     operation_instances.append(operation_key)
@@ -225,7 +225,7 @@ for idx, op_info in enumerate(ALREADY_EXECUTING):
     levata_operations.append(operation_key)
 
     # Add the remaining operations of the current levata
-    current_levata_op = PRODUCTS[product]['cycle'][current_levata]['operations'][(operation+1):]
+    current_levata_op = PRODUCTS[product]['levate'][current_levata][(operation+1):]
     for idx_op, op in enumerate(current_levata_op):
         operation_key = f"{op}_{product_key}_Cycle{current_levata}_Op{idx_op+1}"
         operation_instances.append(operation_key)
@@ -234,26 +234,26 @@ for idx, op_info in enumerate(ALREADY_EXECUTING):
         operations_product[product_key].append(operation_key)
         levata_operations.append(operation_key)
 
-    product_instances[product_key]['levate'].append({'operations': levata_operations})
+    product_instances[product_key].append(levata_operations)
 
     # Add the remaining levate of the product
-    for levata_idx, levata_product in enumerate(PRODUCTS[product]['cycle'][(current_levata+1):(end_levata+1)]):
+    for levata_idx, levata_product in enumerate(PRODUCTS[product]['levate'][(current_levata+1):(end_levata+1)]):
         new_operations = []
-        for op_idx, op in enumerate(levata_product['operations']):
+        for op_idx, op in enumerate(levata_product):
             op_instance = f"{op}_{product_key}_Cycle{levata_idx + 1}_Op{op_idx + 1}"
             new_operations.append(op_instance)
             operations_product[product_key].append(op_instance)
             operation_instances.append(op_instance)
             operation_time_shift[op_instance] = 0
             operation_max_time[op_instance] = op_info['DueDate']
-        product_instances[product_key]['levate'].append({'operations': new_operations})
+        product_instances[product_key].append(new_operations)
 
 
 # Mapping Operations to Their Operation Type
 op_instance_to_type = {}
 for product_key, product_info in product_instances.items():
-    for levata_product in product_info['levate']:
-        for op_instance in levata_product['operations']:
+    for levata_product in product_info:
+        for op_instance in levata_product:
             # Extract the base operation name (e.g., Op1 from Op1_ProductA_Order1)
             base_op = op_instance.split('_')[0]
             op_instance_to_type[op_instance] = base_op
