@@ -20,14 +20,16 @@ PRIORITY_LEVELS = 3  # Number of priority levels
 ORDERS = {
     'Order1': {
         'due_date': 500,  # in hours
+        'start_date': 100,
         'products': {
-            'ProductA': 200,
+            'ProductA': 200, # in kg
             'ProductB': 250
         },
         'priority': 0
     },
     'Order2': {
         'due_date': 500,  # in hours
+        'start_date': 0,
         'products': {
             'ProductC': 450
         },
@@ -35,6 +37,7 @@ ORDERS = {
     },
     'Order3': {
         'due_date': 500,  # in hours
+        'start_date': 0,
         'products': {
             'ProductA': 200,
             'ProductB': 250,
@@ -50,14 +53,14 @@ PRODUCTS = {
         'Kg_prod_per_levata': 100,
         'levate': [
             ['PrepareMachine', 'Op1'], #this is a "levata"
-            ['RechargeMachine', 'Op1'],
+            ['RechargeMachine', 'Op1','UnloadMachine'],
         ]
     },
     'ProductB': {
         'Kg_prod_per_levata': 250,
         'levate': [
             ['PrepareMachine', 'Op2'],
-            ['RechargeMachine', 'Op2'],
+            ['RechargeMachine', 'Op2', 'UnloadMachine'],
         ]
     },
     'ProductC': {
@@ -65,7 +68,7 @@ PRODUCTS = {
         'levate': [
             ['PrepareMachine', 'Op3'],
             ['RechargeMachine', 'Op3'],
-            ['RechargeMachine', 'Op3'],
+            ['RechargeMachine', 'Op3', 'UnloadMachine'],
         ]
     }
 }
@@ -74,6 +77,7 @@ PRODUCTS = {
 OPERATION_SPECIFICATIONS = {
     'PrepareMachine': {'machines': ['M1', 'M2', 'M3'], 'base_time': {'M1': 5, 'M2': 3, 'M3': 5}, 'requires_supervision': True},
     'RechargeMachine': {'machines': ['M1', 'M2', 'M3'], 'base_time': {'M1': 4, 'M2': 2, 'M3': 3}, 'requires_supervision': True},
+    'UnloadMachine': {'machines': ['M1', 'M2', 'M3'], 'base_time': {'M1': 5, 'M2': 3, 'M3': 5}, 'requires_supervision': True},
     'Op1': {'machines': ['M1', 'M3'], 'base_time': {'M1': 35, 'M3': 35}, 'requires_supervision': False},
     'Op2': {'machines': ['M2'], 'base_time': {'M2': 35}, 'requires_supervision': False},
     'Op3': {'machines': ['M1', 'M2'], 'base_time': {'M1': 35, 'M2': 35}, 'requires_supervision': False},
@@ -94,8 +98,8 @@ OPERATORS_PER_GROUP = 1  # Number of operators in each group
 ALREADY_EXECUTING = [
     {
         'Product': 'ProductA',
-        'EndLevata': 1,
         'CurrentLevata': 0,
+        'Remaining': 1, # Excluding the current levata
         'Operation': 1,
         'Machine': 'M1',
         'Speed': 1.0,
@@ -168,7 +172,7 @@ for order_id, order_info in ORDERS.items():
                     new_operations.append(op_instance)
                     operations_product[product_key].append(op_instance)
                     operation_instances.append(op_instance)
-                    operation_time_shift[op_instance] = time
+                    operation_time_shift[op_instance] = time + order_info['start_date']
                     operation_max_time[op_instance] = order_info['due_date']
                     prev = op_instance
                     # Update time based on operation duration
@@ -181,17 +185,20 @@ for order_id, order_info in ORDERS.items():
         if num_partial_cycle_levate > 0:
             product_key = f"{product}#{full_cycles}_partial#{num_partial_cycle_levate}_{order_id}"
             order_product_keys[order_id][product].append(product_key)
-            product_levate = copy.deepcopy(PRODUCTS[product]['levate'])[0:num_partial_cycle_levate]
+            product_levate = copy.deepcopy(PRODUCTS[product]['levate'])
             operations_product[product_key] = []
 
-            for levate in range(num_partial_cycle_levate):
+            # The last operation of the partial cycle is the last operation of the last full cycle of the product for the unload operation
+            levate_product = [l for l in range(max(0, num_partial_cycle_levate-1))] + [len(PRODUCTS[product]['levate'])-1]
+
+            for levate in levate_product:
                 new_operations = []
                 for op_idx, op in enumerate(product_levate[levate]):
                     op_instance = f"{op}_{product_key}_Cycle{levate + 1}_Op{op_idx + 1}"
                     new_operations.append(op_instance)
                     operations_product[product_key].append(op_instance)
                     operation_instances.append(op_instance)
-                    operation_time_shift[op_instance] = time
+                    operation_time_shift[op_instance] = time + order_info['start_date']
                     operation_max_time[op_instance] = order_info['due_date']
                     # Update time based on operation duration
                     time += min([OPERATION_SPECIFICATIONS[op]['base_time'][m] / SPEED_LEVELS[0] for m in OPERATION_SPECIFICATIONS[op]['machines']])
@@ -203,7 +210,7 @@ started_operations = []
 for idx, op_info in enumerate(ALREADY_EXECUTING):
     product = op_info['Product']
     current_levata = op_info['CurrentLevata']
-    end_levata = op_info['EndLevata']
+    remaining_num_levate = op_info['Remaining']
     operation = op_info['Operation']
 
     order_id = f"OrderStarted{idx+1}"
@@ -240,8 +247,13 @@ for idx, op_info in enumerate(ALREADY_EXECUTING):
 
     product_instances[product_key].append(levata_operations)
 
+
+    
+    remaining_levate = PRODUCTS[product]['levate'][(current_levata+1):(current_levata+1+remaining_num_levate+1)]
+    if current_levata < len(PRODUCTS[product]['levate'])-1 and remaining_num_levate > 0:
+        remaining_levate[-1] = PRODUCTS[product]['levate'][-1]
     # Add the remaining levate of the product
-    for levata_idx, levata_product in enumerate(PRODUCTS[product]['levate'][(current_levata+1):(end_levata+1)]):
+    for levata_idx, levata_product in enumerate(remaining_levate):
         new_operations = []
         for op_idx, op in enumerate(levata_product):
             op_instance = f"{op}_{product_key}_Cycle{levata_idx + 1}_Op{op_idx + 1}"
@@ -550,7 +562,7 @@ order_priority_weight = 0.5 / sum([PRIORITY_LEVELS-ORDERS[order_id]['priority'] 
 num_products = len(product_instances)
 product_tightness = model.NewIntVar(0, scheduling_horizon*num_products, "product_tightness")
 model.Add(product_tightness == sum([completion_time_product[p] for p in product_instances]))
-weight_product_tightness = 0.1 / num_products 
+weight_product_tightness = 0.2 / num_products 
 
 # Objective:
 model.Minimize(makespan + order_priority_weight * total_sum + speed_weight * speed_up_penalty + weight_product_tightness * product_tightness)
