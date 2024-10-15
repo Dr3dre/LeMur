@@ -1,0 +1,206 @@
+{
+    "Divisione per articoli prodotti": {
+        "Gruppo1": {
+            "Gruppo1a": {
+                "Numero Fusi": "448",
+                "Singola": {
+                    "Descrizione": "1 motore con rinvio",
+                    "Macchine": []
+                },
+                "Doppia": {
+                    "Descrizione": "1 motore con rinvio",
+                    "Macchine": [
+                        2,
+                        3,
+                        4,
+                        5,
+                        7,
+                        8,
+                        9,
+                        10,
+                        11,
+                        12,
+                        61,
+                        62,
+                        63,
+                        64,
+                        65,
+                        66,
+                        47,
+                        48
+                    ]
+                }
+            },
+            "Gruppo1b": {
+                "Numero Fusi": "392",
+                "Singola": {
+                    "Descrizione": "1 motore con rinvio",
+                    "Macchine": []
+                },
+                "Doppia": {
+                    "Descrizione": "1 motore con rinvio",
+                    "Macchine": [
+                        1
+                    ]
+                }
+            }
+        },
+        "Gruppo2": {
+            "Numero Fusi": "256",
+            "Singola": {
+                "Descrizione": "trasformabile in doppia copertura, 2 motori",
+                "Macchine": []
+            },
+            "Doppia": {
+                "Descrizione": "trasformabile in singola copertura, 2 motori",
+                "Macchine": [
+                    6
+                ]
+            }
+        },
+        "Gruppo3": {
+            "Gruppo3a": {
+                "Numero Fusi": "256",
+                "Singola": {
+                    "Descrizione": "trasformabili in doppia copertura, 1 motore con rinvio",
+                    "Macchine": [
+                        13,
+                        14,
+                        15,
+                        16,
+                        17,
+                        18,
+                        19,
+                        20,
+                        21,
+                        24,
+                        25,
+                        26,
+                        27,
+                        28,
+                        33,
+                        34,
+                        35
+                    ]
+                },
+                "Doppia": {
+                    "Descrizione": "trasformabili in singola copertura, 1 motore con rinvio",
+                    "Macchine": [
+                        22,
+                        23,
+                        36
+                    ]
+                }
+            },
+            "Gruppo3b": {
+                "Numero Fusi": "256",
+                "Singola": {
+                    "Descrizione": "trasformabili in doppia copertura, 1 motore con rinvio, 3 rulli di alimentazione",
+                    "Macchine": [
+                        29,
+                        30,
+                        31,
+                        32
+                    ]
+                },
+                "Doppia": {
+                    "Descrizione": "trasformabili in singola copertura, 1 motore con rinvio, 3 rulli di alimentazione",
+                    "Macchine": []
+                }
+            }
+        },
+        "Gruppo4": {
+            "Gruppo4a": {
+                "Numero Fusi": "256",
+                "Singola": {
+                    "Descrizione": "raccolta larga, 2 motori e un inverter",
+                    "Macchine": []
+                },
+                "Doppia": {
+                    "Descrizione": "raccolta larga, 2 motori e un inverter",
+                    "Macchine": [
+                        37,
+                        38,
+                        40,
+                        41,
+                        42
+                    ]
+                }
+            },
+            "Gruppo4b": {
+                "Numero Fusi": "256",
+                "Singola": {
+                    "Descrizione": "raccolta larga per bobine maggiorate, 2 motori e un inverter",
+                    "Macchine": []
+                },
+                "Doppia": {
+                    "Descrizione": "raccolta larga per bobine maggiorate, 2 motori e un inverter",
+                    "Macchine": [
+                        39
+                    ]
+                }
+            }
+        },
+        "Gruppo5": {
+            "Gruppo5a": {
+                "Numero Fusi": "256 o 264",
+                "Singola": {
+                    "Descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
+                    "Macchine": [
+                        44,
+                        45,
+                        46,
+                        51,
+                        52,
+                        53,
+                        54,
+                        55,
+                        56,
+                        57,
+                        58,
+                        59,
+                        60,
+                        70,
+                        71,
+                        72
+                    ]
+                },
+                "Doppia": {
+                    "Descrizione": "trasformabili in singola copertura, 2 motori con inverter",
+                    "Macchine": [
+                        67,
+                        68,
+                        69
+                    ]
+                }
+            },
+            "Gruppo5b": {
+                "Numero Fusi": "256",
+                "Singola": {
+                    "Descrizione": "trasformabili in doppia copertura, 2 motori con inverter, 3 rulli di alimentazione",
+                    "Macchine": [
+                        43
+                    ]
+                },
+                "Doppia": {
+                    "Descrizione": "trasformabili in singola copertura, 2 motori con inverter, 3 rulli di alimentazione",
+                    "Macchine": []
+                }
+            }
+        },
+        "Gruppo6": {
+            "Numero Fusi": "160",
+            "Singola": {
+                "Descrizione": "2 motori",
+                "Macchine": []
+            },
+            "Doppia": {
+                "Descrizione": "2 motori",
+                "Macchine": [
+                    49,
+                    50
+                ]
+            }
+        }
+    }
+}
