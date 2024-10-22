@@ -20,21 +20,21 @@ COMPLETE / PARTIAL CYCLES
 	- **description** : cycle $\texttt{c}$ of $\texttt{p}$ is a complete cycle
 
 NUMBER OF LEVATE
-- \(\texttt{NUM_LEVATE[p,c]}\)
+- $\texttt{NUM\_LEVATE[p,c]}$
 	-  **type** : Integer
 	- **domain** : $\texttt{[1, max\_levate(p)]}$
 	- **description** : number of levate 
 
 TIME BEGINNINGS
-- $\texttt{SETUP_BEG[p,c]}$
+- $\texttt{SETUP\_BEG[p,c]}$
 	- **type** : Integer
 	- **domain** : $x \in \texttt{work-time\_domain}$
 	- **description** : <u>beginning</u> of machine machine START operation
-- $\texttt{LOAD_BEG[p,c,l]}$
+- $\texttt{LOAD\_BEG[p,c,l]}$
 	- **type** : Integer
 	- **domain** : $x \in \texttt{work-time\_domain}$
 	- **description** : <u>beginning</u> of machine machine LOAD operation
-- $\texttt{UNLOAD_BEG[p,c,l]}$
+- $\texttt{UNLOAD\_BEG[p,c,l]}$
 	- **type** : Integer
 	- **domain** : $x \in \texttt{work-time\_domain}$
 	- **description** : <u>beginning</u> of machine machine UN-LOAD operation
@@ -50,33 +50,33 @@ Other Variables ( no search needed, easily calculated )
 ---
 
 COSTS RELATED
-- $\texttt{SETUP_COST[p,c]}$
+- $\texttt{SETUP\_COST[p,c]}$
 	- **type** : Integer
 	- **domain** : $[0, horizon]$
 	- **description** : <u>cost</u> of machine machine START operation
-- $\texttt{LOAD_COST[p,c,l]}$
+- $\texttt{LOAD\_COST[p,c,l]}$
 	- **type** : Integer
 	- **domain** : $[0, horizon]$
 	- **description** : <u>cost</u> of machine machine LOAD operation
-- $\texttt{UNLOAD_COST[p,c,l]}$
+- $\texttt{UNLOAD\_COST[p,c,l]}$
 	- **type** : Integer
 	- **domain** : $[0, horizon]$
 	- **description** : <u>cost</u> of machine machine UN-LOAD operation 
-- $\texttt{LEVATA_COST[p,c]}$
+- $\texttt{LEVATA\_COST[p,c]}$
 	- **type** : Integer
 	- **domain** : $[0, horizon]$
 	- **description** : <u>cost</u> of machine machine LEVATA operation 
 
 END OF PROCEDURES
-- $\texttt{SETUP_END[p,c]}$
+- $\texttt{SETUP\_END[p,c]}$
 	- **type** : Integer
 	- **domain** : $x \in \texttt{work-time\_beginning\_domain}$
 	- **description** : <u>end</u> of machine machine START operation
-- $\texttt{LOAD_END[p,c,l]}$
+- $\texttt{LOAD\_END[p,c,l]}$
 	- **type** : Integer
 	- **domain** : $x \in \texttt{work-time\_beginning\_domain}$
 	- **description** : <u>end</u> of machine machine LOAD operation
-- $\texttt{UNLOAD_END[p,c,l]}$
+- $\texttt{UNLOAD\_END[p,c,l]}$
 	- **type** : Integer
 	- **domain** : $x \in \texttt{work-time\_beginning\_domain}$
 	- **description** : <u>end</u> of machine machine UN-LOAD operation
