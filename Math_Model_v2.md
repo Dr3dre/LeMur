@@ -20,7 +20,7 @@ COMPLETE / PARTIAL CYCLES
 	- **description** : cycle $\texttt{c}$ of $\texttt{p}$ is a complete cycle
 
 NUMBER OF LEVATE
-- $\texttt{NUM_LEVATE[p,c]}$
+- \(\texttt{NUM_LEVATE[p,c]}\)
 	-  **type** : Integer
 	- **domain** : $\texttt{[1, max\_levate(p)]}$
 	- **description** : number of levate 
