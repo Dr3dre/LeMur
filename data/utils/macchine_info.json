@@ -1,506 +1,765 @@
-[
-    {
-        "N_mc":1,
-        "classe":"Gruppo1b",
-        "n_fusi":"392",
-        "mode":"Doppia",
-        "descrizione":"1 motore con rinvio"
-    },
-    {
-        "N_mc":2,
-        "classe":"Gruppo1a",
-        "n_fusi":"448",
-        "mode":"Doppia",
-        "descrizione":"1 motore con rinvio"
-    },
-    {
-        "N_mc":3,
-        "classe":"Gruppo1a",
-        "n_fusi":"448",
-        "mode":"Doppia",
-        "descrizione":"1 motore con rinvio"
-    },
-    {
-        "N_mc":4,
-        "classe":"Gruppo1a",
-        "n_fusi":"448",
-        "mode":"Doppia",
-        "descrizione":"1 motore con rinvio"
-    },
-    {
-        "N_mc":5,
-        "classe":"Gruppo1a",
-        "n_fusi":"448",
-        "mode":"Doppia",
-        "descrizione":"1 motore con rinvio"
-    },
-    {
-        "N_mc":6,
-        "classe":"Gruppo2",
-        "n_fusi":"256",
-        "mode":"Doppia",
-        "descrizione":"trasformabile in singola copertura, 2 motori"
-    },
-    {
-        "N_mc":7,
-        "classe":"Gruppo1a",
-        "n_fusi":"448",
-        "mode":"Doppia",
-        "descrizione":"1 motore con rinvio"
-    },
-    {
-        "N_mc":8,
-        "classe":"Gruppo1a",
-        "n_fusi":"448",
-        "mode":"Doppia",
-        "descrizione":"1 motore con rinvio"
-    },
-    {
-        "N_mc":9,
-        "classe":"Gruppo1a",
-        "n_fusi":"448",
-        "mode":"Doppia",
-        "descrizione":"1 motore con rinvio"
-    },
-    {
-        "N_mc":10,
-        "classe":"Gruppo1a",
-        "n_fusi":"448",
-        "mode":"Doppia",
-        "descrizione":"1 motore con rinvio"
-    },
-    {
-        "N_mc":11,
-        "classe":"Gruppo1a",
-        "n_fusi":"448",
-        "mode":"Doppia",
-        "descrizione":"1 motore con rinvio"
-    },
-    {
-        "N_mc":12,
-        "classe":"Gruppo1a",
-        "n_fusi":"448",
-        "mode":"Doppia",
-        "descrizione":"1 motore con rinvio"
-    },
-    {
-        "N_mc":13,
-        "classe":"Gruppo3a",
-        "n_fusi":"256",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 1 motore con rinvio"
-    },
-    {
-        "N_mc":14,
-        "classe":"Gruppo3a",
-        "n_fusi":"256",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 1 motore con rinvio"
-    },
-    {
-        "N_mc":15,
-        "classe":"Gruppo3a",
-        "n_fusi":"256",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 1 motore con rinvio"
-    },
-    {
-        "N_mc":16,
-        "classe":"Gruppo3a",
-        "n_fusi":"256",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 1 motore con rinvio"
-    },
-    {
-        "N_mc":17,
-        "classe":"Gruppo3a",
-        "n_fusi":"256",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 1 motore con rinvio"
-    },
-    {
-        "N_mc":18,
-        "classe":"Gruppo3a",
-        "n_fusi":"256",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 1 motore con rinvio"
-    },
-    {
-        "N_mc":19,
-        "classe":"Gruppo3a",
-        "n_fusi":"256",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 1 motore con rinvio"
-    },
-    {
-        "N_mc":20,
-        "classe":"Gruppo3a",
-        "n_fusi":"256",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 1 motore con rinvio"
-    },
-    {
-        "N_mc":21,
-        "classe":"Gruppo3a",
-        "n_fusi":"256",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 1 motore con rinvio"
-    },
-    {
-        "N_mc":22,
-        "classe":"Gruppo3a",
-        "n_fusi":"256",
-        "mode":"Doppia",
-        "descrizione":"trasformabili in singola copertura, 1 motore con rinvio"
-    },
-    {
-        "N_mc":23,
-        "classe":"Gruppo3a",
-        "n_fusi":"256",
-        "mode":"Doppia",
-        "descrizione":"trasformabili in singola copertura, 1 motore con rinvio"
-    },
-    {
-        "N_mc":24,
-        "classe":"Gruppo3a",
-        "n_fusi":"256",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 1 motore con rinvio"
-    },
-    {
-        "N_mc":25,
-        "classe":"Gruppo3a",
-        "n_fusi":"256",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 1 motore con rinvio"
-    },
-    {
-        "N_mc":26,
-        "classe":"Gruppo3a",
-        "n_fusi":"256",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 1 motore con rinvio"
-    },
-    {
-        "N_mc":27,
-        "classe":"Gruppo3a",
-        "n_fusi":"256",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 1 motore con rinvio"
-    },
-    {
-        "N_mc":28,
-        "classe":"Gruppo3a",
-        "n_fusi":"256",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 1 motore con rinvio"
-    },
-    {
-        "N_mc":29,
-        "classe":"Gruppo3b",
-        "n_fusi":"256",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 1 motore con rinvio, 3 rulli di alimentazione"
-    },
-    {
-        "N_mc":30,
-        "classe":"Gruppo3b",
-        "n_fusi":"256",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 1 motore con rinvio, 3 rulli di alimentazione"
-    },
-    {
-        "N_mc":31,
-        "classe":"Gruppo3b",
-        "n_fusi":"256",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 1 motore con rinvio, 3 rulli di alimentazione"
-    },
-    {
-        "N_mc":32,
-        "classe":"Gruppo3b",
-        "n_fusi":"256",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 1 motore con rinvio, 3 rulli di alimentazione"
-    },
-    {
-        "N_mc":33,
-        "classe":"Gruppo3a",
-        "n_fusi":"256",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 1 motore con rinvio"
-    },
-    {
-        "N_mc":34,
-        "classe":"Gruppo3a",
-        "n_fusi":"256",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 1 motore con rinvio"
-    },
-    {
-        "N_mc":35,
-        "classe":"Gruppo3a",
-        "n_fusi":"256",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 1 motore con rinvio"
-    },
-    {
-        "N_mc":36,
-        "classe":"Gruppo3a",
-        "n_fusi":"256",
-        "mode":"Doppia",
-        "descrizione":"trasformabili in singola copertura, 1 motore con rinvio"
-    },
-    {
-        "N_mc":37,
-        "classe":"Gruppo4a",
-        "n_fusi":"256",
-        "mode":"Doppia",
-        "descrizione":"raccolta larga, 2 motori e un inverter"
-    },
-    {
-        "N_mc":38,
-        "classe":"Gruppo4a",
-        "n_fusi":"256",
-        "mode":"Doppia",
-        "descrizione":"raccolta larga, 2 motori e un inverter"
-    },
-    {
-        "N_mc":39,
-        "classe":"Gruppo4b",
-        "n_fusi":"256",
-        "mode":"Doppia",
-        "descrizione":"raccolta larga per bobine maggiorate, 2 motori e un inverter"
-    },
-    {
-        "N_mc":40,
-        "classe":"Gruppo4a",
-        "n_fusi":"256",
-        "mode":"Doppia",
-        "descrizione":"raccolta larga, 2 motori e un inverter"
-    },
-    {
-        "N_mc":41,
-        "classe":"Gruppo4a",
-        "n_fusi":"256",
-        "mode":"Doppia",
-        "descrizione":"raccolta larga, 2 motori e un inverter"
-    },
-    {
-        "N_mc":42,
-        "classe":"Gruppo4a",
-        "n_fusi":"256",
-        "mode":"Doppia",
-        "descrizione":"raccolta larga, 2 motori e un inverter"
-    },
-    {
-        "N_mc":43,
-        "classe":"Gruppo5b",
-        "n_fusi":"256",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 2 motori con inverter, 3 rulli di alimentazione"
-    },
-    {
-        "N_mc":44,
-        "classe":"Gruppo5a",
-        "n_fusi":"256 o 264",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 2 motori con inverter"
-    },
-    {
-        "N_mc":45,
-        "classe":"Gruppo5a",
-        "n_fusi":"256 o 264",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 2 motori con inverter"
-    },
-    {
-        "N_mc":46,
-        "classe":"Gruppo5a",
-        "n_fusi":"256 o 264",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 2 motori con inverter"
-    },
-    {
-        "N_mc":47,
-        "classe":"Gruppo1a",
-        "n_fusi":"448",
-        "mode":"Doppia",
-        "descrizione":"1 motore con rinvio"
-    },
-    {
-        "N_mc":48,
-        "classe":"Gruppo1a",
-        "n_fusi":"448",
-        "mode":"Doppia",
-        "descrizione":"1 motore con rinvio"
-    },
-    {
-        "N_mc":49,
-        "classe":"Gruppo6",
-        "n_fusi":"160",
-        "mode":"Doppia",
-        "descrizione":"2 motori"
-    },
-    {
-        "N_mc":50,
-        "classe":"Gruppo6",
-        "n_fusi":"160",
-        "mode":"Doppia",
-        "descrizione":"2 motori"
-    },
-    {
-        "N_mc":51,
-        "classe":"Gruppo5a",
-        "n_fusi":"256 o 264",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 2 motori con inverter"
-    },
-    {
-        "N_mc":52,
-        "classe":"Gruppo5a",
-        "n_fusi":"256 o 264",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 2 motori con inverter"
-    },
-    {
-        "N_mc":53,
-        "classe":"Gruppo5a",
-        "n_fusi":"256 o 264",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 2 motori con inverter"
-    },
-    {
-        "N_mc":54,
-        "classe":"Gruppo5a",
-        "n_fusi":"256 o 264",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 2 motori con inverter"
-    },
-    {
-        "N_mc":55,
-        "classe":"Gruppo5a",
-        "n_fusi":"256 o 264",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 2 motori con inverter"
-    },
-    {
-        "N_mc":56,
-        "classe":"Gruppo5a",
-        "n_fusi":"256 o 264",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 2 motori con inverter"
-    },
-    {
-        "N_mc":57,
-        "classe":"Gruppo5a",
-        "n_fusi":"256 o 264",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 2 motori con inverter"
-    },
-    {
-        "N_mc":58,
-        "classe":"Gruppo5a",
-        "n_fusi":"256 o 264",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 2 motori con inverter"
-    },
-    {
-        "N_mc":59,
-        "classe":"Gruppo5a",
-        "n_fusi":"256 o 264",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 2 motori con inverter"
-    },
-    {
-        "N_mc":60,
-        "classe":"Gruppo5a",
-        "n_fusi":"256 o 264",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 2 motori con inverter"
-    },
-    {
-        "N_mc":61,
-        "classe":"Gruppo1a",
-        "n_fusi":"448",
-        "mode":"Doppia",
-        "descrizione":"1 motore con rinvio"
-    },
-    {
-        "N_mc":62,
-        "classe":"Gruppo1a",
-        "n_fusi":"448",
-        "mode":"Doppia",
-        "descrizione":"1 motore con rinvio"
-    },
-    {
-        "N_mc":63,
-        "classe":"Gruppo1a",
-        "n_fusi":"448",
-        "mode":"Doppia",
-        "descrizione":"1 motore con rinvio"
-    },
-    {
-        "N_mc":64,
-        "classe":"Gruppo1a",
-        "n_fusi":"448",
-        "mode":"Doppia",
-        "descrizione":"1 motore con rinvio"
-    },
-    {
-        "N_mc":65,
-        "classe":"Gruppo1a",
-        "n_fusi":"448",
-        "mode":"Doppia",
-        "descrizione":"1 motore con rinvio"
-    },
-    {
-        "N_mc":66,
-        "classe":"Gruppo1a",
-        "n_fusi":"448",
-        "mode":"Doppia",
-        "descrizione":"1 motore con rinvio"
-    },
-    {
-        "N_mc":67,
-        "classe":"Gruppo5a",
-        "n_fusi":"256 o 264",
-        "mode":"Doppia",
-        "descrizione":"trasformabili in singola copertura, 2 motori con inverter"
-    },
-    {
-        "N_mc":68,
-        "classe":"Gruppo5a",
-        "n_fusi":"256 o 264",
-        "mode":"Doppia",
-        "descrizione":"trasformabili in singola copertura, 2 motori con inverter"
-    },
-    {
-        "N_mc":69,
-        "classe":"Gruppo5a",
-        "n_fusi":"256 o 264",
-        "mode":"Doppia",
-        "descrizione":"trasformabili in singola copertura, 2 motori con inverter"
-    },
-    {
-        "N_mc":70,
-        "classe":"Gruppo5a",
-        "n_fusi":"256 o 264",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 2 motori con inverter"
-    },
-    {
-        "N_mc":71,
-        "classe":"Gruppo5a",
-        "n_fusi":"256 o 264",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 2 motori con inverter"
-    },
-    {
-        "N_mc":72,
-        "classe":"Gruppo5a",
-        "n_fusi":"256 o 264",
-        "mode":"Singola",
-        "descrizione":"trasformabili in doppia copertura, 2 motori con inverter"
+{
+    "1": {
+        "classe": "Gruppo1b",
+        "n_fusi": "392",
+        "mode": "Doppia",
+        "descrizione": "1 motore con rinvio",
+        "articoli": [
+            "2277DN mini"
+        ]
+    },
+    "2": {
+        "classe": "Gruppo1a",
+        "n_fusi": "448",
+        "mode": "Doppia",
+        "descrizione": "1 motore con rinvio",
+        "articoli": [
+            "2011DN mini"
+        ]
+    },
+    "3": {
+        "classe": "Gruppo1a",
+        "n_fusi": "448",
+        "mode": "Doppia",
+        "descrizione": "1 motore con rinvio",
+        "articoli": [
+            "2011DN mini"
+        ]
+    },
+    "4": {
+        "classe": "Gruppo1a",
+        "n_fusi": "448",
+        "mode": "Doppia",
+        "descrizione": "1 motore con rinvio",
+        "articoli": [
+            "2011DN mini"
+        ]
+    },
+    "5": {
+        "classe": "Gruppo1a",
+        "n_fusi": "448",
+        "mode": "Doppia",
+        "descrizione": "1 motore con rinvio",
+        "articoli": [
+            "2011DN mini",
+            "2271DN 20700 mini"
+        ]
+    },
+    "6": {
+        "classe": "Gruppo2",
+        "n_fusi": "256",
+        "mode": "Doppia",
+        "descrizione": "trasformabile in singola copertura, 2 motori",
+        "articoli": [
+            "749DN mini"
+        ]
+    },
+    "7": {
+        "classe": "Gruppo1a",
+        "n_fusi": "448",
+        "mode": "Doppia",
+        "descrizione": "1 motore con rinvio",
+        "articoli": [
+            "X22-1703DN minispole",
+            "2277DN mini"
+        ]
+    },
+    "8": {
+        "classe": "Gruppo1a",
+        "n_fusi": "448",
+        "mode": "Doppia",
+        "descrizione": "1 motore con rinvio",
+        "articoli": [
+            "2271DN 20700 mini"
+        ]
+    },
+    "9": {
+        "classe": "Gruppo1a",
+        "n_fusi": "448",
+        "mode": "Doppia",
+        "descrizione": "1 motore con rinvio",
+        "articoli": [
+            "2271DN 20700 mini"
+        ]
+    },
+    "10": {
+        "classe": "Gruppo1a",
+        "n_fusi": "448",
+        "mode": "Doppia",
+        "descrizione": "1 motore con rinvio",
+        "articoli": [
+            "2271DN 20700 mini"
+        ]
+    },
+    "11": {
+        "classe": "Gruppo1a",
+        "n_fusi": "448",
+        "mode": "Doppia",
+        "descrizione": "1 motore con rinvio",
+        "articoli": [
+            "2271DN 20700 mini"
+        ]
+    },
+    "12": {
+        "classe": "Gruppo1a",
+        "n_fusi": "448",
+        "mode": "Doppia",
+        "descrizione": "1 motore con rinvio",
+        "articoli": [
+            "2271DN 20700 mini",
+            "2271DN 20000 mini"
+        ]
+    },
+    "13": {
+        "classe": "Gruppo3a",
+        "n_fusi": "256",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 1 motore con rinvio",
+        "articoli": [
+            "X23-3399S+ZF"
+        ]
+    },
+    "14": {
+        "classe": "Gruppo3a",
+        "n_fusi": "256",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 1 motore con rinvio",
+        "articoli": [
+            "4428ZN/F",
+            "manilas+z",
+            "2270s+z rpm 19800"
+        ]
+    },
+    "15": {
+        "classe": "Gruppo3a",
+        "n_fusi": "256",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 1 motore con rinvio",
+        "articoli": [
+            "2270S+ZN 19800"
+        ]
+    },
+    "16": {
+        "classe": "Gruppo3a",
+        "n_fusi": "256",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 1 motore con rinvio",
+        "articoli": [
+            "2270S+ZN 19800",
+            "2270s+z"
+        ]
+    },
+    "17": {
+        "classe": "Gruppo3a",
+        "n_fusi": "256",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 1 motore con rinvio",
+        "articoli": [
+            "2270s+z",
+            "2270S+ZN 19800",
+            "7034ZN"
+        ]
+    },
+    "18": {
+        "classe": "Gruppo3a",
+        "n_fusi": "256",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 1 motore con rinvio",
+        "articoli": [
+            "7032S+ZN",
+            "X23-2299V5ZF",
+            "7032s+z",
+            "4466S+ZN"
+        ]
+    },
+    "19": {
+        "classe": "Gruppo3a",
+        "n_fusi": "256",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 1 motore con rinvio",
+        "articoli": [
+            "2270S+ZN 19800",
+            "2270s+z"
+        ]
+    },
+    "20": {
+        "classe": "Gruppo3a",
+        "n_fusi": "256",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 1 motore con rinvio",
+        "articoli": [
+            "2270S+ZN 19800"
+        ]
+    },
+    "21": {
+        "classe": "Gruppo3a",
+        "n_fusi": "256",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 1 motore con rinvio",
+        "articoli": [
+            "2270s+z rpm 21000",
+            "X21-1796ZN ''la mc \u00e8 in s+z utilizzato solo piano inf",
+            "4412SN",
+            "7036ZN"
+        ]
+    },
+    "22": {
+        "classe": "Gruppo3a",
+        "n_fusi": "256",
+        "mode": "Doppia",
+        "descrizione": "trasformabili in singola copertura, 1 motore con rinvio",
+        "articoli": [
+            "X22-7810s+z",
+            "10353ZF",
+            "X22-7810S-ZN354 4 ci",
+            "2250S+ZN"
+        ]
+    },
+    "23": {
+        "classe": "Gruppo3a",
+        "n_fusi": "256",
+        "mode": "Doppia",
+        "descrizione": "trasformabili in singola copertura, 1 motore con rinvio",
+        "articoli": [
+            "31002DN1"
+        ]
+    },
+    "24": {
+        "classe": "Gruppo3a",
+        "n_fusi": "256",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 1 motore con rinvio",
+        "articoli": [
+            "X24-4401S+ZF2",
+            "X23-4493S+ZF"
+        ]
+    },
+    "25": {
+        "classe": "Gruppo3a",
+        "n_fusi": "256",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 1 motore con rinvio",
+        "articoli": [
+            "X23-4493S+ZF",
+            "X21-2291sf",
+            "X21-2291SF"
+        ]
+    },
+    "26": {
+        "classe": "Gruppo3a",
+        "n_fusi": "256",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 1 motore con rinvio",
+        "articoli": [
+            "2270S+ZN 19800",
+            "2270S+ZN mini 19800",
+            "2270S+ZN mini"
+        ]
+    },
+    "27": {
+        "classe": "Gruppo3a",
+        "n_fusi": "256",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 1 motore con rinvio",
+        "articoli": [
+            "X20-2219V2ZF",
+            "X21-2099S+ZN mini"
+        ]
+    },
+    "28": {
+        "classe": "Gruppo3a",
+        "n_fusi": "256",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 1 motore con rinvio",
+        "articoli": [
+            "X24-2001S+ZN",
+            "X21-2099S+ZN mini",
+            "X21-2099s+z mini"
+        ]
+    },
+    "29": {
+        "classe": "Gruppo3b",
+        "n_fusi": "256",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 1 motore con rinvio, 3 rulli di alimentazione",
+        "articoli": [
+            "X23-13097V5ZF",
+            "13007ZN/F-14500",
+            "28503ZN",
+            "13005ZF-14000",
+            "CAMPIONE CREORA 130"
+        ]
+    },
+    "30": {
+        "classe": "Gruppo3b",
+        "n_fusi": "256",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 1 motore con rinvio, 3 rulli di alimentazione",
+        "articoli": [
+            "13007ZN/F-14500",
+            "13005ZF-14000"
+        ]
+    },
+    "31": {
+        "classe": "Gruppo3b",
+        "n_fusi": "256",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 1 motore con rinvio, 3 rulli di alimentazione",
+        "articoli": [
+            "2246ZN 10800",
+            "13007ZF 903C 14000",
+            "4463S+ZN1"
+        ]
+    },
+    "32": {
+        "classe": "Gruppo3b",
+        "n_fusi": "256",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 1 motore con rinvio, 3 rulli di alimentazione",
+        "articoli": [
+            "13005ZF-14000",
+            "13007ZN/F-14500"
+        ]
+    },
+    "33": {
+        "classe": "Gruppo3a",
+        "n_fusi": "256",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 1 motore con rinvio",
+        "articoli": [
+            "X21-2099s+z mini",
+            "X21-2099S+ZN mini"
+        ]
+    },
+    "34": {
+        "classe": "Gruppo3a",
+        "n_fusi": "256",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 1 motore con rinvio",
+        "articoli": [
+            "X21-2099s+z mini",
+            "X21-2099S+ZN mini"
+        ]
+    },
+    "35": {
+        "classe": "Gruppo3a",
+        "n_fusi": "256",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 1 motore con rinvio",
+        "articoli": [
+            "2275S+ZN-N00",
+            "X23-2280S+ZN",
+            "X23-2280s+z"
+        ]
+    },
+    "36": {
+        "classe": "Gruppo3a",
+        "n_fusi": "256",
+        "mode": "Doppia",
+        "descrizione": "trasformabili in singola copertura, 1 motore con rinvio",
+        "articoli": [
+            "X20-2222DN2 mini",
+            "X23-7892DN mini",
+            "X23-1299DN mini"
+        ]
+    },
+    "37": {
+        "classe": "Gruppo4a",
+        "n_fusi": "256",
+        "mode": "Doppia",
+        "descrizione": "raccolta larga, 2 motori e un inverter",
+        "articoli": [
+            "S600A03DN",
+            "S15-160018DN",
+            "33002DN",
+            "S14-60003V2DN 23h",
+            "s22-700011DN",
+            "S600A04DN"
+        ]
+    },
+    "38": {
+        "classe": "Gruppo4a",
+        "n_fusi": "256",
+        "mode": "Doppia",
+        "descrizione": "raccolta larga, 2 motori e un inverter",
+        "articoli": [
+            "31004DN220379 dm84",
+            "X21-20099DN2",
+            "S21-60091V3DN   A230",
+            "X23-8397DN",
+            "s21-60091V3dn",
+            "S19-60052DN2",
+            "33001DN2"
+        ]
+    },
+    "39": {
+        "classe": "Gruppo4b",
+        "n_fusi": "256",
+        "mode": "Doppia",
+        "descrizione": "raccolta larga per bobine maggiorate, 2 motori e un inverter",
+        "articoli": [
+            "4462ZN2",
+            "X21-39599V7DN0332",
+            "62002DN",
+            "39502DN-14446",
+            "39502dn",
+            "62002DN2",
+            "39502DN2",
+            "62001DN2",
+            "31003DN220274"
+        ]
+    },
+    "40": {
+        "classe": "Gruppo4a",
+        "n_fusi": "256",
+        "mode": "Doppia",
+        "descrizione": "raccolta larga, 2 motori e un inverter",
+        "articoli": [
+            "31003DN220274 dm84",
+            "X23-31094DN3813",
+            "62001DN1",
+            "62001DN2",
+            "X21-20099DN2",
+            "S180001DN",
+            "31003DN220274"
+        ]
+    },
+    "41": {
+        "classe": "Gruppo4a",
+        "n_fusi": "256",
+        "mode": "Doppia",
+        "descrizione": "raccolta larga, 2 motori e un inverter",
+        "articoli": [
+            "33002DN",
+            "33001DN2"
+        ]
+    },
+    "42": {
+        "classe": "Gruppo4a",
+        "n_fusi": "256",
+        "mode": "Doppia",
+        "descrizione": "raccolta larga, 2 motori e un inverter",
+        "articoli": [
+            "X23-47097DN366",
+            "X24-31001DN366",
+            "X23-47097DN1"
+        ]
+    },
+    "43": {
+        "classe": "Gruppo5b",
+        "n_fusi": "256",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 2 motori con inverter, 3 rulli di alimentazione",
+        "articoli": [
+            "13007ZN/F-14500",
+            "13007ZF 903C 14000",
+            "13005ZF-14000"
+        ]
+    },
+    "44": {
+        "classe": "Gruppo5a",
+        "n_fusi": "256 o 264",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
+        "articoli": [
+            "2265SN2",
+            "X24-2202s+z",
+            "2246ZN 10800",
+            "X23-3399S+ZF"
+        ]
+    },
+    "45": {
+        "classe": "Gruppo5a",
+        "n_fusi": "256 o 264",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
+        "articoli": [
+            "7034ZN"
+        ]
+    },
+    "46": {
+        "classe": "Gruppo5a",
+        "n_fusi": "256 o 264",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
+        "articoli": [
+            "2275S+ZN-B10A",
+            "2279ZN1 13200",
+            "2279ZNB10A 13200",
+            "X22-2211V2zf"
+        ]
+    },
+    "47": {
+        "classe": "Gruppo1a",
+        "n_fusi": "448",
+        "mode": "Doppia",
+        "descrizione": "1 motore con rinvio",
+        "articoli": [
+            "2271DN 20700 mini",
+            "2271DN 20000 mini"
+        ]
+    },
+    "48": {
+        "classe": "Gruppo1a",
+        "n_fusi": "448",
+        "mode": "Doppia",
+        "descrizione": "1 motore con rinvio",
+        "articoli": [
+            "2271DN 20700 mini"
+        ]
+    },
+    "49": {
+        "classe": "Gruppo6",
+        "n_fusi": "160",
+        "mode": "Doppia",
+        "descrizione": "2 motori",
+        "articoli": [
+            "4407DN",
+            "749DN mini"
+        ]
+    },
+    "50": {
+        "classe": "Gruppo6",
+        "n_fusi": "160",
+        "mode": "Doppia",
+        "descrizione": "2 motori",
+        "articoli": [
+            "4407DN",
+            "749DN mini"
+        ]
+    },
+    "51": {
+        "classe": "Gruppo5a",
+        "n_fusi": "256 o 264",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
+        "articoli": [
+            "X22-7810S-ZN354 4 ci",
+            "X23-4496V2ZN2 16000",
+            "X23-4496V2ZN2",
+            "X24-2202S+Z colorati",
+            "2275S+ZN-B10A",
+            "X22-2203S+ZN"
+        ]
+    },
+    "52": {
+        "classe": "Gruppo5a",
+        "n_fusi": "256 o 264",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
+        "articoli": [
+            "X24-2213ZN2",
+            "4424S+ZN/F",
+            "4424ZN",
+            "lycra 20 fusion usata",
+            "X22-2005V2ZN",
+            "2274ZN2"
+        ]
+    },
+    "53": {
+        "classe": "Gruppo5a",
+        "n_fusi": "256 o 264",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
+        "articoli": [
+            "2276S+ZN",
+            "X23-4496V2ZN2"
+        ]
+    },
+    "54": {
+        "classe": "Gruppo5a",
+        "n_fusi": "256 o 264",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
+        "articoli": [
+            "2013S+ZN mini",
+            "X24-1701S+ZN",
+            "X24-1701S+Z mini"
+        ]
+    },
+    "55": {
+        "classe": "Gruppo5a",
+        "n_fusi": "256 o 264",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
+        "articoli": [
+            "X24-1301V2S+ZN mini"
+        ]
+    },
+    "56": {
+        "classe": "Gruppo5a",
+        "n_fusi": "256 o 264",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
+        "articoli": [
+            "X24-1301V2S+ZN mini"
+        ]
+    },
+    "57": {
+        "classe": "Gruppo5a",
+        "n_fusi": "256 o 264",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
+        "articoli": [
+            "4465SN1",
+            "4424S+ZN/F",
+            "4424zf"
+        ]
+    },
+    "58": {
+        "classe": "Gruppo5a",
+        "n_fusi": "256 o 264",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
+        "articoli": [
+            "4463S+ZN1",
+            "2275S+ZN-B10A"
+        ]
+    },
+    "59": {
+        "classe": "Gruppo5a",
+        "n_fusi": "256 o 264",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
+        "articoli": [
+            "2275S+ZN-B10A",
+            "4466S+ZN"
+        ]
+    },
+    "60": {
+        "classe": "Gruppo5a",
+        "n_fusi": "256 o 264",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
+        "articoli": [
+            "2250s+z minispole",
+            "X24-2213ZN2",
+            "2250SN",
+            "X24-2001S+ZN"
+        ]
+    },
+    "61": {
+        "classe": "Gruppo1a",
+        "n_fusi": "448",
+        "mode": "Doppia",
+        "descrizione": "1 motore con rinvio",
+        "articoli": [
+            "4407DN",
+            "2271DN 20700 mini"
+        ]
+    },
+    "62": {
+        "classe": "Gruppo1a",
+        "n_fusi": "448",
+        "mode": "Doppia",
+        "descrizione": "1 motore con rinvio",
+        "articoli": [
+            "2271DN 20700 mini"
+        ]
+    },
+    "63": {
+        "classe": "Gruppo1a",
+        "n_fusi": "448",
+        "mode": "Doppia",
+        "descrizione": "1 motore con rinvio",
+        "articoli": [
+            "2271DN 20700 mini"
+        ]
+    },
+    "64": {
+        "classe": "Gruppo1a",
+        "n_fusi": "448",
+        "mode": "Doppia",
+        "descrizione": "1 motore con rinvio",
+        "articoli": [
+            "2271DN 20700 mini"
+        ]
+    },
+    "65": {
+        "classe": "Gruppo1a",
+        "n_fusi": "448",
+        "mode": "Doppia",
+        "descrizione": "1 motore con rinvio",
+        "articoli": [
+            "2271DN 20700 mini"
+        ]
+    },
+    "66": {
+        "classe": "Gruppo1a",
+        "n_fusi": "448",
+        "mode": "Doppia",
+        "descrizione": "1 motore con rinvio",
+        "articoli": [
+            "2271DN 20700 mini"
+        ]
+    },
+    "67": {
+        "classe": "Gruppo5a",
+        "n_fusi": "256 o 264",
+        "mode": "Doppia",
+        "descrizione": "trasformabili in singola copertura, 2 motori con inverter",
+        "articoli": [
+            "x24-4403dn mini",
+            "33001DN2",
+            "X21-2278V4DN",
+            "X24-4403DN",
+            "X23-4491DF1"
+        ]
+    },
+    "68": {
+        "classe": "Gruppo5a",
+        "n_fusi": "256 o 264",
+        "mode": "Doppia",
+        "descrizione": "trasformabili in singola copertura, 2 motori con inverter",
+        "articoli": [
+            "X23-4491DF366",
+            "X23-4491DF1"
+        ]
+    },
+    "69": {
+        "classe": "Gruppo5a",
+        "n_fusi": "256 o 264",
+        "mode": "Doppia",
+        "descrizione": "trasformabili in singola copertura, 2 motori con inverter",
+        "articoli": [
+            "15611DN",
+            "S19-60064V3DN-U427",
+            "S21-100011DN100 A230",
+            "X22-2005V2ZN1",
+            "X21-20099DN2"
+        ]
+    },
+    "70": {
+        "classe": "Gruppo5a",
+        "n_fusi": "256 o 264",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
+        "articoli": [
+            "X21-4489V3S+ZN",
+            "X23-7899ZN",
+            "2274ZN2"
+        ]
+    },
+    "71": {
+        "classe": "Gruppo5a",
+        "n_fusi": "256 o 264",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
+        "articoli": [
+            "4450ZN",
+            "1724s+z",
+            "1724S+ZN 2cicli"
+        ]
+    },
+    "72": {
+        "classe": "Gruppo5a",
+        "n_fusi": "256 o 264",
+        "mode": "Singola",
+        "descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
+        "articoli": [
+            "X23-2299V5ZF",
+            "X23-2279ZF",
+            "4412ZN"
+        ]
     }
-]
+}
