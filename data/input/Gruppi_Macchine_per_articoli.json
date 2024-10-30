@@ -143,13 +143,25 @@
         },
         "Gruppo5": {
             "Gruppo5a": {
-                "Numero Fusi": "256 o 264",
+                "Numero Fusi": "256",
                 "Singola": {
                     "Descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
                     "Macchine": [
                         44,
                         45,
-                        46,
+                        46
+                    ]
+                },
+                "Doppia": {
+                    "Descrizione": "trasformabili in singola copertura, 2 motori con inverter",
+                    "Macchine": []
+                }
+            },
+			"Gruppo5b": {
+				"Numero Fusi": "264",
+				"Singola": {
+					"Descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
+					"Macchine": [
                         51,
                         52,
                         53,
@@ -164,17 +176,18 @@
                         71,
                         72
                     ]
-                },
-                "Doppia": {
-                    "Descrizione": "trasformabili in singola copertura, 2 motori con inverter",
-                    "Macchine": [
+				},
+				"Doppia": {
+					"Descrizione": "trasformabili in singola copertura, 2 motori con inverter",
+					"Macchine": [
                         67,
                         68,
                         69
                     ]
                 }
             },
-            "Gruppo5b": {
+			
+            "Gruppo5c": {
                 "Numero Fusi": "256",
                 "Singola": {
                     "Descrizione": "trasformabili in doppia copertura, 2 motori con inverter, 3 rulli di alimentazione",

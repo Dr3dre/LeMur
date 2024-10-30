@@ -446,7 +446,7 @@
         ]
     },
     "43": {
-        "classe": "Gruppo5b",
+        "classe": "Gruppo5c",
         "n_fusi": "256",
         "mode": "Singola",
         "descrizione": "trasformabili in doppia copertura, 2 motori con inverter, 3 rulli di alimentazione",
@@ -458,7 +458,7 @@
     },
     "44": {
         "classe": "Gruppo5a",
-        "n_fusi": "256 o 264",
+        "n_fusi": "256",
         "mode": "Singola",
         "descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
         "articoli": [
@@ -470,7 +470,7 @@
     },
     "45": {
         "classe": "Gruppo5a",
-        "n_fusi": "256 o 264",
+        "n_fusi": "256",
         "mode": "Singola",
         "descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
         "articoli": [
@@ -479,7 +479,7 @@
     },
     "46": {
         "classe": "Gruppo5a",
-        "n_fusi": "256 o 264",
+        "n_fusi": "256",
         "mode": "Singola",
         "descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
         "articoli": [
@@ -529,8 +529,8 @@
         ]
     },
     "51": {
-        "classe": "Gruppo5a",
-        "n_fusi": "256 o 264",
+        "classe": "Gruppo5b",
+        "n_fusi": "264",
         "mode": "Singola",
         "descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
         "articoli": [
@@ -543,8 +543,8 @@
         ]
     },
     "52": {
-        "classe": "Gruppo5a",
-        "n_fusi": "256 o 264",
+        "classe": "Gruppo5b",
+        "n_fusi": "264",
         "mode": "Singola",
         "descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
         "articoli": [
@@ -557,8 +557,8 @@
         ]
     },
     "53": {
-        "classe": "Gruppo5a",
-        "n_fusi": "256 o 264",
+        "classe": "Gruppo5b",
+        "n_fusi": "264",
         "mode": "Singola",
         "descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
         "articoli": [
@@ -567,8 +567,8 @@
         ]
     },
     "54": {
-        "classe": "Gruppo5a",
-        "n_fusi": "256 o 264",
+        "classe": "Gruppo5b",
+        "n_fusi": "264",
         "mode": "Singola",
         "descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
         "articoli": [
@@ -578,8 +578,8 @@
         ]
     },
     "55": {
-        "classe": "Gruppo5a",
-        "n_fusi": "256 o 264",
+        "classe": "Gruppo5b",
+        "n_fusi": "264",
         "mode": "Singola",
         "descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
         "articoli": [
@@ -587,8 +587,8 @@
         ]
     },
     "56": {
-        "classe": "Gruppo5a",
-        "n_fusi": "256 o 264",
+        "classe": "Gruppo5b",
+        "n_fusi": "264",
         "mode": "Singola",
         "descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
         "articoli": [
@@ -596,8 +596,8 @@
         ]
     },
     "57": {
-        "classe": "Gruppo5a",
-        "n_fusi": "256 o 264",
+        "classe": "Gruppo5b",
+        "n_fusi": "264",
         "mode": "Singola",
         "descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
         "articoli": [
@@ -607,8 +607,8 @@
         ]
     },
     "58": {
-        "classe": "Gruppo5a",
-        "n_fusi": "256 o 264",
+        "classe": "Gruppo5b",
+        "n_fusi": "264",
         "mode": "Singola",
         "descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
         "articoli": [
@@ -617,8 +617,8 @@
         ]
     },
     "59": {
-        "classe": "Gruppo5a",
-        "n_fusi": "256 o 264",
+        "classe": "Gruppo5b",
+        "n_fusi": "264",
         "mode": "Singola",
         "descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
         "articoli": [
@@ -627,8 +627,8 @@
         ]
     },
     "60": {
-        "classe": "Gruppo5a",
-        "n_fusi": "256 o 264",
+        "classe": "Gruppo5b",
+        "n_fusi": "264",
         "mode": "Singola",
         "descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
         "articoli": [
@@ -694,8 +694,8 @@
         ]
     },
     "67": {
-        "classe": "Gruppo5a",
-        "n_fusi": "256 o 264",
+        "classe": "Gruppo5b",
+        "n_fusi": "264",
         "mode": "Doppia",
         "descrizione": "trasformabili in singola copertura, 2 motori con inverter",
         "articoli": [
@@ -707,8 +707,8 @@
         ]
     },
     "68": {
-        "classe": "Gruppo5a",
-        "n_fusi": "256 o 264",
+        "classe": "Gruppo5b",
+        "n_fusi": "264",
         "mode": "Doppia",
         "descrizione": "trasformabili in singola copertura, 2 motori con inverter",
         "articoli": [
@@ -717,8 +717,8 @@
         ]
     },
     "69": {
-        "classe": "Gruppo5a",
-        "n_fusi": "256 o 264",
+        "classe": "Gruppo5b",
+        "n_fusi": "264",
         "mode": "Doppia",
         "descrizione": "trasformabili in singola copertura, 2 motori con inverter",
         "articoli": [
@@ -730,8 +730,8 @@
         ]
     },
     "70": {
-        "classe": "Gruppo5a",
-        "n_fusi": "256 o 264",
+        "classe": "Gruppo5b",
+        "n_fusi": "264",
         "mode": "Singola",
         "descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
         "articoli": [
@@ -741,8 +741,8 @@
         ]
     },
     "71": {
-        "classe": "Gruppo5a",
-        "n_fusi": "256 o 264",
+        "classe": "Gruppo5b",
+        "n_fusi": "264",
         "mode": "Singola",
         "descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
         "articoli": [
@@ -752,8 +752,8 @@
         ]
     },
     "72": {
-        "classe": "Gruppo5a",
-        "n_fusi": "256 o 264",
+        "classe": "Gruppo5b",
+        "n_fusi": "264",
         "mode": "Singola",
         "descrizione": "trasformabili in doppia copertura, 2 motori con inverter",
         "articoli": [
