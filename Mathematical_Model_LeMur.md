@@ -116,7 +116,7 @@ $\texttt{PARTIAL\_CYCLE[p,c]}$
 
 $\texttt{GAP\_AT[G]}$
 - Element variable => $\texttt{gaps\_at(G) == gaps\_per\_day[g]}$
-- **description** :
+- **description** : implemented using addElement, it's precomputed and used to calculate gap costs for a specific day to the next working day
 
 $\texttt{GAP(begin, base\_cost)}$
 - **domain** : $[0, \texttt{horizon}]$
@@ -190,8 +190,8 @@ $\texttt{CYCLE\_END[p,c]}$
 ### Operators
 
 $\texttt{OPERATOR\_PER\_GROUP[o]}$
-- **domain** : $[1, \texttt{max\_operators}]$
-- **description** : number of operators assigned to group $\texttt{o}$
+- **domain** : $[2, \texttt{max\_operators}]$
+- **description** : number of operators assigned to group $\texttt{o}$ It cannot be less than 2, otherwise it gives problems with the formulation of gap!
 - **behavior** : 
 	- $\forall \texttt{.(o)}$ : 
 	  $\texttt{OPERATOS\_PER\_GROUP[o] == operators\_per\_group}$
@@ -208,13 +208,6 @@ $\texttt{KG\_CYCLE[p,c]}$
 Constraints (search space reduction related)
 ---
 
-### Search Reduction :
-1. $\texttt{A[p,c,m]} \implies \texttt{ACTIVE\_CYCLE[p,c]}$ ?
-2. $\texttt{COMPLETE[p,c]} \iff \texttt{NUM\_LEVATE[p,c] == standard\_levate(p)}$
-3. $\texttt{COMPLETE[p,c] or PARTIAL\_CYCLE[p,c]} \iff \texttt{ACTIVE\_CYCLE[p,c]}$ 
-4. $\texttt{PARTIAL\_CYCLE[p,c]} \iff \texttt{0 < NUM\_LEVATE[p,c] < standard\_levate(p) }$
-5. $\texttt{ACTIVE\_CYCLE[p,c]} \implies \texttt{}$
-
 ### Compactness :
 1. $\texttt{COMPLETE[p,c]} \ge \texttt{COMPLETE[p,c+1]}$
 2. $\texttt{ACTIVE\_CYCLE[p,c]} \ge \texttt{ACTIVE\_CYCLE[p,c+1]}$
@@ -222,64 +215,84 @@ Constraints (search space reduction related)
 Constraint (LeMur specific)
 ---
 
-1. A cycle can be assigned to 1 or 0 machine
-	- $\forall \texttt{.(p,c)}$
-	  $\texttt{AtMostOne} (\texttt{A[p,c,:]} )$
-	  
+1. Cycle machne assignment:
+	- An active cycle must have one and only one machine assigned
+		- $\forall \texttt{.(p,c)}$
+		$\texttt{ACTIVE\_CYCLE[p,c]} \implies \texttt{XOR(A[p,c,:])}$
+	- A non active cycle must have 0 machines assigned
+		- $\forall \texttt{.(p,c)}$
+		$\texttt{ACTIVE\_CYCLE[p,c].Not()} \implies \texttt{OR(A[p,c,:]).Not()}$
+
 2. At most one partial cycle per product 
 	- $\forall \texttt{.p}$
 	  $\texttt{AtMostOne(PARTIAL\_CYCLE[p,:])}$
-	  
-3. Start date / Due date : (is actually defined at domain level)
+
+3. Connect cycle specific variables:
+	- The complete cycles must be active (only implication to allow for partials)
+		- $\forall \texttt{.(p,c)}$
+		  $\texttt{COMPLETE[p,c]} \implies \texttt{ACTIVE\_CYCLE[p,c]}$
+	- The partial cycle is the active but not complete (this carries the atmost one from partial to active so it needs to be a iff)
+		- $\forall \texttt{.(p,c)}$
+		  $\texttt{PARTIAL\_CYCLE[p,c]} \iff \texttt{ACTIVE\_CYCLE[p,c] and COMPLETE[p,c].Not()}$
+
+3. Tie number of levate to cycles
+	- If the cycle is complete, then the number of levate is the maximum one
+		- $\forall \texttt{.(p,c)}$
+		  $\texttt{COMPLETE[p,c]} \iff \texttt{NUM\_LEVATE[p,c] == standard\_levate(p)}$
+	- If the cycle is not active the number of levate is 0
+		- $\forall \texttt{.(p,c)}$
+		  $\texttt{ACTIVE\_CYCLE[p,c].Not()} \iff \texttt{NUM\_LEVATE[p,c] == 0}$
+	- If partial, then we search for the number of levate
+		- $\forall \texttt{.(p,c)}$
+		  $\texttt{PARTIAL\_CYCLE[p,c]} \iff \texttt{0 < NUM\_LEVATE[p,c] < standard\_levate(p)}$
+
+4. Start date / Due date : (is actually defined at domain level)
 	- $\forall \texttt{.p not in running\_prods}$
 	  $\texttt{SETUP\_BEG[p,c]} \ge \texttt{start\_date(p)}$
 	- $\forall \texttt{.p}$
 	  $\texttt{UNLOAD\_END[p,c,-1]} < \texttt{due\_date(p)}$
 
-4. Objective : all products must reach the requested production
+5. Objective : all products must reach the requested production
 	- $\forall \texttt{.p}$
 	  $\texttt{Kg\_requested(p)} \le \sum_{\texttt{c}}( \texttt{KG\_CYCLE[p,c]}) < \texttt{Kg\_requested(p) + best\_kg\_cycle(p)}$
 	
-5. Define ordering between time variables 
+6. Define ordering between time variables 
 	1. LOAD
-	- $\forall \texttt{.(p,c,l) in Load, if l == 0 : ACTIVE\_LEVATA[p,c,l]} \implies$
+		- $\forall \texttt{.(p,c,l) in Load, if l == 0 : ACTIVE\_LEVATA[p,c,l]} \implies$
 	  $\texttt{LOAD\_BEG[p,c,l]} \ge \texttt{SETUP\_END[p,c])}$
-	- $\forall \texttt{.(p,c,l) in Load, if l > 0 : ACTIVE\_LEVATA[p,c,l]} \implies$
+		- $\forall \texttt{.(p,c,l) in Load, if l > 0 : ACTIVE\_LEVATA[p,c,l]} \implies$
 	  $\texttt{LOAD\_BEG[p,c,l] == UNLOAD\_END[p,c,l-1])}$
 			  
 	2. UNLOAD
-	- $\forall \texttt{.(p,c,l) in Unload : ACTIVE\_LEVATA[p,c,l]} \implies$
+		- $\forall \texttt{.(p,c,l) in Unload : ACTIVE\_LEVATA[p,c,l]} \implies$
 	  $\texttt{UNLOAD\_BEG[p,c,l]} \ge \texttt{LOAD\_END[p,c,l] + LEVATA\_COST[p,c,l]}$
 		  
-	3. PARTIAL LOADS / UNLOADS : 
-	- $\texttt{PARTIAL\_CYCLE[p,c] and ACTIVE\_LEVATA[p,c,l].Not()} \implies$
-		- $\forall \texttt{.(p,c,l) in Load, if l > 0 :}$
-			- $\texttt{LOAD\_BEG[p,c,l] == LOAD\_BEG[p,c,l-1]}$
-		- $\forall \texttt{.(p,c,l) in Unoad, if l > 0 :}$
-			- $\texttt{UNLOAD\_BEG[p,c,l] == UNLOAD\_BEG[p,c,l-1]}$
+	3. PARTIAL LOADS / UNLOADS :  Collapse all non used levata operations at the end of the previous one
+		- $\texttt{PARTIAL\_CYCLE[p,c] and ACTIVE\_LEVATA[p,c,l].Not()} \implies$
+			- $\forall \texttt{.(p,c,l) in Load, if l > 0 :}$
+				- $\texttt{LOAD\_BEG[p,c,l] == LOAD\_BEG[p,c,l-1]}$
+			- $\forall \texttt{.(p,c,l) in Unoad, if l > 0 :}$
+				- $\texttt{UNLOAD\_BEG[p,c,l] == UNLOAD\_BEG[p,c,l-1]}$
 		  
-	4. INACTIVE CYCLES (?)
-	- $\forall \texttt{.(p,c,l) : ACTIVE\_CYCLE[p,c].Not()} \implies$
-		- $\texttt{LOAD\_BEG[p,c,l] == 0}$
-		- $\texttt{UNLOAD\_BEG[p,c,l] == 0}$
+	4. INACTIVE CYCLES they are handled by shoving them at the beginning
+		- $\forall \texttt{.(p,c,l) : ACTIVE\_CYCLE[p,c].Not()} \implies$
+			- $\texttt{LOAD\_BEG[p,c,l] == 0}$
+			- $\texttt{UNLOAD\_BEG[p,c,l] == 0}$
   
-6. No overlap between product cycles on same machine :
-- $\forall \texttt{.(m)}$
-	- $\forall \texttt{.(p,c)}$$\texttt{NoOverlap([}\texttt{A[p,c,m]} \implies \exists \texttt{.Interval(SETUP\_BEG[p,c], UNLOAD\_END[p,c,-1])])}$
+7. No overlap between product cycles on same machine :
+	- $\forall \texttt{.(m)}$
+		- $\forall \texttt{.(p,c)}$ $\texttt{NoOverlap([}\texttt{A[p,c,m]} \implies \exists \texttt{.Interval(SETUP\_BEG[p,c], UNLOAD\_END[p,c,-1])])}$
 
-7. Operators constraints
-- $\forall \texttt{.(o) } \forall \texttt{.(p,c) : ACTIVE\_CYCLE[p,c]} \implies$
-  $\texttt{ExactlyOne(A\_OP\_SETUP[:,p,c])}$
-  - $\forall \texttt{.(o) } \forall \texttt{.(p,c,l,t in \{0,1\}) : ACTIVE\_LEVATA[p,c,l]} \implies$
-    $\texttt{ExactlyOne(A\_OP[:,p,c,l,t])}$
-- $\forall \texttt{.(o) } \forall \texttt{.(p,c)}$
-$\texttt{NoOverlap(}\texttt{A\_OP\_SETUP[o,p,c]} \implies \exists \texttt{.Interval(SETUP\_BEG[p,c], SETUP\_END[p,c])}$
-- $\forall \texttt{.(o) } \forall \texttt{.(p,c,l)}$
-$\texttt{NoOverlap(}\texttt{A\_OP[o,p,c,l,0]} \implies \exists \texttt{.Interval(LOAD\_BEG[p,c,l], LOAD\_END[p,c,l])}$
-$\texttt{NoOverlap(}\texttt{A\_OP[o,p,c,l,1]} \implies \exists \texttt{.Interval(UNLOAD\_BEG[p,c,l], UNLOAD\_END[p,c,l])}$
+8. Operators constraints
+	- The active cycles' setups must be assigned to one operator $\forall \texttt{.(o) } \forall \texttt{.(p,c) : ACTIVE\_CYCLE[p,c]} \implies \texttt{ExactlyOne(A\_OP\_SETUP[:,p,c])}$
+	- The non active cycles' setups must have no operator assigned $\forall \texttt{.(o) } \forall \texttt{.(p,c) : ACTIVE\_CYCLE[p,c].Not()} \implies \texttt{OR(A\_OP\_SETUP[:,p,c]).Not()}$
+	- The levate must have an operator assigned for the load and the unload operation:$\forall \texttt{.(o) } \forall \texttt{.(p,c,l,t in \{0,1\}) : ACTIVE\_LEVATA[p,c,l]} \implies \texttt{ExactlyOne(A\_OP[:,p,c,l,t])}$
+	- The non active levate must have no operator assigned for the load and the unload operation:$\forall \texttt{.(o) } \forall \texttt{.(p,c,l,t in \{0,1\}) : ACTIVE\_LEVATA[p,c,l]} \implies \texttt{OR(A\_OP[:,p,c,l,t]).Not()}$
+	- We create intervals for each operation operators have to handle:<br>$\forall \texttt{.(o,p,c)}$<br> $\texttt{A\_OP\_SETUP[o,p,c]} \implies \exists \texttt{.Interval(SETUP\_BEG[p,c], SETUP\_END[p,c])}$<br>$\forall \texttt{.(o,p,c,l)}$<br>$\texttt{A\_OP[o,p,c,l,0]} \implies \exists \texttt{.Interval(LOAD\_BEG[p,c,l], LOAD\_END[p,c,l]}$<br>$\texttt{A\_OP[o,p,c,l,1]} \implies \exists \texttt{.Interval(UNLOAD\_BEG[p,c,l], UNLOAD\_END[p,c,l]}$
+	- No overlap between all of these interval for an operator<br>$\forall\texttt{I} \in \texttt{Intervals. NoOverlap(I)}$
 
 
-8. Handle initialization of running products.
+9. Handle initialization of running products.
 	- $\texttt{running\_prod[p]}$ : contains specific information needed for products already running on some machine when the scheduling starts
 		- $\texttt{.machine}$ : machine associated to $\texttt{p}$
 		- $\texttt{.operator}$ : operator associated to $\texttt{p}$
@@ -298,46 +311,52 @@ $\texttt{NoOverlap(}\texttt{A\_OP[o,p,c,l,1]} \implies \exists \texttt{.Interval
 	  
 	2. SETUP phase
 		- $\texttt{if p.current\_op\_type == 0}$
+		  - Set Beggining of operations
 		  $\texttt{SETUP\_BEG[p,0] == 0}$
+		  - Current Operation Cost:
 		  $\texttt{SETUP\_COST[p,0] == p.remaining\_time}$
-		  ---
+		  - Operator Assignments:
 		  $\texttt{A\_OP\_SETUP[p.operator,p,0] == 1}$
 	  
 	3. LOAD phase
 		- $\texttt{if p.current\_op\_type == 1}$
+		  - Set Beggining of operations
 		  $\texttt{SETUP\_BEG[p,0] == 0 and LOAD\_BEG[p,0,0] == 0}$
-		  $\texttt{LOAD\_COST[p,0,0] == p.remaining\_time}$
-		  --
-		  $\texttt{SETUP\_COST[p,0] == 0}$
-		  --
+		  - Current Operation Cost:
+		   $\texttt{LOAD\_COST[p,0,0] == p.remaining\_time}$
+		   - Previous Operations have 0 cost:
+		   $\texttt{SETUP\_COST[p,0] == 0}$
+		   Operator Assignments:
 		  $\texttt{A\_OP\_SETUP[p.operator,p,0] == 1}$
 		  $\texttt{A\_OP[p.operator,p,0,0,0] == 1}$
 
 	4. RUNNING phase
-	-  $\texttt{if p.current\_op\_type == 2}$
-	  $\texttt{SETUP\_BEG[p,0] == 0}$
-	  $\texttt{LOAD\_BEG[p,0,0] == 0}$
-	  --
-	  $\texttt{LEVATA\_COST[p,0,0] == p.remaining\_time + VELOCITY[p,0] * velocity\_step[p]}$
-	  --
-	  $\texttt{SETUP\_COST[p,0] == 0}$
-	  $\texttt{LOAD\_COST[p,0,0] == 0}$
-	  --
-	  $\texttt{A\_OP\_SETUP[p.operator,p,0] == 1}$
-	  $\texttt{A\_OP[p.operator,p,0,0,0] == 1}$
+		- $\texttt{if p.current\_op\_type == 2}$
+			- Set Beggining of operations
+			$\texttt{SETUP\_BEG[p,0] == 0}$
+			$\texttt{LOAD\_BEG[p,0,0] == 0}$
+			- Current Operation Cost:
+			$\texttt{LEVATA\_COST[p,0,0] == p.remaining\_time + VELOCITY[p,0] * velocity\_step[p]}$
+			- Previous Operations have 0 cost:
+			$\texttt{SETUP\_COST[p,0] == 0}$
+			$\texttt{LOAD\_COST[p,0,0] == 0}$
+			- Operator Assignments:
+			$\texttt{A\_OP\_SETUP[p.operator,p,0] == 1}$
+			$\texttt{A\_OP[p.operator,p,0,0,0] == 1}$
 
 	5. UNLOAD phase
 		- $\texttt{if p.current\_op\_type == 3}$
+		  - Set Beggining of operations
 		  $\texttt{SETUP\_BEG[p,0] == 0}$
 		  $\texttt{LOAD\_BEG[p,0,0] == 0}$
 		  $\texttt{UNLOAD\_BEG[p,0,0] == 0}$
-		  ---
+		  - Previous Operations have 0 cost:
 		  $\texttt{SETUP\_COST[p,0] == 0}$
 		  $\texttt{LOAD\_COST[p,0,0] == 0}$
 		  $\texttt{LEVATA\_COST[p,0,0] == 0}$
-		  ---
+		  - Current Operation Cost:
 		  $\texttt{UNLOAD\_COST[p,0,0] == p.remaining\_time}$
-		  ---
+		  - Operator Assignments:
 		  $\texttt{A\_OP\_SETUP[p.operator,p,0] == 1}$
 		  $\texttt{A\_OP[p.operator,p,0,0,0] == 1}$
 		  $\texttt{A\_OP[p.operator,p,0,0,1] == 1}$
