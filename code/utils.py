@@ -46,7 +46,7 @@ def get_time_intervals (horizon_days, time_units_in_a_day, start_shift, end_shif
     prohibited_intervals.append((worktime_intervals[-1][1], horizon))
 
     # List of gap size relative to day index (0 being today)
-    gap_at = []
+    gap_at_day = []
     gap_idx = 0 if prohibited_intervals[0][0] > 0 else 1
     for g in range(horizon_days):
         time_step = g * time_units_in_a_day + start_shift
@@ -56,8 +56,8 @@ def get_time_intervals (horizon_days, time_units_in_a_day, start_shift, end_shif
         
         gap_start, gap_end = prohibited_intervals[gap_idx]
         if gap_start <= time_step <= gap_end:
-            gap_at.append(-1)  # Day inside a prohibited interval
+            gap_at_day.append(-1)  # Day inside a prohibited interval
         else :
-            gap_at.append(gap_end-gap_start)
+            gap_at_day.append(gap_end-gap_start)
 
-    return worktime_intervals, prohibited_intervals, gap_at, time_units_from_midnight
+    return worktime_intervals, prohibited_intervals, gap_at_day, time_units_from_midnight

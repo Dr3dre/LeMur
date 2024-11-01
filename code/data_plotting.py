@@ -30,12 +30,12 @@ def plot_gantt_chart(production_schedule, max_cycles, num_machines, horizon, pro
             if c in prod.machine.keys():
                 machine_position = 10 * prod.machine[c] + 5
                 # Cycle patch
-                gnt.broken_barh([(prod.setup_beg[c], prod.cycle_end[c] - prod.setup_beg[c])], (machine_position - rectangle_height / 2, rectangle_height), facecolors=(color,), edgecolors=('black',), linewidth=0.25)
+                edgecolor = 'red' if isinstance(prod, RunningProduct) and c == 0 else 'black'
+                linewidth = 0.8 if isinstance(prod, RunningProduct) and c == 0 else 0.25
+                gnt.broken_barh([(prod.setup_beg[c], prod.cycle_end[c] - prod.setup_beg[c])], (machine_position - rectangle_height / 2, rectangle_height), facecolors=(color,), edgecolors=(edgecolor,), linewidth=linewidth)
                 gnt.text((prod.setup_beg[c] + (prod.cycle_end[c] - prod.setup_beg[c]) / 2), machine_position, f'JOB {chr(p+65)}{c}, V[{prod.velocity[c]}]', color='black', ha='center', va='center', fontsize=8)
                 # Setup patch
-                start_clr = None if isinstance(prod, (RunningProduct)) else 'blue'
-                start_hatch = None if isinstance(prod, (RunningProduct)) else "///"
-                gnt.add_patch(patches.Rectangle((prod.setup_beg[c], machine_position - rectangle_height / 2), prod.setup_end[c]-prod.setup_beg[c], rectangle_height, linewidth=0.8, edgecolor=start_clr, facecolor='none', hatch=start_hatch, linestyle='-', alpha=0.75))
+                gnt.add_patch(patches.Rectangle((prod.setup_beg[c], machine_position - rectangle_height / 2), prod.setup_end[c]-prod.setup_beg[c], rectangle_height, linewidth=0.8, edgecolor='red', facecolor='none', hatch='///', linestyle='-', alpha=0.75))
                 # Load / Unload patches
                 for l in range(prod.num_levate[c]):
                     gnt.add_patch(patches.Rectangle((prod.load_beg[c,l], machine_position - rectangle_height / 2), (prod.load_end[c,l] - prod.load_beg[c,l]), rectangle_height, linewidth=0.8, edgecolor='black', facecolor='none', hatch='///', linestyle='-', alpha=0.75))
@@ -52,8 +52,7 @@ def plot_gantt_chart(production_schedule, max_cycles, num_machines, horizon, pro
     gnt.set_yticklabels([f'[{i}]' for i in range(num_machines)])
     # Legenda
     legend_elements = [
-        mpatches.Patch(facecolor='none', edgecolor='blue', hatch='///', label='Job Start'),
-        mpatches.Patch(facecolor='none', edgecolor='red', hatch='///', label='Job Completion'),
+        mpatches.Patch(facecolor='none', edgecolor='red', hatch='///', label='Job Start'),
         mpatches.Patch(facecolor='none', edgecolor='black', hatch='///', label='Levata Start'),
         mpatches.Patch(facecolor='gray', alpha=0.4, label='Non-working hours'),
         mpatches.Patch(facecolor='red', alpha=0.3, label='past')

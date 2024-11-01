@@ -1,4 +1,5 @@
 import random
+import copy
 
 class Product (object) :
     '''
@@ -146,8 +147,8 @@ def init_data(num_common_jobs, num_running_jobs, num_machines, num_op_groups, ho
         operator = avail_operators
         velocity = 0
         remaining_levate = 1 # random.randint(1, 3)
-        current_op_type = 2 #random.randint(0, 3)
-        remaining_time = random.randint(1, 10)
+        current_op_type = random.randint(0, 3)
+        remaining_time = 3 # Note that this can't exceed the amount of hours in a working day, or the GAP mechanism fails
         running_products.append(RunningProduct(product_id, article, kg_request, start_date, due_date, machine, operator, velocity, remaining_levate, current_op_type, remaining_time))
         product_id += 1
         avail_machines -= 1
