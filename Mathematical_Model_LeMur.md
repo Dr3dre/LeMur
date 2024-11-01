@@ -8,21 +8,28 @@ Notations
 - $\texttt{l}$ : index for levate in some cycle
 
 ### Sets
-- $\texttt{running\_products}$ : products which are already running a machine
-- $\texttt{Setup} = \forall \texttt{.(p,c)} - \texttt{(\{p in running\_prods and p.current\_op\_type == 0\}, 0)}$
-- $\texttt{Load} = \forall \texttt{.(p,c,l)} - \texttt{(\{p in running\_prods and p.current\_op\_type <= 1\}, 0, 0)}$
-- $\texttt{Running } = \forall \texttt{.(p,c,l)} - \texttt{(\{p in running\_prods and p.current\_op\_type <= 2\}, 0, 0)}$
-- $\texttt{Unload} = \forall \texttt{.(p,c,l)} - \texttt{(\{p in running\_prods and p.current\_op\_type <= 3\}, 0, 0)}$
+1. $\texttt{running\_products}$ : products which are already running a machine
+2. sets of indices relative to running products which need to be omitted to some constraints and treated separately 
+	- $\texttt{SETUP\_EXCL} = \texttt{(\{p in running\_prods and p.current\_op\_type == 0\}, 0)}$
+	- $\texttt{LOAD\_EXCL} = \texttt{(\{p in running\_prods and p.current\_op\_type <= 1\}, 0, 0)}$
+	- $\texttt{LEVATA\_EXCL} = \texttt{(\{p in running\_prods and p.current\_op\_type <= 2\}, 0, 0)}$
+	- $\texttt{UNLOAD\_EXCL} = \texttt{(\{p in running\_prods and p.current\_op\_type <= 3\}, 0, 0)}$
  
 ### Inputs
-1. $\texttt{standard\_levate(p)}$ : number of levate to do in an ordinary cycle for product $\texttt{p}$
-2. $\texttt{start\_date(p)}$ : minimum start time for any cycle of $\texttt{p}$
-3. $\texttt{due\_date(p)}$ : maximum end time for any cycle of $\texttt{p}$
-4. $\texttt{number\_of\_operator\_groups}$ : number of operator groups
-5. $\texttt{operators\_per\_group}$ : number of operators in a single group
+1. $\texttt{start\_shift}$ : start time of working shift
+2. $\texttt{end\_shift}$ : end time of working shift
+3. $\texttt{time\_units\_per\_day}$ : defines quantization scale of scheduling operation
+   (24 : hours, 48 : half hours, ... , 1440 : minutes )
+   --
+4. $\texttt{start\_date(p)}$ : minimum start time for any cycle of $\texttt{p}$
+5. $\texttt{due\_date(p)}$ : maximum end time for any cycle of $\texttt{p}$
+   --
 6. $\texttt{Kg\_requested(p)}$ : Kg to produce of product $\texttt{p}$
-7. $\texttt{start\_shift}$ :
-8. $\texttt{end\_shift}$ : 
+7. $\texttt{standard\_levate(p)}$ : number of levate to do in an ordinary cycle for product $\texttt{p}$
+   --
+8. $\texttt{number\_of\_operator\_groups}$ : number of operator groups
+9. $\texttt{operators\_per\_group}$ : number of operators in a single group
+10. .
 
 
 ### Domains
@@ -35,7 +42,7 @@ Notations
 
 ### Derived Constants
 1. $\texttt{best\_kg\_cycle(p)}$ : Kg produced in a single cycle by the better performing machine for product $\texttt{p}$ 
-2. $\texttt{gaps\_per\_day[g]}$ : width of gap associated to day $\texttt{g}$
+2. $\texttt{gap\_at\_day[g]}$ : width of gap associated to day $\texttt{g}$
 3. .
 
 
@@ -95,14 +102,6 @@ $\texttt{ACTIVE\_LEVATA[p,c,l]}$
 - **behavior** : 
 	- $\forall \texttt{.(p,c,l)}$
 	  $\texttt{ACTIVE\_LEVATA[p,c,l] == (l < NUM\_LEVATE[p,c])}$
-	
-$\texttt{ACTIVE\_CYCLE[p,c]}$
-- **domain** : $\{0,1\}$
-- **description** : states if a cycle is active (it exists) or not
-- **scope** : just for readability purposes 
-- **behavior** : 
-	- $\forall \texttt{.(p,c)}$
-	  $\texttt{ACTIVE\_CYCLE[p,c] == ACTIVE\_LEVATA[p,c,0]}$
 
 $\texttt{PARTIAL\_CYCLE[p,c]}$
 - **domain** : $\{0,1\}$
@@ -114,47 +113,75 @@ $\texttt{PARTIAL\_CYCLE[p,c]}$
 
 #### Costs
 
-$\texttt{GAP\_AT[G]}$
-- Element variable => $\texttt{gaps\_at(G) == gaps\_per\_day[g]}$
-- **description** : implemented using addElement, it's precomputed and used to calculate gap costs for a specific day to the next working day
+$\texttt{BASE\_SETUP\_COST[p,c]}$
+- **domain** : $[0, \texttt{due\_date(p)}]$
+- **description** : base cost (time) of machine setup operation, it accounts for machine association & available operators
+- **behavior** :
+	- $\forall \texttt{.(p,c) not in SETUP\_EXCL : A[p,c,m]} \implies$
+	  $\texttt{BASE\_SETUP\_COST[p,c] == base\_setup\_cost[m,p]}$
+	- $\forall \texttt{.(p,c) not in SETUP\_EXCL : ACTIVE\_CYCLE[p,c].Not()} \implies$
+	  $\texttt{BASE\_SETUP\_COST[p,c] == 0}$
+	  
+$\texttt{BASE\_LOAD\_COST[p,c,l]}$
+- **domain** : $[0, \texttt{due\_date(p)}]$
+- **description** : base cost (time) of machine load operation, it accounts for machine association & available operators
+- **behavior** :
+	- $\forall \texttt{.(p,c,l) not in LOAD\_EXCL : A[p,c,m]} \implies$
+	  $\texttt{BASE\_LOAD\_COST[p,c,l] == base\_load\_cost[m,p]}$
+	- $\forall \texttt{.(p,c) not in LOAD\_EXCL : ACTIVE\_LEVATA[p,c,l].Not()} \implies$
+	  $\texttt{BASE\_LOAD\_COST[p,c] == 0}$
+	  
+$\texttt{BASE\_UNLOAD\_COST[p,c,l]}$
+- **domain** : $[0, \texttt{due\_date(p)}]$
+- **description** : base cost (time) of machine unload operation, it accounts for machine association & available operators
+- **behavior** :
+	- $\forall \texttt{.(p,c,l) not in UNLOAD\_EXCL : A[p,c,m]} \implies$
+	  $\texttt{BASE\_UNLOAD\_COST[p,c,l] == base\_unload\_cost[m,p]}$
+	- $\forall \texttt{.(p,c) not in UNLOAD\_EXCL : ACTIVE\_LEVATA[p,c,l].Not()} \implies$
+	  $\texttt{BASE\_UNLOAD\_COST[p,c] == 0}$
 
-$\texttt{GAP(begin, base\_cost)}$
+$\texttt{function make\_gap\_var(BEGIN, BASE\_COST, IS\_ACTIVE)}$
 - **domain** : $[0, \texttt{horizon}]$
 - **description** : 
 - **behavior** : 
-	- $\texttt{G = begin // 24}$
-	- $\texttt{UB = end\_shift + 24*(G-1)}$
+	- $\texttt{gap\_at\_day[G] == GAP\_SIZE}$
+	- $\texttt{G = begin // time\_units\_per\_day}$
+	- $\texttt{UB = end\_shift + time\_units\_per\_day * G}$
 	- $\texttt{NEEDS\_GAP == begin + base\_cost > UB }$
-		- $\texttt{NEEDS\_GAP} \implies \texttt{GAP == GAP\_AT[G]}$
-		- $\texttt{NEEDS\_GAP.Not()} \implies \texttt{GAP == 0}$
-
+		- $\texttt{NEEDS\_GAP and IS\_ACTIVE} \implies \texttt{GAP == GAP\_SIZE}$
+		- $\texttt{NEEDS\_GAP.Not() and IS\_ACTIVE} \implies \texttt{GAP == 0}$
+		- $\texttt{IS\_ACTIVE.Not()} \implies \texttt{GAP == 0}$
+- **returns** : $\texttt{GAP}$
 
 $\texttt{SETUP\_COST[p,c]}$
 - **domain** : $[0, \texttt{due\_date(p)}]$
 - **description** : cost (time) of machine setup operation
 - **behavior** :
-	- $\forall \texttt{.(p,c) in Setup : A[p,c,m]} \implies$
-	  $\texttt{SETUP\_COST[p,c] == base\_setup\_cost[m,p] + GAP(begin,base\_cost)}$
-	
+	- $\forall \texttt{.(p,c) not in SETUP\_EXCL :}$
+	  $\texttt{GAP = make\_gap\_var(SETUP\_BEG, BASE\_SETUP\_COST, ACTIVE\_CYCLE)}$
+	  $\texttt{SETUP\_COST[p,c] == BASE\_SETUP\_COST[p,c] + GAP}$
 $\texttt{LOAD\_COST[p,c,l]}$
 - **domain** : $[0, \texttt{due\_date(p)}]$
 - **description** : cost (time) of machine load operation
 - **behavior** :
-	- $\forall \texttt{.(p,c,l) in Load : A[p,c,m]} \implies$
-	  $\texttt{LOAD\_COST[p,c,l] == base\_load\_cost[m,p] + GAP(begin,base\_cost)}$
-
+	- $\forall \texttt{.(p,c,l) not in LOAD\_EXCL :}$
+	  $\texttt{GAP = make\_gap\_var(LOAD\_BEG, BASE\_LOAD\_COST, ACTIVE\_LEVATA)}$
+	  $\texttt{LOAD\_COST[p,c,l] == BASE\_LOAD\_COST[p,c,l] + GAP}$
 $\texttt{UNLOAD\_COST[p,c,l]}$
 - **domain** : $[0, \texttt{due\_date(p)}]$
 - **description** : cost (time) of machine unload operation 
 - **behavior** :
-	- $\forall \texttt{.(p,c,l) in Unload : A[p,c,m]} \implies$
-	  $\texttt{UNLOAD\_COST[p,c] == base\_unload\_cost[m,p] + GAP(begin,base\_cost)}$
+	- $\forall \texttt{.(p,c,l) not in UNLOAD\_EXCL :}$
+	  $\texttt{GAP = make\_gap\_var(UNLOAD\_BEG, BASE\_UNLOAD\_COST, ACTIVE\_LEVATA)}$
+	  $\texttt{UNLOAD\_COST[p,c,l] == BASE\_UNLOAD\_COST[p,c,l] + GAP}$
 	
 $\texttt{LEVATA\_COST[p,c,l]}$
 - **domain** : $[0, \texttt{due\_date(p)}]$
 - **description** : cost (time) of machine levata operation 
 - **behavior** : 
-	-  $\forall\texttt{.(p,c,l) in Running : ACTIVE\_LEVATA[p,c,l]} \implies$  $\texttt{LEVATA\_COST[p,c,l] == base\_levata\_cost[p] - VELOCITY[p,c] * velocity\_step[p]}$
+	-  $\forall\texttt{.(p,c,l) not in LEVATA\_EXCL : ACTIVE\_LEVATA[p,c,l]} \implies$  $\texttt{LEVATA\_COST[p,c,l] == base\_levata\_cost[p] - VELOCITY[p,c] * velocity\_step[p]}$
+	- $\forall\texttt{.(p,c,l) not in LEVATA\_EXCL : ACTIVE\_LEVATA[p,c,l].Not()} \implies$
+	  $\texttt{LEVATA\_COST[p,c,l] == 0}$
 
 
 #### Time Ends
@@ -163,29 +190,22 @@ $\texttt{SETUP\_END[p,c]}$
 - **domain** : $x \in \texttt{worktime\_domain(p)}$
 - **description** : end of machine machine setup operation
 - **behavior** : 
-	- $\forall\texttt{.(p,c) : ACTIVE\_CYCLE[p,c]} \implies$
+	- $\forall\texttt{.(p,c) :}$
 	  $\texttt{LOAD\_END[p,c,l] == LOAD\_BEG[p,c,l] + LOAD\_COST[p,c,l]}$
 	  
 $\texttt{LOAD\_END[p,c,l]}$
 - **domain** : $x \in \texttt{worktime\_domain(p)}$
 - **description** : end of machine machine load operation
 - **behavior** : 
-	- $\forall\texttt{.(p,c,l) : ACTIVE\_LEVATA[p,c,l]} \implies$
+	- $\forall\texttt{.(p,c,l) :}$
 	  $\texttt{LOAD\_END[p,c,l] == LOAD\_BEG[p,c,l] + LOAD\_COST[p,c,l]}$
 	  
 $\texttt{UNLOAD\_END[p,c,l]}$
 - **domain** : $x \in \texttt{worktime\_domain(p)}$
 - **description** : end of machine machine unload operation
 - **behavior** : 
-	- $\forall\texttt{.(p,c,l) : ACTIVE\_LEVATA[p,c,l]} \implies$
+	- $\forall\texttt{.(p,c,l) :}$
 	  $\texttt{UNLOAD\_END[p,c,l] == UNLOAD\_BEG[p,c,l] + UNLOAD\_COST[p,c,l]}$
-	
-$\texttt{CYCLE\_END[p,c]}$
-- **domain** : $[0, \texttt{due\_date(p)}]$
-- **description** : time at which the cycle ends
-- **behavior** : 
-	- $\forall\texttt{.(p,c) : ACTIVE\_CYCLE[p,c]} \implies$
-	  $\texttt{CYCLE\_END[p,c] == UNLOAD\_END[p,c,-1]}$
 
 ### Operators
 
@@ -199,86 +219,100 @@ $\texttt{OPERATOR\_PER\_GROUP[o]}$
 ### Production goal
 
 $\texttt{KG\_CYCLE[p,c]}$
-- **domain** : $[0, \texttt{best\_kg\_cycle(p)}]$
+- **domain** : $[0, \texttt{production\_request(p) + best\_kg\_cycle(p)}]$
 - **description** : Kg produced by cycle $\texttt{c}$ of product $\texttt{p}$
 - **behavior** : 
 	- $\forall\texttt{.(p,c,m) :}$
 	  $\texttt{KG\_CYCLE[p,c] == NUM\_LEVATE[p,c] * }   \sum_{\texttt{m}} \texttt{(A[p,c,m] * Kg\_per\_levata[m,p])}$
 
-Constraints (search space reduction related)
+Aliases
 ---
 
-### Compactness :
-1. $\texttt{COMPLETE[p,c]} \ge \texttt{COMPLETE[p,c+1]}$
-2. $\texttt{ACTIVE\_CYCLE[p,c]} \ge \texttt{ACTIVE\_CYCLE[p,c+1]}$
+$\texttt{ACTIVE\_CYCLE[p,c]}$
+- **description** : Alias indicating if a cycle is active
+- **behavior** : $\forall \texttt{.(p,c) : ACTIVE\_CYCLE[p,c] = ACTIVE\_LEVATA[p,c,0]}$
+
+$\texttt{CYCLE\_BEG[p,c]}$
+- **description** : Alias indicating when the cycle begins
+- **behavior** : $\forall \texttt{.(p,c) : CYCLE\_BEG[p,c] = SETUP\_BEG[p,0]}$
+$\texttt{CYCLE\_END[p,c]}$
+- **description** : Alias indicating when the cycle ends
+- **behavior** : $\forall \texttt{.(p,c) : CYCLE\_END[p,c] = UNLOAD\_END[p,c,-1]}$
+
+
+Constraints (search space reduction related)
+---
+##### Compactness :
+1. $\forall \texttt{.(p,c) : COMPLETE[p,c]} \ge \texttt{COMPLETE[p,c+1]}$
+2. $\forall \texttt{.(p,c) : ACTIVE\_CYCLE[p,c]} \ge \texttt{ACTIVE\_CYCLE[p,c+1]}$
 
 Constraint (LeMur specific)
 ---
 
-1. Cycle machne assignment:
+1. Cycle machine assignment:
 	- An active cycle must have one and only one machine assigned
-		- $\forall \texttt{.(p,c)}$
-		$\texttt{ACTIVE\_CYCLE[p,c]} \implies \texttt{XOR(A[p,c,:])}$
+		- $\forall \texttt{.(p,c) :}$
+		  $\texttt{ACTIVE\_CYCLE[p,c]} \implies \texttt{XOR(A[p,c,:])}$
 	- A non active cycle must have 0 machines assigned
-		- $\forall \texttt{.(p,c)}$
-		$\texttt{ACTIVE\_CYCLE[p,c].Not()} \implies \texttt{OR(A[p,c,:]).Not()}$
+		- $\forall \texttt{.(p,c) :}$
+		  $\texttt{ACTIVE\_CYCLE[p,c].Not()} \implies \texttt{OR(A[p,c,:]).Not()}$
 
 2. At most one partial cycle per product 
-	- $\forall \texttt{.p}$
+	- $\forall \texttt{.(p) :}$
 	  $\texttt{AtMostOne(PARTIAL\_CYCLE[p,:])}$
 
 3. Connect cycle specific variables:
 	- The complete cycles must be active (only implication to allow for partials)
-		- $\forall \texttt{.(p,c)}$
+		- $\forall \texttt{.(p,c) :}$
 		  $\texttt{COMPLETE[p,c]} \implies \texttt{ACTIVE\_CYCLE[p,c]}$
-	- The partial cycle is the active but not complete (this carries the atmost one from partial to active so it needs to be a iff)
-		- $\forall \texttt{.(p,c)}$
+	- The partial cycle is the active but not complete (this carries the at most one from partial to active so it needs to be a if and only if)
+		- $\forall \texttt{.(p,c) :}$
 		  $\texttt{PARTIAL\_CYCLE[p,c]} \iff \texttt{ACTIVE\_CYCLE[p,c] and COMPLETE[p,c].Not()}$
 
 3. Tie number of levate to cycles
 	- If the cycle is complete, then the number of levate is the maximum one
-		- $\forall \texttt{.(p,c)}$
+		- $\forall \texttt{.(p,c) :}$
 		  $\texttt{COMPLETE[p,c]} \iff \texttt{NUM\_LEVATE[p,c] == standard\_levate(p)}$
 	- If the cycle is not active the number of levate is 0
-		- $\forall \texttt{.(p,c)}$
+		- $\forall \texttt{.(p,c) :}$
 		  $\texttt{ACTIVE\_CYCLE[p,c].Not()} \iff \texttt{NUM\_LEVATE[p,c] == 0}$
 	- If partial, then we search for the number of levate
-		- $\forall \texttt{.(p,c)}$
+		- $\forall \texttt{.(p,c) :}$
 		  $\texttt{PARTIAL\_CYCLE[p,c]} \iff \texttt{0 < NUM\_LEVATE[p,c] < standard\_levate(p)}$
 
-4. Start date / Due date : (is actually defined at domain level)
-	- $\forall \texttt{.p not in running\_prods}$
+4. Start date / Due date : (can actually be defined at domain level)
+	- $\forall \texttt{.(p) not in running\_prods :}$
 	  $\texttt{SETUP\_BEG[p,c]} \ge \texttt{start\_date(p)}$
-	- $\forall \texttt{.p}$
+	- $\forall \texttt{.(p) :}$
 	  $\texttt{UNLOAD\_END[p,c,-1]} < \texttt{due\_date(p)}$
 
 5. Objective : all products must reach the requested production
-	- $\forall \texttt{.p}$
+	- $\forall \texttt{.(p) :}$
 	  $\texttt{Kg\_requested(p)} \le \sum_{\texttt{c}}( \texttt{KG\_CYCLE[p,c]}) < \texttt{Kg\_requested(p) + best\_kg\_cycle(p)}$
 	
 6. Define ordering between time variables 
 	1. LOAD
-		- $\forall \texttt{.(p,c,l) in Load, if l == 0 : ACTIVE\_LEVATA[p,c,l]} \implies$
-	  $\texttt{LOAD\_BEG[p,c,l]} \ge \texttt{SETUP\_END[p,c])}$
-		- $\forall \texttt{.(p,c,l) in Load, if l > 0 : ACTIVE\_LEVATA[p,c,l]} \implies$
-	  $\texttt{LOAD\_BEG[p,c,l] == UNLOAD\_END[p,c,l-1])}$
-			  
+		- $\forall \texttt{.(p,c,l) not in LOAD\_EXCL, if l == 0 : ACTIVE\_LEVATA[p,c,l]} \implies$
+		  $\texttt{LOAD\_BEG[p,c,l]} \ge \texttt{SETUP\_END[p,c])}$
+		- $\forall \texttt{.(p,c,l) not in LOAD\_EXCL, if l > 0 : ACTIVE\_LEVATA[p,c,l]} \implies$
+		  $\texttt{LOAD\_BEG[p,c,l] == UNLOAD\_END[p,c,l-1])}$
+  
 	2. UNLOAD
-		- $\forall \texttt{.(p,c,l) in Unload : ACTIVE\_LEVATA[p,c,l]} \implies$
-	  $\texttt{UNLOAD\_BEG[p,c,l]} \ge \texttt{LOAD\_END[p,c,l] + LEVATA\_COST[p,c,l]}$
+		- $\forall \texttt{.(p,c,l) not in UNLOAD\_EXCL : ACTIVE\_LEVATA[p,c,l]} \implies$
+		  $\texttt{UNLOAD\_BEG[p,c,l]} \ge \texttt{LOAD\_END[p,c,l] + LEVATA\_COST[p,c,l]}$
 		  
 	3. PARTIAL LOADS / UNLOADS :  Collapse all non used levata operations at the end of the previous one
 		- $\texttt{PARTIAL\_CYCLE[p,c] and ACTIVE\_LEVATA[p,c,l].Not()} \implies$
-			- $\forall \texttt{.(p,c,l) in Load, if l > 0 :}$
+			- $\forall \texttt{.(p,c,l) not in LOAD\_EXCL, if l > 0 :}$
 				- $\texttt{LOAD\_BEG[p,c,l] == LOAD\_BEG[p,c,l-1]}$
-			- $\forall \texttt{.(p,c,l) in Unoad, if l > 0 :}$
+			- $\forall \texttt{.(p,c,l) not in UNLOAD\_EXCL, if l > 0 :}$
 				- $\texttt{UNLOAD\_BEG[p,c,l] == UNLOAD\_BEG[p,c,l-1]}$
 		  
 	4. INACTIVE CYCLES they are handled by shoving them at the beginning
 		- $\forall \texttt{.(p,c,l) : ACTIVE\_CYCLE[p,c].Not()} \implies$
-			- $\texttt{LOAD\_BEG[p,c,l] == 0}$
-			- $\texttt{UNLOAD\_BEG[p,c,l] == 0}$
-  
+			- $\texttt{LOAD\_BEG[p,c,l] == 0 ; LOAD\_END[p,c,l] == 0}$
+			- $\texttt{UNLOAD\_BEG[p,c,l] == 0 ; UNLOAD\_END[p,c,l] == 0}$
+	
 7. No overlap between product cycles on same machine :
 	- $\forall \texttt{.(m)}$
 		- $\forall \texttt{.(p,c)}$ $\texttt{NoOverlap([}\texttt{A[p,c,m]} \implies \exists \texttt{.Interval(SETUP\_BEG[p,c], UNLOAD\_END[p,c,-1])])}$
