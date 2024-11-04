@@ -84,7 +84,7 @@ class Schedule(object):
         return len(self.products)
 
 
-def init_data(num_common_jobs, num_running_jobs, num_machines, num_op_groups, horizon) :
+def init_data(num_common_jobs, num_running_jobs, num_machines, num_articles, num_op_groups, horizon) :
     """
     Job data randomly generated
     """
@@ -92,44 +92,43 @@ def init_data(num_common_jobs, num_running_jobs, num_machines, num_op_groups, ho
     num_total_jobs = num_common_jobs + num_running_jobs
 
     # Fake list of articles
-    num_aritcles = 10
-    articles = [a for a in range(num_aritcles)]
+    articles = [a for a in range(num_articles)]
 
     # Fake Machine - Job & Job - Machine compatibility
     job_compatibility = {}
     machine_compatibility = {}
     for m in range(num_machines):
-        machine_compatibility[m] = [j for j in range(num_total_jobs)]  # All other machines are compatible with all jobs
-    for j in range(num_total_jobs):
-        job_compatibility[j] = [i for i in range(num_machines)]  # All jobs are compatible with all machines except machine 0
+        machine_compatibility[m] = [a for a in range(num_articles)]  # All other machines are compatible with all jobs
+    for a in range(num_articles):
+        job_compatibility[a] = [i for i in range(num_machines)]  # All jobs are compatible with all machines except machine 0
 
     # Fake costs
     base_setup_cost = {}
     base_load_cost = {}
     base_unload_cost = {}
     base_levata_cost = {}
-    for p in range(num_total_jobs):
-        base_levata_cost[p] = 24*random.randint(2,4)
-        for m in range(num_machines) :
-            base_setup_cost[p,m] = 2
-            base_load_cost[p,m] = 3
-            base_unload_cost[p,m] = 3
+    for a in range(num_articles):
+        base_levata_cost[a] = 24*random.randint(2,4)
+        for m in job_compatibility[a]:
+            base_setup_cost[a,m] = 2
+            base_load_cost[a,m] = 3
+            base_unload_cost[a,m] = 3
 
     # Fake specs
     kg_per_levata = {}
     for m in range(num_machines) :
-        for j in range(num_total_jobs) :
-            kg_per_levata[m,j] = random.randint(2, 5)
+        for a in machine_compatibility[m] :
+            kg_per_levata[m,a] = random.randint(2, 5)
     standard_levate = {}
-    for j in range(num_total_jobs) :
-        standard_levate[j] = random.randint(2, 4)
+    for a in range(num_articles) :
+        standard_levate[a] = random.randint(2, 4)
 
     # Initialize objects
     common_products = []
     product_id = 0
     for _ in range(num_common_jobs) :
-        article = random.randint(0, len(articles))
-        kg_request = random.randint(10, 20)
+        article = random.randint(0, len(articles)-1)
+        kg_request = random.randint(10, 40)
         start_date = 0
         due_date = horizon
         common_products.append(Product(product_id, article, kg_request, start_date, due_date))
@@ -139,15 +138,17 @@ def init_data(num_common_jobs, num_running_jobs, num_machines, num_op_groups, ho
     avail_machines = num_machines-1
     avail_operators = num_op_groups-1
     for _ in range(num_running_jobs): 
-        article = random.randint(0, len(articles))
-        kg_request = random.randint(10, 20)
+        article = random.randint(0, len(articles)-1)
         start_date = 0
         due_date = horizon
         machine = avail_machines
         operator = avail_operators
         velocity = 0
-        remaining_levate = 1 # random.randint(1, 3)
+        remaining_levate = random.randint(1, standard_levate[article])
+        kg_request = kg_per_levata[machine,article] * remaining_levate
         current_op_type = random.randint(0, 3)
+        if current_op_type in [0,1,3] and avail_operators < 0 :
+            current_op_type = 2
         remaining_time = 3 # Note that this can't exceed the amount of hours in a working day, or the GAP mechanism fails
         running_products.append(RunningProduct(product_id, article, kg_request, start_date, due_date, machine, operator, velocity, remaining_levate, current_op_type, remaining_time))
         product_id += 1

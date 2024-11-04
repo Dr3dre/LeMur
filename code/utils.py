@@ -23,11 +23,11 @@ def get_time_intervals (horizon_days, time_units_in_a_day, start_shift, end_shif
     # Define worktime intervals according to current daytime
     worktime_intervals = []
     # first interval (scheduling startin in or out workday)
-    if (time_units_from_midnight < end_shift) and (current_day_of_week % days_in_week not in [5,6]):
+    if (time_units_from_midnight < end_shift) and (time_units_from_midnight > start_shift) and (current_day_of_week % days_in_week not in [6]):
         worktime_intervals.append((time_units_from_midnight,end_shift))
     # Handle remaining cases
     for day in range(1,horizon_days) :
-        if (day + current_day_of_week) % days_in_week not in [5,6]:
+        if (day + current_day_of_week) % days_in_week not in [6]:
             workday_start = day*time_units_in_a_day + start_shift
             workday_end = day*time_units_in_a_day + end_shift
             worktime_intervals.append((workday_start, workday_end))
@@ -60,4 +60,4 @@ def get_time_intervals (horizon_days, time_units_in_a_day, start_shift, end_shif
         else :
             gap_at_day.append(gap_end-gap_start)
 
-    return worktime_intervals, prohibited_intervals, gap_at_day, time_units_from_midnight
+    return worktime_intervals, prohibited_intervals, gap_at_day, time_units_from_midnight, worktime_intervals[0][0]
