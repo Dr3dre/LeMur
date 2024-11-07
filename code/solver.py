@@ -15,11 +15,17 @@ args = parser.parse_args()
 INPUT DATA
 '''
 
+# timouts for solver
+MAKESPAN_SOLVER_TIMEOUT = 60
+CYCLE_OPTIM_SOLVER_TIMEOUT = 60
+
+USE_ADD_ELEMENT = False
+
 constraints = []
 
-num_common_jobs = 10
-num_running_jobs = 3
-num_machines = 70
+num_common_jobs = 8
+num_running_jobs = 5
+num_machines = 10
 num_articles = 2500
 machine_velocities = 3
 
@@ -344,13 +350,57 @@ if __name__ == '__main__':
         
         return GAP
 
+    def make_gap_var_linear(model, BEGIN, BASE_COST, IS_ACTIVE, gap_at_day, time_units_in_a_day, end_shift, horizon_days, constraints, enabled=True):
+        '''
+        Returns a GAP variable to allow setup / load / unload operations
+        to be performed over multiple days (if needed) without using AddElement.
+        '''
+        if not enabled: return 0 # for testing purposes
+        
+        # Associate day index to relative gap size
+        G = model.NewIntVar(0, horizon_days, 'G')
+        GAP_SIZE = model.NewIntVar(0, max(gap_at_day), 'GAP_SIZE')
+        for i, gap in enumerate(gap_at_day):
+            G_i = model.NewBoolVar(f'G_{i}')
+            model.Add(G == i).OnlyEnforceIf(G_i)
+            model.Add(GAP_SIZE == gap).OnlyEnforceIf(G_i)
+            constraints.append(f"Associate day index to relative gap size {GAP_SIZE} == {gap} {G} == {i}")
+
+        # Get current day
+        model.AddDivisionEquality(G, BEGIN, time_units_in_a_day)
+        constraints.append(f"Get current day {G} == {BEGIN} / {time_units_in_a_day}")
+        UB = end_shift + time_units_in_a_day*G
+
+        # Understand if such operation goes beyond the worktime
+        NEEDS_GAP = model.NewBoolVar('NEEDS_GAP')
+        model.Add((BEGIN + BASE_COST) > UB).OnlyEnforceIf(NEEDS_GAP, IS_ACTIVE)
+        constraints.append(f"Understand if such operation goes beyond the worktime {BEGIN} + {BASE_COST} > {UB}")
+        model.Add((BEGIN + BASE_COST) <= UB).OnlyEnforceIf(NEEDS_GAP.Not(), IS_ACTIVE)
+        constraints.append(f"Understand if such operation goes beyond the worktime {BEGIN} + {BASE_COST} <= {UB}")
+        
+        # Associate to GAP if needed, otherwise it's zero
+        GAP = model.NewIntVar(0, max(gap_at_day), 'GAP')
+        model.Add(GAP == GAP_SIZE).OnlyEnforceIf(NEEDS_GAP, IS_ACTIVE)
+        constraints.append(f"Associate to GAP if needed, otherwise it's zero {GAP} == {GAP_SIZE}")
+        model.Add(GAP == 0).OnlyEnforceIf(NEEDS_GAP.Not(), IS_ACTIVE)
+        constraints.append(f"Associate to GAP if needed, otherwise it's zero {GAP} == 0")
+        # If not active, GAP is also zero
+        model.Add(GAP == 0).OnlyEnforceIf(IS_ACTIVE.Not())
+        constraints.append(f"If not active, GAP is also zero {GAP} == 0")
+
+        return GAP
+
+
     # cost (time) of machine setup operation
     SETUP_COST = {}
     for p, prod in all_products:
         for c in range(max_cycles[p]):
             SETUP_COST[p,c] = model.NewIntVar(0, prod.due_date, f'SETUP_COST[{p},{c}]')
             # behaviour
-            SETUP_GAP = make_gap_var(SETUP_BEG[p,c], BASE_SETUP_COST[p,c], ACTIVE_CYCLE[p,c])
+            if USE_ADD_ELEMENT:
+                SETUP_GAP = make_gap_var(SETUP_BEG[p,c], BASE_SETUP_COST[p,c], ACTIVE_CYCLE[p,c])
+            else:
+                SETUP_GAP = make_gap_var_linear(model, SETUP_BEG[p,c], BASE_SETUP_COST[p,c], ACTIVE_CYCLE[p,c], gap_at_day, time_units_in_a_day, end_shift, horizon_days, constraints)
             model.Add(SETUP_COST[p,c] == BASE_SETUP_COST[p,c] + SETUP_GAP)
             constraints.append(f"cost (time) of machine setup operation {SETUP_COST[p,c]} == {BASE_SETUP_COST[p,c]} + {SETUP_GAP}")
     
@@ -361,7 +411,10 @@ if __name__ == '__main__':
             for l in range(standard_levate[p]):
                 LOAD_COST[p,c,l] = model.NewIntVar(0, prod.due_date, f'LOAD_COST[{p},{c},{l}]')
                 # behaviour
-                LOAD_GAP = make_gap_var(LOAD_BEG[p,c,l], BASE_LOAD_COST[p,c,l], ACTIVE_LEVATA[p,c,l])
+                if USE_ADD_ELEMENT:
+                    LOAD_GAP = make_gap_var(LOAD_BEG[p,c,l], BASE_LOAD_COST[p,c,l], ACTIVE_LEVATA[p,c,l])
+                else:
+                    LOAD_GAP = make_gap_var_linear(model, LOAD_BEG[p,c,l], BASE_LOAD_COST[p,c,l], ACTIVE_LEVATA[p,c,l], gap_at_day, time_units_in_a_day, end_shift, horizon_days, constraints)
                 model.Add(LOAD_COST[p,c,l] == BASE_LOAD_COST[p,c,l] + LOAD_GAP)
                 constraints.append(f"cost (time) of machine load operation {LOAD_COST[p,c,l]} == {BASE_LOAD_COST[p,c,l]} + {LOAD_GAP}")
     # cost (time) of machine unload operation
@@ -371,7 +424,10 @@ if __name__ == '__main__':
             for l in range(standard_levate[p]):
                 UNLOAD_COST[p,c,l] = model.NewIntVar(0, prod.due_date, f'UNLOAD_COST[{p},{c},{l}]')
                 # behaviour
-                UNLOAD_GAP = make_gap_var(UNLOAD_BEG[p,c,l], BASE_UNLOAD_COST[p,c,l], ACTIVE_LEVATA[p,c,l])
+                if USE_ADD_ELEMENT:
+                    UNLOAD_GAP = make_gap_var(UNLOAD_BEG[p,c,l], BASE_UNLOAD_COST[p,c,l], ACTIVE_LEVATA[p,c,l])
+                else:
+                    UNLOAD_GAP = make_gap_var_linear(model, UNLOAD_BEG[p,c,l], BASE_UNLOAD_COST[p,c,l], ACTIVE_LEVATA[p,c,l], gap_at_day, time_units_in_a_day, end_shift, horizon_days, constraints)
                 model.Add(UNLOAD_COST[p,c,l] == BASE_UNLOAD_COST[p,c,l] + UNLOAD_GAP)
                 constraints.append(f"cost (time) of machine unload operation {UNLOAD_COST[p,c,l]} == {BASE_UNLOAD_COST[p,c,l]} + {UNLOAD_GAP}")
 
@@ -655,16 +711,20 @@ if __name__ == '__main__':
         makespan = model.NewIntVar(0, horizon, 'makespan')
         model.AddMaxEquality(makespan, [CYCLE_END[p,c] for p, _ in all_products for c in range(max_cycles[p])])
         # product end variables
-        weight_compactness = 1 / (horizon * sum([max_cycles[p] for p, _ in all_products]))
-        model.Minimize(makespan + sum([(CYCLE_END[p,c]) for p, _ in all_products for c in range(max_cycles[p])]) * weight_compactness)
     else :
         raise ValueError("Unsupported optimization criterion. Use 'tardiness' or 'makespan'.")
 
     # Solve the model
     solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = 60.0
+    solver.parameters.max_time_in_seconds = MAKESPAN_SOLVER_TIMEOUT
     solver.parameters.log_search_progress = True
+        
+    model.Minimize(makespan)
     status = solver.Solve(model)
+    if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+        model.Minimize(sum([CYCLE_END[p,c] for p, _ in all_products for c in range(max_cycles[p])]))
+        solver.parameters.max_time_in_seconds = CYCLE_OPTIM_SOLVER_TIMEOUT
+        status = solver.Solve(model)
 
     '''
     PLOTTING
