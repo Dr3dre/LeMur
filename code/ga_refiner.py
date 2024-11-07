@@ -20,6 +20,10 @@ def overlaps(intervals):
         n -= s
     return result
 
+def print_solution (candidate) :
+    for cycle in candidate :
+        print(cycle)
+
 
 # individual = iterable of cycles c such as : [ pos, load_beg[num_levate[c]], load_end[num_levate[c]], unload_beg[num_levate[c]], unload_end[num_levate[c]]]
 
@@ -84,7 +88,7 @@ def ga_refinement (products, num_machines, base_op_cost, levata_cost, velocity_s
 
             # total fitness accounts for makespan and weighted penalty
             fitness.append(this_fitness + penalty_weight * penalty)
-
+    
         return fitness
 
     def adjust_operation (beg, end, cost) :
@@ -95,64 +99,85 @@ def ga_refinement (products, num_machines, base_op_cost, levata_cost, velocity_s
         if end > (end_shift + time_units_in_a_day*beg_day) :
             end += gap_at_day[beg_day]
 
-    def adjust_cycle (cycle) :
+        return beg, end
+
+    def adjust_cycle (cycle, new_beg) :
+        # scale levata cost according to velocity
         effective_levata_cost = levata_cost[cycle["product"]] - cycle["velocity"]*velocity_step_size[cycle["product"]]
         for l in range(len(cycle["load_beg"])) :
-            adjust_operation(cycle["load_beg"][l], cycle["load_end"][l], base_op_cost[cycle["product"], machine])
-            adjust_operation(cycle["load_end"][l], cycle["unload_beg"][l], effective_levata_cost)
-            adjust_operation(cycle["unload_beg"][l], cycle["unload_end"][l], base_op_cost[cycle["product"], machine]) 
+            # on first levata, set new beginning according to input
+            # on the rest, set new beginning according to previous end
+            cycle["load_beg"][l] = new_beg
+            # adjust all operations of this levata
+            cycle["load_beg"][l], cycle["load_end"][l] = adjust_operation(cycle["load_beg"][l], cycle["load_end"][l], base_op_cost[cycle["product"], machine])
+            cycle["load_end"][l], cycle["unload_beg"][l] = adjust_operation(cycle["load_end"][l], cycle["unload_beg"][l], effective_levata_cost)
+            cycle["unload_beg"][l], cycle["unload_end"][l] = adjust_operation(cycle["unload_beg"][l], cycle["unload_end"][l], base_op_cost[cycle["product"], machine])
+            # set starting point for next levata
+            new_beg = cycle["unload_end"][l]
 
     def mutation (random, candidates, args) :
-        # 50% chance mutating levate :
+        
         for individual in candidates :
-            if random.choice([0,1]) == 0 : 
+            # 50% chance "taking a step to the left / right"
+            if random.random() < 0.5 :
+                # First cycle moves to the left by some amount
+                new_beg = individual[0]["load_beg"][0] - random.choice([-1,1])
+                # adjust all cycles
                 for cycle in individual :
-                    for l in range(len(cycle["load_beg"])) :
-                        if random.choice([0,1]) == 0 : # 50% chance of mutating Load of levata "l"
-                            cycle["load_beg"][l] += random.choice([-1, 1])
-                            adjust_operation(cycle["load_beg"][l], cycle["load_end"][l], base_op_cost[cycle["product"], machine])
-                        if random.choice([0,1]) == 0 : # 50% chance of mutating Load of levata "l"
-                            cycle["unload_beg"][l] += random.choice([-1, 1])
-                            adjust_operation(cycle["unload_beg"][l], cycle["unload_end"][l], base_op_cost[cycle["product"], machine])
-            else :
-                # mutate cycle position
+                    adjust_cycle(cycle, new_beg)
+                    # next start is the end of previous cycle
+                    new_beg = cycle["unload_end"][-1]
+
+            # 50% chance of "swapping 2 cycles"
+            if random.random() < 0.5 : 
+                # change cycle position
                 cycle1 = random.choice(individual)
                 cycle2 = random.choice(individual)
                 if cycle1["pos"] != cycle2["pos"] :
+                    # swap positions and beginnings and actual order in the list
                     cycle1["pos"], cycle2["pos"] = cycle2["pos"], cycle1["pos"]
                     cycle1["load_beg"][0], cycle2["load_beg"][0] = cycle2["load_beg"][0], cycle1["load_beg"][0]
-                    adjust_cycle(cycle1)
-                    adjust_cycle(cycle2)
-        
+                    # phisically swap their positions in the list
+                    individual[cycle1["pos"]], individual[cycle2["pos"]] = individual[cycle2["pos"]], individual[cycle1["pos"]]
+                    # find which cycle starts first between the two
+                    first_pos = min(cycle1["pos"], cycle2["pos"])
+                    first_cycle = cycle1 if cycle1["pos"] < cycle2["pos"] else cycle2
+                    # adjust it separately
+                    adjust_cycle(first_cycle, first_cycle["load_beg"][0])
+                    # adjust also all cycles coming after
+                    new_beg = first_cycle["unload_end"][-1]
+                    for cycle in individual :
+                        if cycle["pos"] > first_pos :
+                            adjust_cycle(cycle, new_beg)
+                            new_beg = cycle["unload_end"][-1]
         return candidates
 
     def crossover (random, candidate, args) :
         pass
 
-    algorithm = ec.EvolutionaryComputation(prng)
-    algorithm.terminator = ec.terminators.default_termination
+    algorithm = ec.GA(prng)
+    algorithm.terminator = ec.terminators.generation_termination
     algorithm.replacer = ec.replacers.steady_state_replacement    
-    algorithm.variator = [ec.variators.default_variation, mutation]
+    algorithm.variator = [ec.variators.uniform_crossover, mutation]
     algorithm.selector = ec.selectors.tournament_selection
+
+    population = 50
 
     final_pop = algorithm.evolve(
         generator=generator,
         evaluator=evaluator,
-        pop_size=50,
+        pop_size=population,
         maximize=False,
-        mutation_rate=1,
+        num_selected=population,
+        mutation_rate=0.5,
+        crossover_rate=0,
         max_generations=500,
+        tournament_size=7,
     )
 
-    best_idx = 0
-    best_fitness = sys.maxsize
-    for idx, solution in enumerate(final_pop) :
-        if solution.fitness < best_fitness :
-            best_fitness = solution.fitness
-            best_idx = idx
+    for solution in final_pop :
+        print(solution.fitness)
     
-    print(final_pop[best_idx].fitness)
-
-    return final_pop[best_idx]
+    return final_pop
 
 
