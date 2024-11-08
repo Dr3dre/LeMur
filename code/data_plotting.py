@@ -60,7 +60,10 @@ def plot_gantt_chart(production_schedule, max_cycles, num_machines, horizon, pro
     gnt.legend(handles=legend_elements, loc='upper right', bbox_to_anchor=(1, 1.125), fontsize=8)
     # Show
     plt.pause(0.1)
-    plt.get_current_fig_manager().window.state('zoomed')
+    try:
+        plt.get_current_fig_manager().window.state('zoomed')
+    except:
+        print('something went wrong on the get_current_fig_manager or the window.state attribute')
     plt.pause(0.1)
     plt.show()
 

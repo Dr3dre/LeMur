@@ -22,11 +22,12 @@ CYCLE_OPTIM_SOLVER_TIMEOUT = 60
 USE_ADD_ELEMENT = False
 
 constraints = []
+broken_machines = [] # put here the number of the broken machines
 
-num_common_jobs = 8
-num_running_jobs = 5
-num_machines = 10
-num_articles = 2500
+num_common_jobs = 3
+num_running_jobs = 2
+num_machines = 5
+num_articles = 200
 machine_velocities = 3
 
 horizon_days = 100
@@ -147,6 +148,13 @@ if __name__ == '__main__':
         for c in range(max_cycles[p]):
             for m in prod_to_machine_comp[p]:
                 A[p,c,m] = model.NewBoolVar(f'A[{p},{c},{m}]')
+
+    # Adding broken machines
+    if len(broken_machines) != 0:
+        for p, _ in all_products:
+            for c in range(max_cycles[p]):
+                for m in broken_machines:
+                    A[p,c,m] = model.NewConstant(0)
     # States if the cycle is a completion cycle
     COMPLETE = {}
     for p, _ in all_products:
