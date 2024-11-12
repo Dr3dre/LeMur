@@ -20,6 +20,7 @@ MAKESPAN_SOLVER_TIMEOUT = 60
 CYCLE_OPTIM_SOLVER_TIMEOUT = 60
 
 USE_ADD_ELEMENT = False
+CSV_PATH = './data/new_orders.csv'
 
 constraints = []
 broken_machines = [] # put here the number of the broken machines
@@ -46,6 +47,9 @@ if machine_velocities % 2 == 0 :
 
 # Data initialization (at random for the moment)
 common_products, running_products, article_to_machine_comp, machine_to_article_comp, base_setup_art_cost, base_load_art_cost, base_unload_art_cost, base_levata_art_cost, standard_levate_art, kg_per_levata_art = init_data(num_common_jobs, num_running_jobs, num_machines, num_articles, num_operator_groups, horizon)
+
+if initialize_data:
+    common_products, running_products, article_to_machine_comp, machine_to_article_comp, base_setup_art_cost, base_load_art_cost, base_unload_art_cost, base_levata_art_cost, standard_levate_art, kg_per_levata_art = init_csv_data(CSV_PATH)
 
 # Make joint tuples (for readability purp.)
 common_products = [(prod.id, prod) for prod in common_products]

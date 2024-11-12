@@ -1,5 +1,6 @@
 import random
 import copy
+import csv
 
 class Product (object) :
     '''
@@ -157,3 +158,13 @@ def init_data(num_common_jobs, num_running_jobs, num_machines, num_articles, num
 
 
     return common_products, running_products, job_compatibility, machine_compatibility, base_setup_cost, base_load_cost, base_unload_cost, base_levata_cost, standard_levate, kg_per_levata
+
+def init_csv_data(csv_path: str):
+    with open(csv_path, newline='') as csvfile:
+
+        csv_data = csv.reader(csvfile, delimiter=' ', quotechar='|')
+
+        for row in csv_data:
+            print(', '.join(row))
+
+    # return common_products, running_products, job_compatibility, machine_compatibility, base_setup_cost, base_load_cost, base_unload_cost, base_levata_cost, standard_levate, kg_per_levata
