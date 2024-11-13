@@ -528,11 +528,8 @@ if __name__ == '__main__':
         for c in range(max_cycles[p]):
             # 1.1 An active cycle must have one and only one machine assigned
             #   !!! note !!! : for some reason, BoolXor and ExactlyOne don't support the OnlyEnforceIf (documentation says that) only BoolAnd / BoolOr does
-            model.Add(sum([A[p,c,m] for m in prod_to_machine_comp[p]]) == 1).OnlyEnforceIf(ACTIVE_CYCLE[p,c])
+            model.AddBoolXOr([A[p,c,m] for m in prod_to_machine_comp[p]]+[ACTIVE_CYCLE[p,c].Not()])
             constraints.append(f"A non active cycle must have 0 machines assigned sum([A[{p},{c},{m}] for m in prod_to_machine_comp[{p}]]) == 1")
-            # 1.2 A non active cycle must have 0 machines assigned
-            model.AddBoolAnd([A[p,c,m].Not() for m in prod_to_machine_comp[p]]).OnlyEnforceIf(ACTIVE_CYCLE[p,c].Not())    
-            constraints.append(f"A non active cycle must have 0 machines assigned sum([A[{p},{c},{m}] for m in prod_to_machine_comp[{p}]]) == 0")
 
     # 2 : At most one partial cycle per product
     for p, prod in all_products:
@@ -639,22 +636,16 @@ if __name__ == '__main__':
     for p, _ in all_products:
         for c in range(max_cycles[p]):
             # 9.1 The active cycles' setups must be assigned to one operator
-            model.Add(sum([A_OP_SETUP[o,p,c] for o in range(num_operator_groups)]) == 1).OnlyEnforceIf(ACTIVE_CYCLE[p,c])
+            model.AddBoolXOr([A_OP_SETUP[o,p,c] for o in range(num_operator_groups)] + [ACTIVE_CYCLE[p,c].Not()])
             constraints.append(f"The active cycles' setups must be assigned to one operator {sum([A_OP_SETUP[o,p,c] for o in range(num_operator_groups)])} == 1")
-            # 9.2 The non active cycles' setups must have no operator assigned
-            model.AddBoolAnd([A_OP_SETUP[o,p,c].Not() for o in range(num_operator_groups)]).OnlyEnforceIf(ACTIVE_CYCLE[p,c].Not())
-            constraints.append(f"The non active cycles' setups must have no operator assigned {A_OP_SETUP[o,p,c].Not()} for o in range({num_operator_groups})")
 
     for p, _ in all_products:
         for c in range(max_cycles[p]):
             for l in range(standard_levate[p]):
                 for t in [0,1]:
                     # 9.3 The levate must have an operator assigned for the load and the unload operation:
-                    model.Add(sum([A_OP[o,p,c,l,t] for o in range(num_operator_groups)]) == 1).OnlyEnforceIf(ACTIVE_LEVATA[p,c,l])
+                    model.AddBoolXOr([A_OP[o,p,c,l,t] for o in range(num_operator_groups)] + [ACTIVE_LEVATA[p,c,l].Not()])
                     constraints.append(f"The levate must have an operator assigned for the load and the unload operation {sum([A_OP[o,p,c,l,t] for o in range(num_operator_groups)])} == 1")
-                    # 9.4 The non active levate must have no operator assigned for the load and the unload operation:
-                    model.AddBoolAnd([A_OP[o,p,c,l,t].Not() for o in range(num_operator_groups)]).OnlyEnforceIf(ACTIVE_LEVATA[p,c,l].Not())
-                    constraints.append(f"The non active levate must have no operator assigned for the load and the unload operation {A_OP[o,p,c,l,t].Not()} for o in range({num_operator_groups})")
     
     for o in range(num_operator_groups) :
         # 9.5 create intervals for each operation operators have to handle:
