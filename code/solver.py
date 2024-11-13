@@ -91,7 +91,7 @@ worktime_intervals, prohibited_intervals, gap_at_day, time_units_from_midnight, 
 velocity_levels = list(range(-(machine_velocities//2), (machine_velocities//2) + 1)) # machine velocities = 3 => [-1, 0, 1]
 velocity_step_size = {}
 for p, prod in all_products:
-    velocity_step_size[p] = int((0.05 / max(velocity_levels)) * base_levata_cost[p])
+    velocity_step_size[p] = int((0.05 / max(1,max(velocity_levels))) * base_levata_cost[p])
 
 # Generate custom domain excluding out of work hours, weekends, etc.
 #   make it personalized for each product, excluding values < start_date[p] and > due_date[p]
