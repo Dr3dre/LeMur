@@ -502,9 +502,9 @@ if __name__ == '__main__':
             # behaviour
             ACTUAL_KG_PER_LEVATA = model.NewIntVar(0, prod.kg_request, f'ACTUAL_KG_PER_LEVATA[{p},{c}]')
             model.Add(ACTUAL_KG_PER_LEVATA == sum([A[p,c,m]*kg_per_levata[m,p] for m in prod_to_machine_comp[p]]))
-            constraints.append(f"number of kg produced by a cycle {ACTUAL_KG_PER_LEVATA} == sum([A[{p},{c},{m}]*{kg_per_levata[m,p]} for m in prod_to_machine_comp[{p}]])")
+            constraints.append(f"number of kg produced by a cycle 1")
             model.AddMultiplicationEquality(KG_CYCLE[p,c], NUM_LEVATE[p,c], ACTUAL_KG_PER_LEVATA)
-            constraints.append(f"number of kg produced by a cycle {KG_CYCLE[p,c]} == {NUM_LEVATE[p,c]} * {ACTUAL_KG_PER_LEVATA}")
+            constraints.append(f"number of kg produced by a cycle 2")
 
 
     '''
