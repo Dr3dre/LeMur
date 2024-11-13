@@ -5,6 +5,7 @@ import math
 from data_init import *
 from data_plotting import *
 from utils import *
+import os
 
 # Parsing args.
 parser = argparse.ArgumentParser(description='Job Scheduling Optimization')
@@ -727,13 +728,41 @@ if __name__ == '__main__':
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = MAKESPAN_SOLVER_TIMEOUT
     solver.parameters.log_search_progress = True
+    solver.parameters.num_search_workers = os.cpu_count()
+    solver.parameters.add_lp_constraints_lazily = True
         
     model.Minimize(makespan)
+
+
     status = solver.Solve(model)
+
+
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+
+        
+        # fix as much as possible
+        for p, prod in all_products:
+            for c in range(max_cycles[p]):
+                model.Add(NUM_LEVATE[p,c] == solver.Value(NUM_LEVATE[p,c]))
+                model.Add(PARTIAL_CYCLE[p,c] == solver.Value(PARTIAL_CYCLE[p,c]))
+                model.Add(COMPLETE[p,c] == solver.Value(COMPLETE[p,c]))
+                model.Add(KG_CYCLE[p,c] == solver.Value(KG_CYCLE[p,c]))
+                model.Add(ACTIVE_CYCLE[p,c] == solver.Value(ACTIVE_CYCLE[p,c]))
+                for m in prod_to_machine_comp[p]:
+                    model.Add(A[p,c,m] == solver.Value(A[p,c,m]))
+
+        
+        # minimize makespan on each machine need to check A[p,c,m] for each product
         model.Minimize(sum([CYCLE_END[p,c] for p, _ in all_products for c in range(max_cycles[p])]))
+        
         solver.parameters.max_time_in_seconds = CYCLE_OPTIM_SOLVER_TIMEOUT
-        status = solver.Solve(model)
+        # avoid presolve
+        solver.parameters.cp_model_presolve = False
+
+        stat = solver.Solve(model)
+
+        if stat == cp_model.OPTIMAL or stat == cp_model.FEASIBLE:
+            status = stat
 
     '''
     PLOTTING
