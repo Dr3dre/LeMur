@@ -23,6 +23,10 @@ USE_ADD_ELEMENT = False
 
 constraints = []
 broken_machines = [] # put here the number of the broken machines
+scheduled_maintenances = {
+    # machine : [(start, duration), ...]
+    # 0 : [(50, 150)],
+}
 
 num_common_jobs = 3
 num_running_jobs = 2
@@ -147,14 +151,11 @@ if __name__ == '__main__':
     for p, _ in all_products:
         for c in range(max_cycles[p]):
             for m in prod_to_machine_comp[p]:
-                A[p,c,m] = model.NewBoolVar(f'A[{p},{c},{m}]')
-
-    # Adding broken machines
-    if len(broken_machines) != 0:
-        for p, _ in all_products:
-            for c in range(max_cycles[p]):
-                for m in broken_machines:
+                if m not in broken_machines:
+                    A[p,c,m] = model.NewBoolVar(f'A[{p},{c},{m}]')
+                else:
                     A[p,c,m] = model.NewConstant(0)
+
     # States if the cycle is a completion cycle
     COMPLETE = {}
     for p, _ in all_products:
@@ -621,9 +622,18 @@ if __name__ == '__main__':
 
     # 8. No overlap between product cycles on same machine :
     for m in range(num_machines):
-        machine_intervals = [model.NewOptionalIntervalVar(CYCLE_BEG[p,c], CYCLE_COST[p,c], CYCLE_END[p,c], A[p,c,m], f'machine_{m}_interval[{p},{c}]') for p in machine_to_prod_comp[m] for c in range(max_cycles[p])]
+        machine_intervals = [model.NewOptionalIntervalVar(CYCLE_BEG[p,c], CYCLE_COST[p,c], CYCLE_END[p,c],is_present=A[p,c,m], name=f'machine_{m}_interval[{p},{c}]') for p in machine_to_prod_comp[m] for c in range(max_cycles[p]) if m in prod_to_machine_comp[p]]
+        
+        # 8.1 Add maintanance intervals
+        if m in scheduled_maintenances :
+            for maintanance in scheduled_maintenances[m]:
+                print(f"Adding maintanance interval for machine {m} : {maintanance}")
+                machine_intervals.append(model.NewFixedSizeIntervalVar(maintanance[0], maintanance[1], f'machine_{m}_maintanance[{maintanance[0]},{maintanance[1]}]'))
+        
         model.AddNoOverlap(machine_intervals)
         constraints.append(f"No overlap between product cycles on same machine {machine_intervals}")
+        
+
     
     # 9. Operators constraints
     for p, _ in all_products:
