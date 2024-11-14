@@ -1,4 +1,5 @@
 from ortools.sat.python import cp_model
+from google.protobuf import text_format
 import argparse
 import math
 
@@ -16,7 +17,7 @@ INPUT DATA
 '''
 
 # timouts for solver
-MAKESPAN_SOLVER_TIMEOUT = 60
+MAKESPAN_SOLVER_TIMEOUT = 600
 CYCLE_OPTIM_SOLVER_TIMEOUT = 60
 
 USE_ADD_ELEMENT = False
@@ -34,13 +35,10 @@ scheduled_maintenances = {
     # 0 : [(50, 150)],
 }
 
-num_common_jobs = 3
-num_running_jobs = 2
 num_machines = 72
-num_articles = 200
 machine_velocities = 3
 
-horizon_days = 100
+horizon_days = 60
 time_units_in_a_day = 24   # 24 : hours, 48 : half-hours, 96 : quarter-hours, ..., 1440 : minutes
 horizon = horizon_days * time_units_in_a_day
 
@@ -49,18 +47,10 @@ end_shift = 18        # 16:00 MUST BE COMPATIBLE WITH time_units_in_a_day
 num_operator_groups = 2
 num_operators_per_group = 2
 
-initialize_data = True
-
-if num_running_jobs > num_machines:
-    raise ValueError("Number of jobs must be less than or equal to the number of machines.")
 if machine_velocities % 2 == 0 :
     raise ValueError("Machine velocities must be odd numbers.")
 
-# Data initialization (at random for the moment)
-common_products, running_products, article_to_machine_comp, machine_to_article_comp, base_setup_art_cost, base_load_art_cost, base_unload_art_cost, base_levata_art_cost, standard_levate_art, kg_per_levata_art = init_data(num_common_jobs, num_running_jobs, num_machines, num_articles, num_operator_groups, horizon)
-
-if initialize_data:
-    common_products, running_products, article_to_machine_comp, machine_to_article_comp, base_setup_art_cost, base_load_art_cost, base_unload_art_cost, base_levata_art_cost, standard_levate_art, kg_per_levata_art = init_csv_data(COMMON_P_PATH, J_COMPATIBILITY_PATH, M_COMPATIBILITY_PATH, M_INFO_PATH, ARTICLE_LIST_PATH, costs=(1, 1/256, 1/256))
+common_products, running_products, article_to_machine_comp, machine_to_article_comp, base_setup_art_cost, base_load_art_cost, base_unload_art_cost, base_levata_art_cost, standard_levate_art, kg_per_levata_art = init_csv_data(COMMON_P_PATH, J_COMPATIBILITY_PATH, M_COMPATIBILITY_PATH, M_INFO_PATH, ARTICLE_LIST_PATH, costs=(1, 1/256, 1/256))
 
 for prod in common_products:
     for m in machine_to_article_comp:
@@ -96,11 +86,11 @@ for p, prod in all_products:
 # convert machine and article compatibility to be indexed on product id
 prod_to_machine_comp = {}
 machine_to_prod_comp = {}
+for m in range(1,num_machines+1):
+    machine_to_prod_comp[m] = []
 for p, prod in all_products:
     prod_to_machine_comp[p] = article_to_machine_comp[prod.article]
     for m in article_to_machine_comp[prod.article]:
-        if m not in machine_to_prod_comp:
-            machine_to_prod_comp[m] = []
         machine_to_prod_comp[m].append(p)
 # breakpoint()
 '''
@@ -133,6 +123,15 @@ for p, prod in all_products :
             break  
     if adjusted_intervals and adjusted_intervals[-1][1] < prod.due_date:
         adjusted_intervals[-1] = (adjusted_intervals[-1][0], min(adjusted_intervals[-1][1],prod.due_date))
+    
+    # check empty intervals
+    valid = False
+    for interval in adjusted_intervals:
+        if interval[0] < interval[1]:
+            valid = True
+    if not valid:
+        print("EMPTY DOMAIN FOR ARTICLE",prod.article)
+        raise ValueError
     
     # generate worktime domain for p
     worktime_domain[p] = cp_model.Domain.FromIntervals(adjusted_intervals)
@@ -550,15 +549,15 @@ if __name__ == '__main__':
             # 1.1 An active cycle must have one and only one machine assigned
             #   !!! note !!! : for some reason, BoolXor and ExactlyOne don't support the OnlyEnforceIf (documentation says that) only BoolAnd / BoolOr does
             model.Add(sum([A[p,c,m] for m in prod_to_machine_comp[p]]) == 1).OnlyEnforceIf(ACTIVE_CYCLE[p,c])
-            constraints.append(f"A non active cycle must have 0 machines assigned sum([A[{p},{c},{m}] for m in prod_to_machine_comp[{p}]]) == 1")
+            constraints.append(f"A non active cycle must have 0 machines assigned")
             # 1.2 A non active cycle must have 0 machines assigned
             model.AddBoolAnd([A[p,c,m].Not() for m in prod_to_machine_comp[p]]).OnlyEnforceIf(ACTIVE_CYCLE[p,c].Not())    
-            constraints.append(f"A non active cycle must have 0 machines assigned sum([A[{p},{c},{m}] for m in prod_to_machine_comp[{p}]]) == 0")
+            constraints.append(f"A non active cycle must have 0 machines assigned")
 
     # 2 : At most one partial cycle per product
     for p, prod in all_products:
         model.AddAtMostOne([PARTIAL_CYCLE[p,c] for c in range(max_cycles[p])])
-        constraints.append(f"At most one partial cycle per product {PARTIAL_CYCLE[p,c]} for c in range({max_cycles[p]})")
+        constraints.append(f"At most one partial cycle per product")
 
     # 3 : Connect cycle specific variables
     for p, _ in all_products:
@@ -642,8 +641,17 @@ if __name__ == '__main__':
                 constraints.append(f"Inactive cycles {UNLOAD_BEG[p,c,l]} == {start_schedule}")
 
     # 8. No overlap between product cycles on same machine :
-    for m in range(num_machines):
-        machine_intervals = [model.NewOptionalIntervalVar(CYCLE_BEG[p,c], CYCLE_COST[p,c], CYCLE_END[p,c],is_present=A[p,c,m], name=f'machine_{m}_interval[{p},{c}]') for p in machine_to_prod_comp[m] for c in range(max_cycles[p]) if m in prod_to_machine_comp[p]]
+    for m in range(1,num_machines + 1):
+        machine_intervals = [
+            model.NewOptionalIntervalVar(
+                CYCLE_BEG[p,c], 
+                CYCLE_COST[p,c], 
+                CYCLE_END[p,c],
+                is_present=A[p,c,m], 
+                name=f'machine_{m}_interval[{p},{c}]') 
+            for p in machine_to_prod_comp[m]
+                for c in range(max_cycles[p]) 
+            if m in prod_to_machine_comp[p]]
         
         # 8.1 Add maintanance intervals
         if m in scheduled_maintenances :
@@ -764,6 +772,8 @@ if __name__ == '__main__':
         model.Minimize(sum([CYCLE_END[p,c] for p, _ in all_products for c in range(max_cycles[p])]))
         solver.parameters.max_time_in_seconds = CYCLE_OPTIM_SOLVER_TIMEOUT
         status = solver.Solve(model)
+
+    # solver.
 
     '''
     PLOTTING

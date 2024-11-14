@@ -167,7 +167,7 @@ def init_data(num_common_jobs, num_running_jobs, num_machines, num_articles, num
         avail_operators -= 1
 
 
-    return common_products, running_products, job_compatibility, machine_compatibility, base_setup_cost, base_load_cost, base_unload_cost, base_levata_cost, standard_levate, kg_per_levata
+    return common_products, running_products, article_compatibility, machine_compatibility, base_setup_cost, base_load_cost, base_unload_cost, base_levata_cost, standard_levate, kg_per_levata
 
 def date_hours_parser(start_date, due_date):
     """
