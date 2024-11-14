@@ -29,6 +29,10 @@ ARTICLE_LIST_PATH = 'data/valid/lista_articoli.csv'
 
 constraints = []
 broken_machines = [] # put here the number of the broken machines
+scheduled_maintenances = {
+    # machine : [(start, duration), ...]
+    # 0 : [(50, 150)],
+}
 
 num_common_jobs = 3
 num_running_jobs = 2
@@ -108,7 +112,7 @@ worktime_intervals, prohibited_intervals, gap_at_day, time_units_from_midnight, 
 velocity_levels = list(range(-(machine_velocities//2), (machine_velocities//2) + 1)) # machine velocities = 3 => [-1, 0, 1]
 velocity_step_size = {}
 for p, prod in all_products:
-    velocity_step_size[p] = int((0.05 / max(velocity_levels)) * base_levata_cost[p])
+    velocity_step_size[p] = int((0.05 / max(1,max(velocity_levels))) * base_levata_cost[p])
 
 # Generate custom domain excluding out of work hours, weekends, etc.
 #   make it personalized for each product, excluding values < start_date[p] and > due_date[p]
@@ -168,14 +172,11 @@ if __name__ == '__main__':
     for p, _ in all_products:
         for c in range(max_cycles[p]):
             for m in prod_to_machine_comp[p]:
-                A[p,c,m] = model.NewBoolVar(f'A[{p},{c},{m}]')
-
-    # Adding broken machines
-    if len(broken_machines) != 0:
-        for p, _ in all_products:
-            for c in range(max_cycles[p]):
-                for m in broken_machines:
+                if m not in broken_machines:
+                    A[p,c,m] = model.NewBoolVar(f'A[{p},{c},{m}]')
+                else:
                     A[p,c,m] = model.NewConstant(0)
+
     # States if the cycle is a completion cycle
     COMPLETE = {}
     for p, _ in all_products:
@@ -522,9 +523,9 @@ if __name__ == '__main__':
             # behaviour
             ACTUAL_KG_PER_LEVATA = model.NewIntVar(0, prod.kg_request, f'ACTUAL_KG_PER_LEVATA[{p},{c}]')
             model.Add(ACTUAL_KG_PER_LEVATA == sum([A[p,c,m]*kg_per_levata[m,p] for m in prod_to_machine_comp[p]]))
-            constraints.append(f"number of kg produced by a cycle {ACTUAL_KG_PER_LEVATA} == sum([A[{p},{c},{m}]*{kg_per_levata[m,p]} for m in prod_to_machine_comp[{p}]])")
+            constraints.append(f"number of kg produced by a cycle 1")
             model.AddMultiplicationEquality(KG_CYCLE[p,c], NUM_LEVATE[p,c], ACTUAL_KG_PER_LEVATA)
-            constraints.append(f"number of kg produced by a cycle {KG_CYCLE[p,c]} == {NUM_LEVATE[p,c]} * {ACTUAL_KG_PER_LEVATA}")
+            constraints.append(f"number of kg produced by a cycle 2")
 
 
     '''
@@ -642,9 +643,18 @@ if __name__ == '__main__':
 
     # 8. No overlap between product cycles on same machine :
     for m in range(num_machines):
-        machine_intervals = [model.NewOptionalIntervalVar(CYCLE_BEG[p,c], CYCLE_COST[p,c], CYCLE_END[p,c], A[p,c,m], f'machine_{m}_interval[{p},{c}]') for p in machine_to_prod_comp[m] for c in range(max_cycles[p])]
+        machine_intervals = [model.NewOptionalIntervalVar(CYCLE_BEG[p,c], CYCLE_COST[p,c], CYCLE_END[p,c],is_present=A[p,c,m], name=f'machine_{m}_interval[{p},{c}]') for p in machine_to_prod_comp[m] for c in range(max_cycles[p]) if m in prod_to_machine_comp[p]]
+        
+        # 8.1 Add maintanance intervals
+        if m in scheduled_maintenances :
+            for maintanance in scheduled_maintenances[m]:
+                print(f"Adding maintanance interval for machine {m} : {maintanance}")
+                machine_intervals.append(model.NewFixedSizeIntervalVar(maintanance[0], maintanance[1], f'machine_{m}_maintanance[{maintanance[0]},{maintanance[1]}]'))
+        
         model.AddNoOverlap(machine_intervals)
         constraints.append(f"No overlap between product cycles on same machine {machine_intervals}")
+        
+
     
     # 9. Operators constraints
     for p, _ in all_products:

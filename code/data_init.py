@@ -98,12 +98,12 @@ def init_data(num_common_jobs, num_running_jobs, num_machines, num_articles, num
     articles = [a for a in range(num_articles)]
 
     # Fake Machine - Job & Job - Machine compatibility
-    job_compatibility = {}
+    article_compatibility = {}
     machine_compatibility = {}
-    for m in range(num_machines):
-        machine_compatibility[m] = [a for a in range(num_articles)]  # All other machines are compatible with all jobs
     for a in range(num_articles):
-        job_compatibility[a] = [i for i in range(num_machines)]  # All jobs are compatible with all machines except machine 0
+        article_compatibility[a] = random.sample(list(range(num_machines)), random.randint(num_machines//2, num_machines))
+    for m in range(num_machines):
+        machine_compatibility[m] = [a for a in range(num_articles) if m in article_compatibility[a]]
 
     # Fake costs
     base_setup_cost = {}
@@ -112,7 +112,7 @@ def init_data(num_common_jobs, num_running_jobs, num_machines, num_articles, num
     base_levata_cost = {}
     for a in range(num_articles):
         base_levata_cost[a] = 24*random.randint(2,4)
-        for m in job_compatibility[a]:
+        for m in article_compatibility[a]:
             base_setup_cost[a,m] = 2
             base_load_cost[a,m] = 3
             base_unload_cost[a,m] = 3
@@ -138,13 +138,21 @@ def init_data(num_common_jobs, num_running_jobs, num_machines, num_articles, num
         product_id += 1
 
     running_products = []
-    avail_machines = num_machines-1
+    avail_machines = [m for m in range(num_machines)]
     avail_operators = num_op_groups-1
     for _ in range(num_running_jobs): 
-        article = random.randint(0, len(articles)-1)
+        # choose an article for which there is at least one machine available
+        compatible_machines = 0
+        while compatible_machines == 0:
+            article = random.randint(0, len(articles)-1)
+            for m in article_compatibility[article]:
+                if m in avail_machines:
+                    compatible_machines += 1
         start_date = 0
         due_date = horizon
-        machine = avail_machines
+        machine = random.choice(article_compatibility[article])
+        while machine not in avail_machines:
+            machine = random.choice(article_compatibility[article])
         operator = avail_operators
         velocity = 0
         remaining_levate = random.randint(1, standard_levate[article])
@@ -155,7 +163,7 @@ def init_data(num_common_jobs, num_running_jobs, num_machines, num_articles, num
         remaining_time = 3 # Note that this can't exceed the amount of hours in a working day, or the GAP mechanism fails
         running_products.append(RunningProduct(product_id, article, kg_request, start_date, due_date, machine, operator, velocity, remaining_levate, current_op_type, remaining_time))
         product_id += 1
-        avail_machines -= 1
+        avail_machines.remove(machine)
         avail_operators -= 1
 
 
