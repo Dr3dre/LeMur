@@ -1,6 +1,8 @@
 import random
 import copy
 import csv
+import json
+from datetime import datetime
 
 class Product (object) :
     '''
@@ -159,12 +161,134 @@ def init_data(num_common_jobs, num_running_jobs, num_machines, num_articles, num
 
     return common_products, running_products, job_compatibility, machine_compatibility, base_setup_cost, base_load_cost, base_unload_cost, base_levata_cost, standard_levate, kg_per_levata
 
-def init_csv_data(csv_path: str):
-    with open(csv_path, newline='') as csvfile:
+def date_hours_parser(start_date, due_date):
+    """
+    Parser for start and due date from strings to hours
+    """
+    # Parse input dates
+    start = datetime.strptime(start_date, "%Y-%m-%d")
+    due = datetime.strptime(due_date, "%Y-%m-%d")
+    
+    # Get current date and time
+    current_datetime = datetime.now()
 
-        csv_data = csv.reader(csvfile, delimiter=' ', quotechar='|')
+    # Calculate differences in hours
+    start_hours = int((start - current_datetime).total_seconds() // 3600)
+    due_hours = int((due - current_datetime).total_seconds() // 3600)
 
-        for row in csv_data:
-            print(', '.join(row))
+    if start_hours < 0:
+        start_hours = 0
 
-    # return common_products, running_products, job_compatibility, machine_compatibility, base_setup_cost, base_load_cost, base_unload_cost, base_levata_cost, standard_levate, kg_per_levata
+    return start_hours, due_hours
+
+def init_csv_data(common_p_path: str, j_compatibility_path: str, m_compatibility_path: str, m_info_path: str, article_list_path: str, costs = (2,1,1), running_products =  {}):
+    """
+    - `costs:` a tuple representing the costs of the operation made by the human operators, cost expressed *per fuse*:
+        - `base_setup_cost:`
+        - `base_load_cost:`
+        - `base_unload_cost:`
+
+
+    1. *common_products*
+        The csv gave us:
+        - Client name (useless)
+        - Product code 
+        - Product quantity
+        - Insertion date
+        - Due date
+        for every row, which is a "Product" object and the list of those form the "common_products"
+    2. *running_products*
+        Assuming an empty list right now
+    3. *job_compatibility*
+        From "articoli_macchine.json" we retrieve the associations
+    4. *machine_compatibility*
+        From "macchine_articoli.json" we retrieve the associations
+    5. *base_setup_cost*
+        Costant taken from input, machine dependent (number of fuses)
+    6. *base_load_cost*
+        For every product is machine dependent(depends from the number of fusi) 
+    7. *base_unload_cost*
+        Same as point 6 
+    8.  *base_levata_cost*
+        For every product, from "lista_articoli" see "ore_levata" 
+    9. *standard_levate*
+        For every product, form "lista_articoli" see "no_cicli" but is leavta 
+    10. *kg_per_levata*
+        See from "lista_articoli" the "kg_ora" and the "ore_levata", ASSUMING THAT the obtained data have been made in a 256 fuses machine
+    
+"""
+    const_setup_cost, const_load_cost, const_unload_cost = costs    
+
+    # 1. common_products
+    with open(common_p_path, newline='') as csvfile:
+        
+        csv_data = csv.reader(csvfile, delimiter=',', quotechar='|')
+        common_products = []
+        str_out = ""
+        for idx, row in enumerate(csv_data):
+            if idx > 0:
+                str_out = str_out + ', '.join(row) 
+                str_out += '\n'
+                # print(f'start_date:  {row[3]} - type: {type(row[3])}')
+                start_date, due_date = date_hours_parser(row[3], row[4])
+                common_products.append(Product(idx, row[1], int(float(row[2])), start_date, due_date))
+    # 2. running_products
+    # there is nothing here for now
+
+    # 3. job_compatibility
+    job_compatibility = json.load(open(j_compatibility_path))
+
+    # 4. machine_compatibility
+    machine_temp = json.load(open(m_compatibility_path))
+    machine_compatibility = {}
+    for i in machine_temp:
+        if int(i) < 73:
+            machine_compatibility[int(i)] = machine_temp[i]
+    print(len(machine_compatibility))
+
+    # 5-6-7. base_setup_cost, base_load_cost, base_unload_cost
+    base_setup_cost = {}
+    base_load_cost = {}
+    base_unload_cost = {}
+
+    m_info = json.load(open(m_info_path))
+    fuses_machines_associations = {int(machine):m_info[machine]['n_fusi'] for machine in m_info}
+
+    for a in job_compatibility:
+        for m in fuses_machines_associations:
+            base_setup_cost[a,int(m)] = int(float(const_setup_cost))
+            base_load_cost[a,int(m)] = int(float(const_load_cost) * float(fuses_machines_associations[m]))
+            base_unload_cost[a,int(m)] = int(float(const_unload_cost) * float(fuses_machines_associations[m]))
+
+    # 8-9-10. base_levata_cost, standard_levate, kg_per_levata
+    base_levata_cost = {}
+    standard_levate = {}
+    kg_per_levata = {}
+
+    with open(article_list_path, newline='') as csvfile:
+        csv_data = csv.reader(csvfile, delimiter=',', quotechar='"')
+        for idx, row in enumerate(csv_data):
+            # row[0] is the article code, row[10] is the hours needed for a single "levata"
+            if idx > 0:
+                # print(f'article: {row[0]}')
+                base_levata_cost[row[0]] = int(float(row[10]))
+                standard_levate[row[0]] = int(float(row[9]))
+                print(f'costo levata: {int(float(row[10]))}')
+                for m in machine_compatibility:
+                    kg_per_levata[m,row[0]] = int((float(row[10]) * float(row[6])) * float(fuses_machines_associations[m]) / 256.0)
+        
+
+                # try:
+                #     base_levata_cost[row[0]] = int(float(row[10]))
+                #     standard_levate[row[0]] = int(float(row[9]))
+                #     for m in machine_compatibility:
+                #         kg_per_levata[m,row[0]] = int((float(row[9]) * float(row[6]) / 256) * fuses_machines_associations[m])
+                # except:
+                #     print(f'row[0]:{row[0]}, row[6]:{row[6]}, row[9]:{row[9]}, row[10]:{row[10]}')
+    # print(str_out)
+    # for i in common_products:
+    #     print(i.__str__())
+    # print(f'job compatibility: {len(job_compatibility)}\nmachines: {len(machine_compatibility)}\ncosts: {len(base_setup_cost)}')
+    # print(f'job_compatibility: {[job_compatibility[i] for i in job_compatibility]}')
+        
+    return common_products, running_products, job_compatibility, machine_compatibility, base_setup_cost, base_load_cost, base_unload_cost, base_levata_cost, standard_levate, kg_per_levata

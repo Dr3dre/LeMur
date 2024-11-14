@@ -20,14 +20,19 @@ MAKESPAN_SOLVER_TIMEOUT = 60
 CYCLE_OPTIM_SOLVER_TIMEOUT = 60
 
 USE_ADD_ELEMENT = False
-CSV_PATH = './data/new_orders.csv'
+
+COMMON_P_PATH = 'data/new_orders.csv'
+J_COMPATIBILITY_PATH = 'data/utils/articoli_macchine.json'
+M_COMPATIBILITY_PATH = 'data/utils/macchine_articoli.json'
+M_INFO_PATH = 'data/utils/macchine_info.json'
+ARTICLE_LIST_PATH = 'data/valid/lista_articoli.csv'
 
 constraints = []
 broken_machines = [] # put here the number of the broken machines
 
 num_common_jobs = 3
 num_running_jobs = 2
-num_machines = 5
+num_machines = 72
 num_articles = 200
 machine_velocities = 3
 
@@ -40,6 +45,8 @@ end_shift = 18        # 16:00 MUST BE COMPATIBLE WITH time_units_in_a_day
 num_operator_groups = 2
 num_operators_per_group = 2
 
+initialize_data = True
+
 if num_running_jobs > num_machines:
     raise ValueError("Number of jobs must be less than or equal to the number of machines.")
 if machine_velocities % 2 == 0 :
@@ -49,7 +56,14 @@ if machine_velocities % 2 == 0 :
 common_products, running_products, article_to_machine_comp, machine_to_article_comp, base_setup_art_cost, base_load_art_cost, base_unload_art_cost, base_levata_art_cost, standard_levate_art, kg_per_levata_art = init_data(num_common_jobs, num_running_jobs, num_machines, num_articles, num_operator_groups, horizon)
 
 if initialize_data:
-    common_products, running_products, article_to_machine_comp, machine_to_article_comp, base_setup_art_cost, base_load_art_cost, base_unload_art_cost, base_levata_art_cost, standard_levate_art, kg_per_levata_art = init_csv_data(CSV_PATH)
+    common_products, running_products, article_to_machine_comp, machine_to_article_comp, base_setup_art_cost, base_load_art_cost, base_unload_art_cost, base_levata_art_cost, standard_levate_art, kg_per_levata_art = init_csv_data(COMMON_P_PATH, J_COMPATIBILITY_PATH, M_COMPATIBILITY_PATH, M_INFO_PATH, ARTICLE_LIST_PATH, costs=(1, 1/256, 1/256))
+
+for prod in common_products:
+    for m in machine_to_article_comp:
+        if kg_per_levata_art[m,prod.article] <= 0:
+            print('no kg_per_levata_art found')
+            print(f'm: {m} --- article: {prod.article}')
+            exit(0)
 
 # Make joint tuples (for readability purp.)
 common_products = [(prod.id, prod) for prod in common_products]
@@ -67,10 +81,13 @@ for p, prod in all_products:
     standard_levate[p] = standard_levate_art[prod.article]
     base_levata_cost[p] = base_levata_art_cost[prod.article]
     for m in article_to_machine_comp[prod.article]:
-        kg_per_levata[m,p] = kg_per_levata_art[m,prod.article]
-        base_setup_cost[p,m] = base_setup_art_cost[prod.article,m]
-        base_load_cost[p,m] = base_load_art_cost[prod.article,m]
-        base_unload_cost[p,m] = base_unload_art_cost[prod.article,m]
+        try:
+            kg_per_levata[m,p] = kg_per_levata_art[m,prod.article]
+            base_setup_cost[p,m] = base_setup_art_cost[prod.article,m]
+            base_load_cost[p,m] = base_load_art_cost[prod.article,m]
+            base_unload_cost[p,m] = base_unload_art_cost[prod.article,m]
+        except:
+            breakpoint()
 
 # convert machine and article compatibility to be indexed on product id
 prod_to_machine_comp = {}
