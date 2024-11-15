@@ -51,7 +51,7 @@ num_operators_per_group = 4
 if machine_velocities % 2 == 0 :
     raise ValueError("Machine velocities must be odd numbers.")
 
-common_products, running_products, article_to_machine_comp, machine_to_article_comp, base_setup_art_cost, base_load_art_cost, base_unload_art_cost, base_levata_art_cost, standard_levate_art, kg_per_levata_art = init_csv_data(COMMON_P_PATH, J_COMPATIBILITY_PATH, M_COMPATIBILITY_PATH, M_INFO_PATH, ARTICLE_LIST_PATH, costs=(4, 2/256, 6/256))
+common_products, running_products, article_to_machine_comp, machine_to_article_comp, base_setup_art_cost, base_load_art_cost, base_unload_art_cost, base_levata_art_cost, standard_levate_art, kg_per_levata_art = init_csv_data(COMMON_P_PATH, J_COMPATIBILITY_PATH, M_COMPATIBILITY_PATH, M_INFO_PATH, ARTICLE_LIST_PATH, costs=(4, 6/256, 2/256))
 
 for prod in common_products:
     for m in machine_to_article_comp:
