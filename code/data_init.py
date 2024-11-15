@@ -262,12 +262,19 @@ def init_csv_data(common_p_path: str, j_compatibility_path: str, m_compatibility
     job_compatibility = json.load(open(j_compatibility_path))
 
     # 4. machine_compatibility
-    machine_temp = json.load(open(m_compatibility_path))
     machine_compatibility = {}
-    for i in machine_temp:
-        if int(i) < 73:
-            machine_compatibility[int(i)] = machine_temp[i]
+    for a in job_compatibility:
+        for m in job_compatibility[a]:
+            if m not in machine_compatibility:
+                machine_compatibility[m] = []
+            machine_compatibility[m].append(a)
     print(len(machine_compatibility))
+
+    #check consistency between job_compatibility and machine_compatibility
+    for a in job_compatibility:
+        for m in job_compatibility[a]:
+            if a not in machine_compatibility[m]:
+                print(f'Inconsistency between job_compatibility and machine_compatibility: {a} not in {m}')
 
     # 5-6-7. base_setup_cost, base_load_cost, base_unload_cost
     base_setup_cost = {}
@@ -297,7 +304,9 @@ def init_csv_data(common_p_path: str, j_compatibility_path: str, m_compatibility
                 base_levata_cost[row[0]] = int(float(row[10]))
                 standard_levate[row[0]] = int(float(row[9]))
                 print(f'costo levata: {int(float(row[10]))}')
-                for m in machine_compatibility:
-                    kg_per_levata[m,row[0]] = int((float(row[10]) * float(row[6])) * float(fuses_machines_associations[m]) / 256.0)
-          
+                if row[0] in job_compatibility:
+                    for m in job_compatibility[row[0]]:
+                        print(f'kg_ora: {float(row[6])} - ore_levata: {float(row[10])} - fusi: {fuses_machines_associations[m]} - kg_per_levata: {int((float(row[10]) * float(row[6])) * float(fuses_machines_associations[m]) / 256.0)} - kg_ciclo: {int((float(row[10]) * float(row[6])) * float(fuses_machines_associations[m]) / 256.0) * int(float(row[9]))}')
+                        kg_per_levata[m,row[0]] = int((float(row[10]) * float(row[6])) * float(fuses_machines_associations[m]) / 256.0)
+    # breakpoint()
     return common_products, running_products, job_compatibility, machine_compatibility, base_setup_cost, base_load_cost, base_unload_cost, base_levata_cost, standard_levate, kg_per_levata

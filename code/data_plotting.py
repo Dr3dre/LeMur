@@ -305,7 +305,7 @@ def plot_gantt_chart_1(production_schedule, max_cycles, num_machines, horizon, p
                 fig.add_trace(go.Scatter(
                     x=[setup_start + setup_duration + cycle_duration / 2],
                     y=[machine_pos],
-                    text=[f'JOB {chr(65 + p)}{c+1}, V[{prod.velocity[c]}]'],
+                    text=[f'JOB {prod.id} C {c + 1} V[{prod.velocity[c]}]'],
                     mode='text',
                     textposition='middle center',
                     showlegend=False,
