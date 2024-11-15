@@ -6,6 +6,7 @@ import math
 from data_init import *
 from data_plotting import *
 from utils import *
+import os
 
 # Parsing args.
 parser = argparse.ArgumentParser(description='Job Scheduling Optimization')
@@ -548,11 +549,8 @@ if __name__ == '__main__':
         for c in range(max_cycles[p]):
             # 1.1 An active cycle must have one and only one machine assigned
             #   !!! note !!! : for some reason, BoolXor and ExactlyOne don't support the OnlyEnforceIf (documentation says that) only BoolAnd / BoolOr does
-            model.Add(sum([A[p,c,m] for m in prod_to_machine_comp[p]]) == 1).OnlyEnforceIf(ACTIVE_CYCLE[p,c])
-            constraints.append(f"A non active cycle must have 0 machines assigned")
-            # 1.2 A non active cycle must have 0 machines assigned
-            model.AddBoolAnd([A[p,c,m].Not() for m in prod_to_machine_comp[p]]).OnlyEnforceIf(ACTIVE_CYCLE[p,c].Not())    
-            constraints.append(f"A non active cycle must have 0 machines assigned")
+            model.AddBoolXOr([A[p,c,m] for m in prod_to_machine_comp[p]]+[ACTIVE_CYCLE[p,c].Not()])
+            constraints.append(f"A non active cycle must have 0 machines assigned sum([A[{p},{c},{m}] for m in prod_to_machine_comp[{p}]]) == 1")
 
     # 2 : At most one partial cycle per product
     for p, prod in all_products:
@@ -668,22 +666,16 @@ if __name__ == '__main__':
     for p, _ in all_products:
         for c in range(max_cycles[p]):
             # 9.1 The active cycles' setups must be assigned to one operator
-            model.Add(sum([A_OP_SETUP[o,p,c] for o in range(num_operator_groups)]) == 1).OnlyEnforceIf(ACTIVE_CYCLE[p,c])
+            model.AddBoolXOr([A_OP_SETUP[o,p,c] for o in range(num_operator_groups)] + [ACTIVE_CYCLE[p,c].Not()])
             constraints.append(f"The active cycles' setups must be assigned to one operator {sum([A_OP_SETUP[o,p,c] for o in range(num_operator_groups)])} == 1")
-            # 9.2 The non active cycles' setups must have no operator assigned
-            model.AddBoolAnd([A_OP_SETUP[o,p,c].Not() for o in range(num_operator_groups)]).OnlyEnforceIf(ACTIVE_CYCLE[p,c].Not())
-            constraints.append(f"The non active cycles' setups must have no operator assigned {A_OP_SETUP[o,p,c].Not()} for o in range({num_operator_groups})")
 
     for p, _ in all_products:
         for c in range(max_cycles[p]):
             for l in range(standard_levate[p]):
                 for t in [0,1]:
                     # 9.3 The levate must have an operator assigned for the load and the unload operation:
-                    model.Add(sum([A_OP[o,p,c,l,t] for o in range(num_operator_groups)]) == 1).OnlyEnforceIf(ACTIVE_LEVATA[p,c,l])
+                    model.AddBoolXOr([A_OP[o,p,c,l,t] for o in range(num_operator_groups)] + [ACTIVE_LEVATA[p,c,l].Not()])
                     constraints.append(f"The levate must have an operator assigned for the load and the unload operation {sum([A_OP[o,p,c,l,t] for o in range(num_operator_groups)])} == 1")
-                    # 9.4 The non active levate must have no operator assigned for the load and the unload operation:
-                    model.AddBoolAnd([A_OP[o,p,c,l,t].Not() for o in range(num_operator_groups)]).OnlyEnforceIf(ACTIVE_LEVATA[p,c,l].Not())
-                    constraints.append(f"The non active levate must have no operator assigned for the load and the unload operation {A_OP[o,p,c,l,t].Not()} for o in range({num_operator_groups})")
     
     for o in range(num_operator_groups) :
         # 9.5 create intervals for each operation operators have to handle:
@@ -765,15 +757,41 @@ if __name__ == '__main__':
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = MAKESPAN_SOLVER_TIMEOUT
     solver.parameters.log_search_progress = True
+    solver.parameters.num_search_workers = os.cpu_count()
+    solver.parameters.add_lp_constraints_lazily = True
         
     model.Minimize(makespan)
-    status = solver.Solve(model)
-    if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
-        model.Minimize(sum([CYCLE_END[p,c] for p, _ in all_products for c in range(max_cycles[p])]))
-        solver.parameters.max_time_in_seconds = CYCLE_OPTIM_SOLVER_TIMEOUT
-        status = solver.Solve(model)
 
-    # solver.
+
+    status = solver.Solve(model)
+
+
+    if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+
+        
+        # fix as much as possible
+        for p, prod in all_products:
+            for c in range(max_cycles[p]):
+                model.Add(NUM_LEVATE[p,c] == solver.Value(NUM_LEVATE[p,c]))
+                model.Add(PARTIAL_CYCLE[p,c] == solver.Value(PARTIAL_CYCLE[p,c]))
+                model.Add(COMPLETE[p,c] == solver.Value(COMPLETE[p,c]))
+                model.Add(KG_CYCLE[p,c] == solver.Value(KG_CYCLE[p,c]))
+                model.Add(ACTIVE_CYCLE[p,c] == solver.Value(ACTIVE_CYCLE[p,c]))
+                for m in prod_to_machine_comp[p]:
+                    model.Add(A[p,c,m] == solver.Value(A[p,c,m]))
+
+        
+        # minimize makespan on each machine need to check A[p,c,m] for each product
+        model.Minimize(sum([CYCLE_END[p,c] for p, _ in all_products for c in range(max_cycles[p])]))
+        
+        solver.parameters.max_time_in_seconds = CYCLE_OPTIM_SOLVER_TIMEOUT
+        # avoid presolve
+        solver.parameters.cp_model_presolve = False
+
+        stat = solver.Solve(model)
+
+        if stat == cp_model.OPTIMAL or stat == cp_model.FEASIBLE:
+            status = stat
 
     '''
     PLOTTING
