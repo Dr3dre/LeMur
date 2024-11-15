@@ -37,21 +37,21 @@ scheduled_maintenances = {
 }
 
 num_machines = 72
-machine_velocities = 3
+machine_velocities = 1
 
-horizon_days = 60
+horizon_days = 50
 time_units_in_a_day = 24   # 24 : hours, 48 : half-hours, 96 : quarter-hours, ..., 1440 : minutes
 horizon = horizon_days * time_units_in_a_day
 
 start_shift = 8       # 8:00 MUST BE COMPATIBLE WITH time_units_in_a_day
-end_shift = 18        # 16:00 MUST BE COMPATIBLE WITH time_units_in_a_day
+end_shift = 16        # 16:00 MUST BE COMPATIBLE WITH time_units_in_a_day
 num_operator_groups = 2
-num_operators_per_group = 2
+num_operators_per_group = 4
 
 if machine_velocities % 2 == 0 :
     raise ValueError("Machine velocities must be odd numbers.")
 
-common_products, running_products, article_to_machine_comp, machine_to_article_comp, base_setup_art_cost, base_load_art_cost, base_unload_art_cost, base_levata_art_cost, standard_levate_art, kg_per_levata_art = init_csv_data(COMMON_P_PATH, J_COMPATIBILITY_PATH, M_COMPATIBILITY_PATH, M_INFO_PATH, ARTICLE_LIST_PATH, costs=(1, 1/256, 1/256))
+common_products, running_products, article_to_machine_comp, machine_to_article_comp, base_setup_art_cost, base_load_art_cost, base_unload_art_cost, base_levata_art_cost, standard_levate_art, kg_per_levata_art = init_csv_data(COMMON_P_PATH, J_COMPATIBILITY_PATH, M_COMPATIBILITY_PATH, M_INFO_PATH, ARTICLE_LIST_PATH, costs=(4, 2/256, 6/256))
 
 for prod in common_products:
     for m in machine_to_article_comp:
@@ -792,6 +792,11 @@ if __name__ == '__main__':
 
         if stat == cp_model.OPTIMAL or stat == cp_model.FEASIBLE:
             status = stat
+    else:
+        model_proto = model.Proto()
+        variables = model_proto.variables
+        constraints = model_proto.constraints
+        breakpoint()
 
     # solver.
 

@@ -1,8 +1,10 @@
+import math
 import random
 import copy
 import csv
 import json
 from datetime import datetime
+from datetime import timedelta
 
 class Product (object) :
     '''
@@ -69,7 +71,7 @@ class Schedule(object):
     def __str__(self):
         output = "Production Schedule:\n"
         for p, prod in self.products :
-            output += f"Product : {chr(p+65)}\n"
+            output += f"Product : {prod.id} Article : {prod.article} Request : {prod.kg_request} Kg\n"
             for c in prod.setup_beg.keys():
                 output += f"    Cycle {c} :\n"
                 output += f"        Machine   : {prod.machine[c]}:\n"
@@ -78,7 +80,12 @@ class Schedule(object):
                 output += f"        Setup     : ({prod.setup_beg[c]}, {prod.setup_end[c]})\n"
                 for l in range(prod.num_levate[c]) :
                     if (c,l) in prod.load_beg.keys() : 
-                        output += f"            Levata [{l}] : ({prod.load_beg[c,l]}, {prod.load_end[c,l]}) => ({prod.unload_beg[c,l]}, {prod.unload_end[c,l]})\n"
+                        # compute load and unload times from the current day at 00:00 (remove the current time of the day)
+                        load_beg_datetime = datetime.now() + timedelta(hours=prod.load_beg[c,l]) - timedelta(hours=datetime.now().hour, minutes=datetime.now().minute, seconds=datetime.now().second)
+                        load_end_datetime = datetime.now() + timedelta(hours=prod.load_end[c,l]) - timedelta(hours=datetime.now().hour, minutes=datetime.now().minute, seconds=datetime.now().second)
+                        unload_beg_datetime = datetime.now() + timedelta(hours=prod.unload_beg[c,l]) - timedelta(hours=datetime.now().hour, minutes=datetime.now().minute, seconds=datetime.now().second)
+                        unload_end_datetime = datetime.now() + timedelta(hours=prod.unload_end[c,l]) - timedelta(hours=datetime.now().hour, minutes=datetime.now().minute, seconds=datetime.now().second)
+                        output += f"            Levata [{l}] : LOAD({load_beg_datetime}, {load_end_datetime}) UNLOAD({unload_beg_datetime}, {unload_end_datetime})\n"
             output += "\n"
         
         return output
@@ -264,9 +271,9 @@ def init_csv_data(common_p_path: str, j_compatibility_path: str, m_compatibility
 
     for a in job_compatibility:
         for m in fuses_machines_associations:
-            base_setup_cost[a,int(m)] = int(float(const_setup_cost))
-            base_load_cost[a,int(m)] = int(float(const_load_cost) * float(fuses_machines_associations[m]))
-            base_unload_cost[a,int(m)] = int(float(const_unload_cost) * float(fuses_machines_associations[m]))
+            base_setup_cost[a,int(m)] = int(math.ceil(float(const_setup_cost)))
+            base_load_cost[a,int(m)] = int(math.ceil(float(const_load_cost) * float(fuses_machines_associations[m])))
+            base_unload_cost[a,int(m)] = int(math.ceil(float(const_unload_cost) * float(fuses_machines_associations[m])))
 
     # 8-9-10. base_levata_cost, standard_levate, kg_per_levata
     base_levata_cost = {}
