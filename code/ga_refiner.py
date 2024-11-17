@@ -15,6 +15,7 @@ class GA_Refiner:
     def refine_solution(self, products, args, plot_metrics=True):
         self.penalty_weight = 1 * args["time_units_in_a_day"]
         self.seed = self._initialize_seed(products, args)
+        self.products = products
         self.best_candidate = None
         args["plot_metrics"] = plot_metrics
         # Populate overlap Tree for domain gaps
@@ -80,6 +81,11 @@ class GA_Refiner:
     
     def _initialize_seed(self, products, args):
         seed = [[] for _ in range(args["num_machines"])]
+
+        args["setup_reduced_cost"] = {}
+        args["load_reduced_cost"] = {}
+        args["unload_reduced_cost"] = {}
+
         for p, prod in products:
             for c in prod.setup_beg.keys():
                 cycle = {
@@ -108,7 +114,6 @@ class GA_Refiner:
         return seed
     
     def observer(self, population, num_generations, num_evaluations, args):
-        
         if num_generations == 0 :
             # iniitialize best candidate with first candidate
             # in population only in first generation
@@ -120,51 +125,9 @@ class GA_Refiner:
                 self.best_candidate = candidate
         
         if args["plot_metrics"]:
-            stats = ec.analysis.fitness_statistics(population)
-            best_fitness = stats['best']
-            worst_fitness = stats['worst']
-            median_fitness = stats['median']
-            average_fitness = stats['mean']
-            colors = ['black', 'blue', 'green', 'red']
-            labels = ['average', 'median', 'best', 'worst']
-            data = []
-            if num_generations == 0:
-                plt.figure('A')
-                plt.ion()
-                data = [[num_evaluations], [average_fitness], [median_fitness], [best_fitness], [worst_fitness]]
-                lines = []
-                for i in range(4):
-                    line, = plt.plot(data[0], data[i+1], color=colors[i], label=labels[i])
-                    lines.append(line)
-                args['plot_data'] = data
-                args['plot_lines'] = lines
-                plt.xlabel('Evaluations')
-                plt.ylabel('Fitness')
-            else:
-                data = args['plot_data']
-                data[0].append(num_evaluations)
-                data[1].append(average_fitness)
-                data[2].append(median_fitness)
-                data[3].append(best_fitness)
-                data[4].append(worst_fitness)
-                lines = args['plot_lines']
-                for i, line in enumerate(lines):
-                    line.set_xdata(numpy.array(data[0]))
-                    line.set_ydata(numpy.array(data[i+1]))
-                args['plot_data'] = data
-                args['plot_lines'] = lines
-            ymin = min([min(d) for d in data[1:]])
-            ymax = max([max(d) for d in data[1:]])
-            yrange = ymax - ymin
-            plt.xlim((0, num_evaluations))
-            plt.ylim((ymin - 0.1*yrange, ymax + 0.1*yrange))
-            plt.draw()
-            plt.legend()
-        
-        if num_generations % 25 == 0:
-            print(f"Gen [{num_generations}] Fitness => {self.best_candidate.fitness}")
-
-
+            if num_generations % 10 == 0:
+                print(f"Gen [{num_generations}] Fitness => {self.best_candidate.fitness}")
+            generational_stats_plot(population, num_generations, num_evaluations, args)
 
 
     def generator(self, random, args):
@@ -173,28 +136,36 @@ class GA_Refiner:
     def evaluator(self, candidates, args):
         fitness = []
         for individual in candidates :
-            # fitness is basically the machine makespan
-            machine_fitness = []
-            # penalties are assign to avoid unfeasible spaces
+            # penalties are assigned to discourage unfeasible spaces
             penalty = 0
-
+            schedule_makespan = 0
+            cumulative_schedule_makespan = 0
             for machine_queue in individual :
-                # Strong penalty for not respecting time window
                 for cycle in machine_queue :
-                    # lower bound is either "Now"
-                    lb = args["time_units_from_midnight"]
+                    # Strong penalty for not respecting time window (Start Date & Due Date)
+                    lb = args["start_date"][cycle["product"]]
                     if cycle["setup_beg"] < lb :
-                        penalty += lb - cycle["setup_beg"]
-                    ub = args["horizon"]
+                        #penalty += lb - cycle["setup_beg"]
+                        penalty += 1
+                    ub = args["due_date"][cycle["product"]]
                     if cycle["unload_end"][-1] > ub:
-                        penalty += cycle["unload_end"][-1] - ub
+                        #penalty += cycle["unload_end"][-1] - ub
+                        penalty += 1
+                # Schedule makespan is the maximum among all cycle end times
+                machine_makespan = 0 if len(machine_queue) == 0 else machine_queue[-1]["unload_end"][-1]
+                schedule_makespan = max(schedule_makespan, machine_makespan)
+                # Cumulative makespan accounts for all cycle ends instead of the maximum one only
+                cumulative_schedule_makespan += sum([cycle["unload_end"][-1] for cycle in machine_queue])
+            
+            # Fitness accounts both for schedule makespan and compactness of solution
+            # This allows tune machines which doesn't represent a bottleneck
+            weight_compactness = 1 / (args["horizon"] * sum([args["max_cycles"][p] for p, _ in self.products]))
+            schedule_fitness = schedule_makespan + cumulative_schedule_makespan*weight_compactness
+            # Final fitness accounts for both schedule makespan and penalty
+            individual_fitness = schedule_fitness + self.penalty_weight*penalty
+            # Store fitness
+            fitness.append(individual_fitness)
 
-                # total fitness accounts for machine makespan and weighted penalty
-                machine_makespan = 0 if len(machine_queue) == 0 else sum([cycle["unload_end"][-1] for cycle in machine_queue])
-                machine_fitness.append(machine_makespan + self.penalty_weight*penalty)
-        
-            # Solution fitness is sum of all machine fitness
-            fitness.append(sum(machine_fitness))
         return fitness
 
     def mutation(self, random, candidates, args):
@@ -204,7 +175,7 @@ class GA_Refiner:
             if mutation_type == 0:
                 individual =self._compact_and_shift(individual, random, args)
             elif mutation_type == 1:
-                individual = self._random_2_swap(individual, random, args)
+                individual = self._random_swap_two(individual, random, args)
             elif mutation_type == 2:
                 individual = self._pop_and_push(individual, random, args)
         
@@ -228,7 +199,7 @@ class GA_Refiner:
         
         return individual
 
-    def _random_2_swap(self, individual, random, args):
+    def _random_swap_two(self, individual, random, args):
        # choose a random machine queue in the solution
         machine_idx = random.choice([m for m in range(args["num_machines"]) if not (len(individual[m]) == 0 or ( (len(individual[m]) == 1) and individual[m][0]["fixed"])) ])
         machine_queue = individual[machine_idx]
