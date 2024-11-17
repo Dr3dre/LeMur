@@ -1,10 +1,90 @@
 from inspyred import ec
-from random import Random
 from intervaltree import IntervalTree, Interval
-from data_init import RunningProduct
 import matplotlib.pyplot as plt
-import numpy
-import copy
+import numpy as np
+
+"""
+Data Visualization Functions
+"""
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+def generational_stats_plot(population, num_generations, num_evaluations, args):
+    """
+    Generate a plot of the best, worst, median, and average fitnesses in
+    the population given a certain generation of the evolutionary algorithm
+    """
+    stats = ec.analysis.fitness_statistics(population)
+    best_fitness = stats['best']
+    worst_fitness = stats['worst']
+    median_fitness = stats['median']
+    average_fitness = stats['mean']
+    colors = ['black', 'blue', 'green', 'red']
+    labels = ['average', 'median', 'best', 'worst']
+    data = []
+    
+    if num_generations == 0:
+        plt.figure('A')
+        plt.ion()
+        data = [[num_evaluations], [average_fitness], [median_fitness], [best_fitness], [worst_fitness]]
+        lines = []
+        for i in range(4):
+            line, = plt.plot(data[0], data[i + 1], color=colors[i], label=labels[i])
+            lines.append(line)
+        args['plot_data'] = data
+        args['plot_lines'] = lines
+        plt.xlabel('Evaluations')
+        plt.ylabel('Fitness')
+    else:
+        data = args['plot_data']
+        data[0].append(num_evaluations)
+        data[1].append(average_fitness)
+        data[2].append(median_fitness)
+        data[3].append(best_fitness)
+        data[4].append(worst_fitness)
+        lines = args['plot_lines']
+        for i, line in enumerate(lines):
+            line.set_xdata(np.array(data[0]))
+            line.set_ydata(np.array(data[i + 1]))
+        args['plot_data'] = data
+        args['plot_lines'] = lines
+
+    # Calculate ymin, ymax, and adjust yrange to prevent warnings
+    ymin = min([min(d) for d in data[1:]])
+    ymax = max([max(d) for d in data[1:]])
+
+    if ymin == ymax:  # Handle the case where all y-values are identical
+        ymin -= 1
+        ymax += 1
+
+    yrange = ymax - ymin
+    plt.xlim((0, num_evaluations))
+    plt.ylim((ymin - 0.1 * yrange, ymax + 0.1 * yrange))  # Adjusted ylim to avoid singular transformation
+    plt.draw()
+    plt.legend()
+
+
+def print_solution (candidate) :
+    """
+    format output for a candidate solution
+    """
+    for cycle in candidate :
+        print(f"Product {chr(cycle['product']+65)}, Cycle {cycle['cycle']}, Pos [{cycle['pos']}] :")
+        print(f"    Setup : ({cycle['setup_beg']}, {cycle['setup_end']})")
+        for l in range(len(cycle["load_beg"])) :
+            print(f"        [{l}] : ({cycle['load_beg'][l]}, {cycle['load_end'][l]}) => ({cycle['unload_beg'][l]}, {cycle['unload_end'][l]})")
+
+
+"""
+DOMAIN ADJUSTMENT FUNCTIONS
+"""
 
 def build_operator_inter_tree (individual, args, exclude_machines=[], exclude_cycles=[]) :
     """
@@ -46,11 +126,6 @@ def add_intervals_to_tree (tree, machine_queue, from_pos=0) :
                 if (cycle["load_end"][l] - cycle["load_beg"][l]) > 0 : tree[cycle["load_operator"][l]].add(Interval(cycle["load_beg"][l], cycle["load_end"][l]))
                 if (cycle["unload_end"][l] - cycle["unload_beg"][l]) > 0 : tree[cycle["unload_operator"][l]].add(Interval(cycle["unload_beg"][l], cycle["unload_end"][l]))
     return tree
-
-
-"""
-DOMAIN ADJUSTMENT FUNCTIONS
-"""
 
 def greedy_set_value_in_domain (value, overlap_tree) :
     """
@@ -119,8 +194,8 @@ def adjust_cycle (cycle, machine_id, operator_overlap_tree, args) :
     # first anchor point is end of setup
     anchor = cycle["setup_end"]
     for l in range(len(cycle["load_beg"])) :
-        cycle["load_beg"][l], cycle["load_end"][l] = adjust_operation(anchor, 0, args["base_op_cost"][cycle["product"], machine_id], operator_overlap_tree[cycle["load_operator"][l]], args)
-        cycle["unload_beg"][l], cycle["unload_end"][l] = adjust_operation(cycle["load_end"][l], effective_levata_cost, args["base_op_cost"][cycle["product"], machine_id], operator_overlap_tree[cycle["unload_operator"][l]], args)
+        cycle["load_beg"][l], cycle["load_end"][l] = adjust_operation(anchor, 0, args["base_load_cost"][cycle["product"], machine_id], operator_overlap_tree[cycle["load_operator"][l]], args)
+        cycle["unload_beg"][l], cycle["unload_end"][l] = adjust_operation(cycle["load_end"][l], effective_levata_cost, args["base_unload_cost"][cycle["product"], machine_id], operator_overlap_tree[cycle["unload_operator"][l]], args)
         # set next anchor point
         anchor = cycle["unload_end"][l]
     
@@ -140,16 +215,9 @@ def adjust_machine(machine_queue, machine_id, anchor, operator_overlap_tree, arg
     return machine_queue
 
 
-def print_solution (candidate) :
-    """
-    format output for a candidate solution
-    """
-    for cycle in candidate :
-        print(f"Product {chr(cycle['product']+65)}, Cycle {cycle['cycle']}, Pos [{cycle['pos']}] :")
-        print(f"    Setup : ({cycle['setup_beg']}, {cycle['setup_end']})")
-        for l in range(len(cycle["load_beg"])) :
-            print(f"        [{l}] : ({cycle['load_beg'][l]}, {cycle['load_end'][l]}) => ({cycle['unload_beg'][l]}, {cycle['unload_end'][l]})")
-
+"""
+Test Cases Functions
+"""
 
 def check_solution_conformity(solution, args):
     """
@@ -187,9 +255,7 @@ def check_solution_conformity(solution, args):
             p = elem["product"]
             c = elem["cycle"]
 
-            setup_overlaps = operator_interval_tree[elem["setup_operator"]].overlap(
-                elem["setup_beg"], elem["setup_end"]
-            )
+            setup_overlaps = operator_interval_tree[elem["setup_operator"]].overlap(elem["setup_beg"], elem["setup_end"])
             if len(setup_overlaps) > 1:
                 print(
                     f"operatorSETUP OVERLAP: {(chr(p + 65), c)} - "
@@ -199,9 +265,7 @@ def check_solution_conformity(solution, args):
                 has_conflicts = True
 
             for l in range(len(elem["load_beg"])):
-                load_overlaps = operator_interval_tree[
-                    elem["load_operator"][l]
-                ].overlap(elem["load_beg"][l], elem["load_end"][l])
+                load_overlaps = operator_interval_tree[elem["load_operator"][l]].overlap(elem["load_beg"][l], elem["load_end"][l])
                 if len(load_overlaps) > 1:
                     print(
                         f"LOAD OVERLAP: {(chr(p + 65), c)} - "
@@ -210,9 +274,7 @@ def check_solution_conformity(solution, args):
                     )
                     has_conflicts = True
 
-                unload_overlaps = operator_interval_tree[
-                    elem["unload_operator"][l]
-                ].overlap(elem["unload_beg"][l], elem["unload_end"][l])
+                unload_overlaps = operator_interval_tree[elem["unload_operator"][l]].overlap(elem["unload_beg"][l], elem["unload_end"][l])
                 if len(unload_overlaps) > 1:
                     print(
                         f"UNLOAD OVERLAP: {(chr(p + 65), c)} - "
@@ -220,6 +282,23 @@ def check_solution_conformity(solution, args):
                         f"{unload_overlaps}"
                     )
                     has_conflicts = True
+
+    # LOOK FOR TIME WINDOW VIOLATIONS
+    for m, machine_queue in enumerate(solution):
+        for elem in machine_queue:
+            if elem["setup_beg"] < args["start_date"][elem["product"]]:
+                print(
+                    f"Start Date violation: {(chr(elem['product'] + 65), elem['cycle'])} - "
+                    f"{(elem['setup_beg'], elem['setup_end'])}"
+                )
+                has_conflicts = True
+            
+            if elem["unload_end"][-1] > args["due_date"][elem["product"]]:
+                print(
+                    f"Due Date Violation: {(chr(elem['product'] + 65), elem['cycle'])} - "
+                    f"{(elem['unload_beg'][-1], elem['unload_end'][-1])}"
+                )
+                has_conflicts = True
 
     if has_conflicts:
         print("CONFLICTS FOUND\n")
