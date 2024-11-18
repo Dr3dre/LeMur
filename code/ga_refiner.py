@@ -17,29 +17,45 @@ class GA_Refiner:
         self.seed = self._initialize_seed(products, args)
         self.products = products
         self.best_candidate = None
+        args["minimize"] = True
         args["plot_metrics"] = plot_metrics
         # Populate overlap Tree for domain gaps
         args["domain_interval_tree"] = IntervalTree.from_tuples(args["prohibited_intervals"])
-
+        args["curr_generation"] = 0
         # EA configuration and execution
         ga = ec.GA(self.prng)
-        ga.terminator = ec.terminators.generation_termination
-        ga.replacer = ec.replacers.steady_state_replacement    
         ga.variator = [ec.variators.uniform_crossover, self.mutation]
-        ga.selector = ec.selectors.rank_selection
         ga.observer = self.observer
 
-        population = 10
+        ga.terminator = ec.terminators.generation_termination
+        ga.selector = ec.selectors.rank_selection
+        #ga.selector = ec.selectors.uniform_selection
+        #ga.selector = ec.selectors.tournament_selection
+        ga.replacer = ec.replacers.comma_replacement
+        #ga.replacer = ec.replacers.steady_state_replacement   
+        #ga.replacer = ec.replacers.random_replacement
+
+        generations = 150
+        population = 50
+
+        # Probability of applying _compact_and_shift mutation
+        # It degrades over generations and is proportional to the
+        # number of machines in the input space
+        initial_temp = 1
+        goal_temp = 0.1
+        saturation_point = int(args["num_machines"] * 2)
+        args["temperature"] = [temperature_profile(t, saturation_point, initial_temp, goal_temp) for t in range(generations+1)]
 
         _ = ga.evolve(
             generator=self.generator,
             evaluator=self.evaluator,
             pop_size=population,
-            maximize=False,
-            num_selected=population,
+            maximize=(not args["minimize"]),
+            num_selected=int(population * 0.5),
             mutation_rate=1,
             crossover_rate=0,
-            max_generations=100,
+            max_generations=generations,
+            #tournament_size=3,
             **args
         )
 
@@ -114,6 +130,9 @@ class GA_Refiner:
         return seed
     
     def observer(self, population, num_generations, num_evaluations, args):
+        # Keeps track of current generation
+        args["curr_generation"] = num_generations + 1
+        
         if num_generations == 0 :
             # iniitialize best candidate with first candidate
             # in population only in first generation
@@ -121,9 +140,13 @@ class GA_Refiner:
 
         # Look for the best candidate in the population & store it
         for candidate in population :
-            if candidate.fitness < self.best_candidate.fitness :
-                self.best_candidate = candidate
-        
+            if args["minimize"]:
+                if candidate.fitness < self.best_candidate.fitness :
+                    self.best_candidate = candidate
+            else :
+                if candidate.fitness > self.best_candidate.fitness :
+                    self.best_candidate = candidate
+
         if args["plot_metrics"]:
             if num_generations % 10 == 0:
                 print(f"Gen [{num_generations}] Fitness => {self.best_candidate.fitness}")
@@ -170,15 +193,18 @@ class GA_Refiner:
 
     def mutation(self, random, candidates, args):
         for individual in candidates:
-            mutation_type = self.prng.choice([0, 1, 2])
 
-            if mutation_type == 0:
-                individual =self._compact_and_shift(individual, random, args)
-            elif mutation_type == 1:
-                individual = self._random_swap_two(individual, random, args)
-            elif mutation_type == 2:
-                individual = self._pop_and_push(individual, random, args)
-        
+            if random.random() < args["temperature"][args["curr_generation"]] :
+                individual = self._compact_and_shift(individual, random, args)
+            else :
+                mutation_choice = random.choice([0, 1])
+                if mutation_choice == 0 :
+                    individual = self._random_swap_two(individual, random, args)
+                elif mutation_choice == 1 :
+                    individual = self._pop_and_push(individual, random, args)
+                else:
+                    pass
+
         return candidates
 
     def crossover (self, random, candidate, args) :
