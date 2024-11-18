@@ -7,15 +7,6 @@ import numpy as np
 Data Visualization Functions
 """
 
-import matplotlib.pyplot as plt
-import numpy as np
-
-import matplotlib.pyplot as plt
-import numpy as np
-
-import matplotlib.pyplot as plt
-import numpy as np
-
 def generational_stats_plot(population, num_generations, num_evaluations, args):
     """
     Generate a plot of the best, worst, median, and average fitnesses in
@@ -81,6 +72,19 @@ def print_solution (candidate) :
         for l in range(len(cycle["load_beg"])) :
             print(f"        [{l}] : ({cycle['load_beg'][l]}, {cycle['load_end'][l]}) => ({cycle['unload_beg'][l]}, {cycle['unload_end'][l]})")
 
+
+def temperature_profile(t, saturation_point, initial_temp, goal_temp):
+    """
+    - t : current time step
+    - saturation_point : last time step
+    - initial_temp : temperature at t=0
+    - goal_temp : temperature at t=saturation_point
+    """
+    if t >= saturation_point:
+        # If we've reached the last iteration, T is constrant
+        return goal_temp
+    # Sigmoid-like curve: stays high, then drops
+    return initial_temp - (initial_temp - goal_temp) * ((t / saturation_point) ** 8)
 
 """
 DOMAIN ADJUSTMENT FUNCTIONS
@@ -308,3 +312,5 @@ def check_solution_conformity(solution, args):
         return False
 
     return True
+
+
