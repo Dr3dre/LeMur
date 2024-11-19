@@ -797,10 +797,12 @@ if __name__ == '__main__':
         if stat == cp_model.OPTIMAL or stat == cp_model.FEASIBLE:
             status = stat
             solver = solver_new
-    model_proto = model.Proto()
-    variables = model_proto.variables
-    constraints = model_proto.constraints
-    breakpoint()
+
+    if status == cp_model.UNKNOWN or status == cp_model.MODEL_INVALID:
+        model_proto = model.Proto()
+        variables = model_proto.variables
+        constraints = model_proto.constraints
+        breakpoint()
 
     # solver.
 
@@ -836,7 +838,6 @@ if __name__ == '__main__':
                             prod.unload_beg[c,l] = solver.Value(UNLOAD_BEG[p,c,l])
                             prod.unload_end[c,l] = solver.Value(UNLOAD_END[p,c,l])
 
-        breakpoint()
         num_partials = sum([solver.Value(PARTIAL_CYCLE[p,c]) for p, _ in all_products for c in range(max_cycles[p])])
         production_schedule = Schedule(all_products)
         print(production_schedule)
