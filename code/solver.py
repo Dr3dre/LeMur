@@ -547,7 +547,11 @@ if __name__ == '__main__':
 
     # 2 : At most one partial cycle per product
     for p, prod in all_products:
-        model.AddAtMostOne([PARTIAL_CYCLE[p,c] for c in range(max_cycles[p])])
+        # TODO: benchmark which one is faster
+        no_partial = model.NewBoolVar(f'NO PARTIAL_CYCLE[{p}]')
+        model.AddBoolAnd([PARTIAL_CYCLE[p,c].Not() for c in range(max_cycles[p])]).OnlyEnforceIf(no_partial)
+        model.AddBoolXOr([PARTIAL_CYCLE[p,c] for c in range(max_cycles[p])] + [no_partial])
+        # model.AddAtMostOne([PARTIAL_CYCLE[p,c] for c in range(max_cycles[p])])
         constraints.append(f"At most one partial cycle per product")
 
     # 3 : Connect cycle specific variables
