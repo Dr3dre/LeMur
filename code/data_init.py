@@ -1,5 +1,10 @@
+import math
 import random
 import copy
+import csv
+import json
+from datetime import datetime
+from datetime import timedelta
 
 class Product (object) :
     '''
@@ -66,7 +71,7 @@ class Schedule(object):
     def __str__(self):
         output = "Production Schedule:\n"
         for p, prod in self.products :
-            output += f"Product : {chr(p+65)}\n"
+            output += f"Product : {prod.id} Article : {prod.article} Request : {prod.kg_request} Kg\n"
             for c in prod.setup_beg.keys():
                 output += f"    Cycle {c} :\n"
                 output += f"        Machine   : {prod.machine[c]}:\n"
@@ -75,7 +80,12 @@ class Schedule(object):
                 output += f"        Setup     : ({prod.setup_beg[c]}, {prod.setup_end[c]})\n"
                 for l in range(prod.num_levate[c]) :
                     if (c,l) in prod.load_beg.keys() : 
-                        output += f"            Levata [{l}] : ({prod.load_beg[c,l]}, {prod.load_end[c,l]}) => ({prod.unload_beg[c,l]}, {prod.unload_end[c,l]})\n"
+                        # compute load and unload times from the current day at 00:00 (remove the current time of the day)
+                        load_beg_datetime = datetime.now() + timedelta(hours=prod.load_beg[c,l]) - timedelta(hours=datetime.now().hour, minutes=datetime.now().minute, seconds=datetime.now().second)
+                        load_end_datetime = datetime.now() + timedelta(hours=prod.load_end[c,l]) - timedelta(hours=datetime.now().hour, minutes=datetime.now().minute, seconds=datetime.now().second)
+                        unload_beg_datetime = datetime.now() + timedelta(hours=prod.unload_beg[c,l]) - timedelta(hours=datetime.now().hour, minutes=datetime.now().minute, seconds=datetime.now().second)
+                        unload_end_datetime = datetime.now() + timedelta(hours=prod.unload_end[c,l]) - timedelta(hours=datetime.now().hour, minutes=datetime.now().minute, seconds=datetime.now().second)
+                        output += f"            Levata [{l}] : LOAD({load_beg_datetime}, {load_end_datetime}) UNLOAD({unload_beg_datetime}, {unload_end_datetime})\n"
             output += "\n"
         
         return output
@@ -165,3 +175,138 @@ def init_data(num_common_jobs, num_running_jobs, num_machines, num_articles, num
 
 
     return common_products, running_products, article_compatibility, machine_compatibility, base_setup_cost, base_load_cost, base_unload_cost, base_levata_cost, standard_levate, kg_per_levata
+
+def date_hours_parser(start_date, due_date):
+    """
+    Parser for start and due date from strings to hours
+    """
+    # Parse input dates
+    start = datetime.strptime(start_date, "%Y-%m-%d")
+    due = datetime.strptime(due_date, "%Y-%m-%d")
+    
+    # Get current date and time
+    current_datetime = datetime.now()
+
+    # Calculate differences in hours
+    start_hours = int((start - current_datetime).total_seconds() // 3600)
+    due_hours = int((due - current_datetime).total_seconds() // 3600)
+
+    if start_hours < 0:
+        start_hours = 0
+
+    return start_hours, due_hours
+
+def init_csv_data(common_p_path: str, j_compatibility_path: str, m_compatibility_path: str, m_info_path: str, article_list_path: str, costs = (2,1,1), running_products =  {}):
+    """
+
+    - `costs:` a tuple representing the costs of the operation made by the human operators, cost expressed *per fuse*:
+        - `base_setup_cost:` the cost of setting up a machine before a cicle (see 5)
+        - `base_load_cost:` the cost of the load operation before a levata (see 6)
+        - `base_unload_cost:` the cost of the unload operation after a levata (see 7)
+    1.`common_products: [Product]`
+        The csv gave us:
+        - Client name (useless)
+        - Product code 
+        - Product quantity
+        - Insertion date
+        - Due date
+        for every row, which is a "Product" object and the list of those form the "common_products"
+    
+    2.`running_products: {Product}`
+        Assuming an empty list right now
+
+    3.`job_compatibility[article]: {str : [int]}`
+        From "articoli_macchine.json" we retrieve the associations, is the dict containing which article goes on which machine
+    
+    4.`machine_compatibility[machine]: {int: [str]}`
+        From "macchine_articoli.json" we retrieve the associations, is the dict containing which machine can produce which article
+    
+    5.`base_setup_cost[article, machine]: {(str,int) : float}`
+        Costant taken from input, machine dependent (number of fuses)
+    
+    6.`base_load_cost[article, machine]: {(str,int) : float}`
+        For every product is machine dependent (number of fuses) 
+    
+    7.`base_unload_cost[article, machine]: {(str,int) : float}`
+        Same as point 6 
+    
+    8.`base_levata_cost[article]: {str: int}`
+        For every product, from "lista_articoli" see "ore_levata" , is the dict with the associations of the cost(in hours) of a levata for a product
+    
+    9.`standard_levate[article]: {str: int}`
+        For every product, form "lista_articoli" see "no_cicli" but is leavta, is the dict with the associations of the number of levate in a cicle for a product
+    
+    10.`kg_per_levata[machine, article]: {(int,str): int}`
+        See from "lista_articoli" the "kg_ora" and the "ore_levata", ASSUMING THAT the obtained data have been made in a 256 fuses machine
+    
+"""
+    const_setup_cost, const_load_cost, const_unload_cost = costs    
+
+    # 1. common_products
+    with open(common_p_path, newline='') as csvfile:
+        
+        csv_data = csv.reader(csvfile, delimiter=',', quotechar='|')
+        common_products = []
+        str_out = ""
+        for idx, row in enumerate(csv_data):
+            if idx > 0:
+                str_out = str_out + ', '.join(row) 
+                str_out += '\n'
+                # print(f'start_date:  {row[3]} - type: {type(row[3])}')
+                start_date, due_date = date_hours_parser(row[3], row[4])
+                common_products.append(Product(idx, row[1], int(float(row[2])), start_date, due_date))
+    # 2. running_products
+    # there is nothing here for now
+
+    # 3. job_compatibility
+    job_compatibility = json.load(open(j_compatibility_path))
+
+    # 4. machine_compatibility
+    machine_compatibility = {}
+    for a in job_compatibility:
+        for m in job_compatibility[a]:
+            if m not in machine_compatibility:
+                machine_compatibility[m] = []
+            machine_compatibility[m].append(a)
+    print(len(machine_compatibility))
+
+    #check consistency between job_compatibility and machine_compatibility
+    for a in job_compatibility:
+        for m in job_compatibility[a]:
+            if a not in machine_compatibility[m]:
+                print(f'Inconsistency between job_compatibility and machine_compatibility: {a} not in {m}')
+
+    # 5-6-7. base_setup_cost, base_load_cost, base_unload_cost
+    base_setup_cost = {}
+    base_load_cost = {}
+    base_unload_cost = {}
+
+    m_info = json.load(open(m_info_path))
+    fuses_machines_associations = {int(machine):m_info[machine]['n_fusi'] for machine in m_info}
+
+    for a in job_compatibility:
+        for m in fuses_machines_associations:
+            base_setup_cost[a,int(m)] = int(math.ceil(float(const_setup_cost)))
+            base_load_cost[a,int(m)] = int(math.ceil(float(const_load_cost) * float(fuses_machines_associations[m])))
+            base_unload_cost[a,int(m)] = int(math.ceil(float(const_unload_cost) * float(fuses_machines_associations[m])))
+
+    # 8-9-10. base_levata_cost, standard_levate, kg_per_levata
+    base_levata_cost = {}
+    standard_levate = {}
+    kg_per_levata = {}
+
+    with open(article_list_path, newline='') as csvfile:
+        csv_data = csv.reader(csvfile, delimiter=',', quotechar='"')
+        for idx, row in enumerate(csv_data):
+            # row[0] is the article code, row[10] is the hours needed for a single "levata"
+            if idx > 0:
+                # print(f'article: {row[0]}')
+                base_levata_cost[row[0]] = int(float(row[10]))
+                standard_levate[row[0]] = int(float(row[9]))
+                print(f'costo levata: {int(float(row[10]))}')
+                if row[0] in job_compatibility:
+                    for m in job_compatibility[row[0]]:
+                        print(f'kg_ora: {float(row[6])} - ore_levata: {float(row[10])} - fusi: {fuses_machines_associations[m]} - kg_per_levata: {int((float(row[10]) * float(row[6])) * float(fuses_machines_associations[m]) / 256.0)} - kg_ciclo: {int((float(row[10]) * float(row[6])) * float(fuses_machines_associations[m]) / 256.0) * int(float(row[9]))}')
+                        kg_per_levata[m,row[0]] = int((float(row[10]) * float(row[6])) * float(fuses_machines_associations[m]) / 256.0)
+    # breakpoint()
+    return common_products, running_products, job_compatibility, machine_compatibility, base_setup_cost, base_load_cost, base_unload_cost, base_levata_cost, standard_levate, kg_per_levata

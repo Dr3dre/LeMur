@@ -1,10 +1,12 @@
 from ortools.sat.python import cp_model
+from google.protobuf import text_format
 import argparse
 import math
 
 from data_init import *
 from data_plotting import *
 from utils import *
+import os
 
 # Parsing args.
 parser = argparse.ArgumentParser(description='Job Scheduling Optimization')
@@ -16,10 +18,16 @@ INPUT DATA
 '''
 
 # timouts for solver
-MAKESPAN_SOLVER_TIMEOUT = 60
-CYCLE_OPTIM_SOLVER_TIMEOUT = 60
+MAKESPAN_SOLVER_TIMEOUT = 120
+CYCLE_OPTIM_SOLVER_TIMEOUT = 120
 
 USE_ADD_ELEMENT = False
+
+COMMON_P_PATH = 'data/new_orders.csv'
+J_COMPATIBILITY_PATH = 'data/utils/articoli_macchine.json'
+M_COMPATIBILITY_PATH = 'data/utils/macchine_articoli.json'
+M_INFO_PATH = 'data/utils/macchine_info.json'
+ARTICLE_LIST_PATH = 'data/valid/lista_articoli.csv'
 
 constraints = []
 broken_machines = [] # put here the number of the broken machines
@@ -28,28 +36,22 @@ scheduled_maintenances = {
     # 0 : [(50, 150)],
 }
 
-num_common_jobs = 3
-num_running_jobs = 2
-num_machines = 5
-num_articles = 200
-machine_velocities = 3
+num_machines = 72
+machine_velocities = 1
 
-horizon_days = 100
+horizon_days = 300
 time_units_in_a_day = 24   # 24 : hours, 48 : half-hours, 96 : quarter-hours, ..., 1440 : minutes
 horizon = horizon_days * time_units_in_a_day
 
 start_shift = 8       # 8:00 MUST BE COMPATIBLE WITH time_units_in_a_day
-end_shift = 18        # 16:00 MUST BE COMPATIBLE WITH time_units_in_a_day
+end_shift = 16        # 16:00 MUST BE COMPATIBLE WITH time_units_in_a_day
 num_operator_groups = 2
-num_operators_per_group = 2
+num_operators_per_group = 4
 
-if num_running_jobs > num_machines:
-    raise ValueError("Number of jobs must be less than or equal to the number of machines.")
 if machine_velocities % 2 == 0 :
     raise ValueError("Machine velocities must be odd numbers.")
 
-# Data initialization (at random for the moment)
-common_products, running_products, article_to_machine_comp, machine_to_article_comp, base_setup_art_cost, base_load_art_cost, base_unload_art_cost, base_levata_art_cost, standard_levate_art, kg_per_levata_art = init_data(num_common_jobs, num_running_jobs, num_machines, num_articles, num_operator_groups, horizon)
+common_products, running_products, article_to_machine_comp, machine_to_article_comp, base_setup_art_cost, base_load_art_cost, base_unload_art_cost, base_levata_art_cost, standard_levate_art, kg_per_levata_art = init_csv_data(COMMON_P_PATH, J_COMPATIBILITY_PATH, M_COMPATIBILITY_PATH, M_INFO_PATH, ARTICLE_LIST_PATH, costs=(4, 6/256, 2/256))
 
 # Make joint tuples (for readability purp.)
 common_products = [(prod.id, prod) for prod in common_products]
@@ -67,19 +69,22 @@ for p, prod in all_products:
     standard_levate[p] = standard_levate_art[prod.article]
     base_levata_cost[p] = base_levata_art_cost[prod.article]
     for m in article_to_machine_comp[prod.article]:
-        kg_per_levata[m,p] = kg_per_levata_art[m,prod.article]
-        base_setup_cost[p,m] = base_setup_art_cost[prod.article,m]
-        base_load_cost[p,m] = base_load_art_cost[prod.article,m]
-        base_unload_cost[p,m] = base_unload_art_cost[prod.article,m]
+        try:
+            kg_per_levata[m,p] = kg_per_levata_art[m,prod.article]
+            base_setup_cost[p,m] = base_setup_art_cost[prod.article,m]
+            base_load_cost[p,m] = base_load_art_cost[prod.article,m]
+            base_unload_cost[p,m] = base_unload_art_cost[prod.article,m]
+        except:
+            breakpoint()
 
 # convert machine and article compatibility to be indexed on product id
 prod_to_machine_comp = {}
 machine_to_prod_comp = {}
+for m in range(1,num_machines+1):
+    machine_to_prod_comp[m] = []
 for p, prod in all_products:
     prod_to_machine_comp[p] = article_to_machine_comp[prod.article]
     for m in article_to_machine_comp[prod.article]:
-        if m not in machine_to_prod_comp:
-            machine_to_prod_comp[m] = []
         machine_to_prod_comp[m].append(p)
 # breakpoint()
 '''
@@ -112,6 +117,15 @@ for p, prod in all_products :
             break  
     if adjusted_intervals and adjusted_intervals[-1][1] < prod.due_date:
         adjusted_intervals[-1] = (adjusted_intervals[-1][0], min(adjusted_intervals[-1][1],prod.due_date))
+    
+    # check empty intervals
+    valid = False
+    for interval in adjusted_intervals:
+        if interval[0] < interval[1]:
+            valid = True
+    if not valid:
+        print("EMPTY DOMAIN FOR ARTICLE",prod.article)
+        raise ValueError
     
     # generate worktime domain for p
     worktime_domain[p] = cp_model.Domain.FromIntervals(adjusted_intervals)
@@ -382,9 +396,9 @@ if __name__ == '__main__':
 
         # Understand if such operation goes beyond the worktime
         NEEDS_GAP = model.NewBoolVar('NEEDS_GAP')
-        model.Add((BEGIN + BASE_COST) > UB).OnlyEnforceIf(NEEDS_GAP, IS_ACTIVE)
+        model.Add((BEGIN + BASE_COST) >= UB).OnlyEnforceIf(NEEDS_GAP, IS_ACTIVE)
         constraints.append(f"Understand if such operation goes beyond the worktime {BEGIN} + {BASE_COST} > {UB}")
-        model.Add((BEGIN + BASE_COST) <= UB).OnlyEnforceIf(NEEDS_GAP.Not(), IS_ACTIVE)
+        model.Add((BEGIN + BASE_COST) < UB).OnlyEnforceIf(NEEDS_GAP.Not(), IS_ACTIVE)
         constraints.append(f"Understand if such operation goes beyond the worktime {BEGIN} + {BASE_COST} <= {UB}")
         
         # Associate to GAP if needed, otherwise it's zero
@@ -498,14 +512,15 @@ if __name__ == '__main__':
     KG_CYCLE = {}
     for p, prod in all_products:
         for c in range(max_cycles[p]):
-            KG_CYCLE[p,c] = model.NewIntVar(0, prod.kg_request+best_kg_cycle[p], f'KG_CYCLE[{p},{c}]')
+            KG_CYCLE[p,c] = model.NewIntVar(0, best_kg_cycle[p]*standard_levate[p], f'KG_CYCLE[{p},{c}]')
             # behaviour
-            ACTUAL_KG_PER_LEVATA = model.NewIntVar(0, prod.kg_request, f'ACTUAL_KG_PER_LEVATA[{p},{c}]')
+            ACTUAL_KG_PER_LEVATA = model.NewIntVar(0, int(best_kg_cycle[p]/standard_levate[p]), f'ACTUAL_KG_PER_LEVATA[{p},{c}]')
             model.Add(ACTUAL_KG_PER_LEVATA == sum([A[p,c,m]*kg_per_levata[m,p] for m in prod_to_machine_comp[p]]))
+            model.Add(ACTUAL_KG_PER_LEVATA == 0).OnlyEnforceIf(ACTIVE_CYCLE[p,c].Not())
             constraints.append(f"number of kg produced by a cycle 1")
             model.AddMultiplicationEquality(KG_CYCLE[p,c], NUM_LEVATE[p,c], ACTUAL_KG_PER_LEVATA)
+            model.Add(KG_CYCLE[p,c] == 0).OnlyEnforceIf(ACTIVE_CYCLE[p,c].Not())
             constraints.append(f"number of kg produced by a cycle 2")
-
 
     '''
     CONSTRAINTS (search space reduction)
@@ -513,12 +528,11 @@ if __name__ == '__main__':
     # Left tightness to search space
     for p, _ in all_products:
         if max_cycles[p]>1:
-            for c in range(max_cycles[p]-2):
-                model.Add(COMPLETE[p,c] >= COMPLETE[p,c+1])
+            for c in range(max_cycles[p]-1):
+                model.AddImplication(COMPLETE[p,c+1], COMPLETE[p,c])
                 constraints.append(f"Left tightness to search space {COMPLETE[p,c]} >= {COMPLETE[p,c+1]}")
-                model.Add(ACTIVE_CYCLE[p,c] >= ACTIVE_CYCLE[p,c+1])
+                model.AddImplication(ACTIVE_CYCLE[p,c+1], ACTIVE_CYCLE[p,c])
                 constraints.append(f"Left tightness to search space {ACTIVE_CYCLE[p,c]} >= {ACTIVE_CYCLE[p,c+1]}")
-
 
     '''
     CONSTRAINTS (LeMur specific)
@@ -528,16 +542,17 @@ if __name__ == '__main__':
         for c in range(max_cycles[p]):
             # 1.1 An active cycle must have one and only one machine assigned
             #   !!! note !!! : for some reason, BoolXor and ExactlyOne don't support the OnlyEnforceIf (documentation says that) only BoolAnd / BoolOr does
-            model.Add(sum([A[p,c,m] for m in prod_to_machine_comp[p]]) == 1).OnlyEnforceIf(ACTIVE_CYCLE[p,c])
-            constraints.append(f"A non active cycle must have 0 machines assigned sum([A[{p},{c},{m}] for m in prod_to_machine_comp[{p}]]) == 1")
-            # 1.2 A non active cycle must have 0 machines assigned
-            model.AddBoolAnd([A[p,c,m].Not() for m in prod_to_machine_comp[p]]).OnlyEnforceIf(ACTIVE_CYCLE[p,c].Not())    
-            constraints.append(f"A non active cycle must have 0 machines assigned sum([A[{p},{c},{m}] for m in prod_to_machine_comp[{p}]]) == 0")
+            model.AddBoolXOr([A[p,c,m] for m in prod_to_machine_comp[p]]+[ACTIVE_CYCLE[p,c].Not()])
+            constraints.append(f"A non active cycle must have 0 machines assigned")
 
     # 2 : At most one partial cycle per product
     for p, prod in all_products:
-        model.AddAtMostOne([PARTIAL_CYCLE[p,c] for c in range(max_cycles[p])])
-        constraints.append(f"At most one partial cycle per product {PARTIAL_CYCLE[p,c]} for c in range({max_cycles[p]})")
+        # TODO: benchmark which one is faster
+        no_partial = model.NewBoolVar(f'NO PARTIAL_CYCLE[{p}]')
+        model.AddBoolAnd([PARTIAL_CYCLE[p,c].Not() for c in range(max_cycles[p])]).OnlyEnforceIf(no_partial)
+        model.AddBoolXOr([PARTIAL_CYCLE[p,c] for c in range(max_cycles[p])] + [no_partial])
+        # model.AddAtMostOne([PARTIAL_CYCLE[p,c] for c in range(max_cycles[p])])
+        constraints.append(f"At most one partial cycle per product")
 
     # 3 : Connect cycle specific variables
     for p, _ in all_products:
@@ -571,8 +586,8 @@ if __name__ == '__main__':
 
     # 6. Objective : all products must reach the requested production
     for p, prod in all_products:
-        total_production = sum([KG_CYCLE[p,c] for c in range(max_cycles[p])])
-        model.AddLinearConstraint(total_production, lb=prod.kg_request, ub=(prod.kg_request + best_kg_cycle[p]))
+        total_production = model.NewIntVar(prod.kg_request, prod.kg_request+best_kg_cycle[p], f'TOTAL_PRODUCTION[{p}]')
+        model.Add(total_production == sum([KG_CYCLE[p,c] for c in range(max_cycles[p])]))
         constraints.append(f"Objective : all products must reach the requested production {total_production} == {prod.kg_request} + {best_kg_cycle[p]}")
 
     # 7. Define ordering between time variables
@@ -621,8 +636,17 @@ if __name__ == '__main__':
                 constraints.append(f"Inactive cycles {UNLOAD_BEG[p,c,l]} == {start_schedule}")
 
     # 8. No overlap between product cycles on same machine :
-    for m in range(num_machines):
-        machine_intervals = [model.NewOptionalIntervalVar(CYCLE_BEG[p,c], CYCLE_COST[p,c], CYCLE_END[p,c],is_present=A[p,c,m], name=f'machine_{m}_interval[{p},{c}]') for p in machine_to_prod_comp[m] for c in range(max_cycles[p]) if m in prod_to_machine_comp[p]]
+    for m in range(1,num_machines + 1):
+        machine_intervals = [
+            model.NewOptionalIntervalVar(
+                CYCLE_BEG[p,c], 
+                CYCLE_COST[p,c], 
+                CYCLE_END[p,c],
+                is_present=A[p,c,m], 
+                name=f'machine_{m}_interval[{p},{c}]') 
+            for p in machine_to_prod_comp[m]
+                for c in range(max_cycles[p]) 
+            if m in prod_to_machine_comp[p]]
         
         # 8.1 Add maintanance intervals
         if m in scheduled_maintenances :
@@ -639,22 +663,16 @@ if __name__ == '__main__':
     for p, _ in all_products:
         for c in range(max_cycles[p]):
             # 9.1 The active cycles' setups must be assigned to one operator
-            model.Add(sum([A_OP_SETUP[o,p,c] for o in range(num_operator_groups)]) == 1).OnlyEnforceIf(ACTIVE_CYCLE[p,c])
+            model.AddBoolXOr([A_OP_SETUP[o,p,c] for o in range(num_operator_groups)] + [ACTIVE_CYCLE[p,c].Not()])
             constraints.append(f"The active cycles' setups must be assigned to one operator {sum([A_OP_SETUP[o,p,c] for o in range(num_operator_groups)])} == 1")
-            # 9.2 The non active cycles' setups must have no operator assigned
-            model.AddBoolAnd([A_OP_SETUP[o,p,c].Not() for o in range(num_operator_groups)]).OnlyEnforceIf(ACTIVE_CYCLE[p,c].Not())
-            constraints.append(f"The non active cycles' setups must have no operator assigned {A_OP_SETUP[o,p,c].Not()} for o in range({num_operator_groups})")
 
     for p, _ in all_products:
         for c in range(max_cycles[p]):
             for l in range(standard_levate[p]):
                 for t in [0,1]:
                     # 9.3 The levate must have an operator assigned for the load and the unload operation:
-                    model.Add(sum([A_OP[o,p,c,l,t] for o in range(num_operator_groups)]) == 1).OnlyEnforceIf(ACTIVE_LEVATA[p,c,l])
+                    model.AddBoolXOr([A_OP[o,p,c,l,t] for o in range(num_operator_groups)] + [ACTIVE_LEVATA[p,c,l].Not()])
                     constraints.append(f"The levate must have an operator assigned for the load and the unload operation {sum([A_OP[o,p,c,l,t] for o in range(num_operator_groups)])} == 1")
-                    # 9.4 The non active levate must have no operator assigned for the load and the unload operation:
-                    model.AddBoolAnd([A_OP[o,p,c,l,t].Not() for o in range(num_operator_groups)]).OnlyEnforceIf(ACTIVE_LEVATA[p,c,l].Not())
-                    constraints.append(f"The non active levate must have no operator assigned for the load and the unload operation {A_OP[o,p,c,l,t].Not()} for o in range({num_operator_groups})")
     
     for o in range(num_operator_groups) :
         # 9.5 create intervals for each operation operators have to handle:
@@ -736,13 +754,55 @@ if __name__ == '__main__':
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = MAKESPAN_SOLVER_TIMEOUT
     solver.parameters.log_search_progress = True
+    solver.parameters.num_search_workers = os.cpu_count()
+    # solver.parameters.add_lp_constraints_lazily = True
         
     model.Minimize(makespan)
+
+
     status = solver.Solve(model)
+
+
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+
+        
+        # fix as much as possible
+        for p, prod in all_products:
+            for c in range(max_cycles[p]):
+                model.Add(NUM_LEVATE[p,c] == solver.Value(NUM_LEVATE[p,c]))
+                model.Add(PARTIAL_CYCLE[p,c] == solver.Value(PARTIAL_CYCLE[p,c]))
+                model.Add(COMPLETE[p,c] == solver.Value(COMPLETE[p,c]))
+                model.Add(KG_CYCLE[p,c] == solver.Value(KG_CYCLE[p,c]))
+                model.Add(ACTIVE_CYCLE[p,c] == solver.Value(ACTIVE_CYCLE[p,c]))
+                model.Add(SETUP_END[p,c] <= solver.Value(SETUP_END[p,c]))
+                model.Add(LOAD_END[p,c,l] <= solver.Value(LOAD_END[p,c,l]))
+                model.Add(UNLOAD_END[p,c,l] <= solver.Value(UNLOAD_END[p,c,l]))
+                for m in prod_to_machine_comp[p]:
+                    model.Add(A[p,c,m] == solver.Value(A[p,c,m]))
+
+        
+        solver_new = cp_model.CpSolver()
+
+        # minimize makespan on each machine need to check A[p,c,m] for each product
         model.Minimize(sum([CYCLE_END[p,c] for p, _ in all_products for c in range(max_cycles[p])]))
-        solver.parameters.max_time_in_seconds = CYCLE_OPTIM_SOLVER_TIMEOUT
-        status = solver.Solve(model)
+        
+        solver_new.parameters.max_time_in_seconds = CYCLE_OPTIM_SOLVER_TIMEOUT
+        # avoid presolve
+        solver_new.parameters.cp_model_presolve = False
+        solver_new.parameters.log_search_progress = True
+        solver_new.parameters.num_search_workers = os.cpu_count()
+
+        stat = solver_new.Solve(model)
+
+        if stat == cp_model.OPTIMAL or stat == cp_model.FEASIBLE:
+            status = stat
+            solver = solver_new
+    model_proto = model.Proto()
+    variables = model_proto.variables
+    constraints = model_proto.constraints
+    breakpoint()
+
+    # solver.
 
     '''
     PLOTTING
@@ -776,11 +836,15 @@ if __name__ == '__main__':
                             prod.unload_beg[c,l] = solver.Value(UNLOAD_BEG[p,c,l])
                             prod.unload_end[c,l] = solver.Value(UNLOAD_END[p,c,l])
 
+        breakpoint()
         num_partials = sum([solver.Value(PARTIAL_CYCLE[p,c]) for p, _ in all_products for c in range(max_cycles[p])])
         production_schedule = Schedule(all_products)
         print(production_schedule)
+        # save production schedule string form to file
+        with open(f"schedule.txt", "w") as f:
+            f.write(str(production_schedule))
         
         # Plot schedule
-        plot_gantt_chart(production_schedule, max_cycles, num_machines, horizon, prohibited_intervals, time_units_from_midnight)
+        plot_gantt_chart_1(production_schedule, max_cycles, num_machines, horizon, prohibited_intervals, time_units_from_midnight)
     else:
         print("No solution found. Try increasing the horizon days.")
