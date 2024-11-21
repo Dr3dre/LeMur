@@ -39,7 +39,7 @@ scheduled_maintenances = {
 num_machines = 72
 machine_velocities = 1
 
-horizon_days = 300
+horizon_days = 400
 time_units_in_a_day = 24   # 24 : hours, 48 : half-hours, 96 : quarter-hours, ..., 1440 : minutes
 horizon = horizon_days * time_units_in_a_day
 
@@ -775,8 +775,9 @@ if __name__ == '__main__':
                 model.Add(KG_CYCLE[p,c] == solver.Value(KG_CYCLE[p,c]))
                 model.Add(ACTIVE_CYCLE[p,c] == solver.Value(ACTIVE_CYCLE[p,c]))
                 model.Add(SETUP_END[p,c] <= solver.Value(SETUP_END[p,c]))
-                model.Add(LOAD_END[p,c,l] <= solver.Value(LOAD_END[p,c,l]))
-                model.Add(UNLOAD_END[p,c,l] <= solver.Value(UNLOAD_END[p,c,l]))
+                for l in range(standard_levate[p]):
+                    model.Add(LOAD_END[p,c,l] <= solver.Value(LOAD_END[p,c,l]))
+                    model.Add(UNLOAD_END[p,c,l] <= solver.Value(UNLOAD_END[p,c,l]))
                 for m in prod_to_machine_comp[p]:
                     model.Add(A[p,c,m] == solver.Value(A[p,c,m]))
 
