@@ -7,6 +7,7 @@ from data_init import *
 from data_plotting import *
 from utils import *
 import os
+from ga_refiner import GA_Refiner
 
 # Parsing args.
 parser = argparse.ArgumentParser(description='Job Scheduling Optimization')
@@ -18,8 +19,9 @@ INPUT DATA
 '''
 
 # timouts for solver
-MAKESPAN_SOLVER_TIMEOUT = 120
-CYCLE_OPTIM_SOLVER_TIMEOUT = 120
+MAKESPAN_SOLVER_TIMEOUT = 10
+CYCLE_OPTIM_SOLVER_TIMEOUT = 10
+GENETIC_REFINEMENT = True
 
 USE_ADD_ELEMENT = False
 
@@ -28,6 +30,10 @@ J_COMPATIBILITY_PATH = 'data/utils/articoli_macchine.json'
 M_COMPATIBILITY_PATH = 'data/utils/macchine_articoli.json'
 M_INFO_PATH = 'data/utils/macchine_info.json'
 ARTICLE_LIST_PATH = 'data/valid/lista_articoli.csv'
+
+# output txt files
+OUTPUT_SCHEDULE = 'output/schedule.txt'
+OUTPUT_REFINED_SCHEDULE = 'output/refined_schedule.txt'
 
 constraints = []
 broken_machines = [] # put here the number of the broken machines
@@ -755,7 +761,8 @@ if __name__ == '__main__':
     solver.parameters.max_time_in_seconds = MAKESPAN_SOLVER_TIMEOUT
     solver.parameters.log_search_progress = True
     solver.parameters.num_search_workers = os.cpu_count()
-    # solver.parameters.add_lp_constraints_lazily = True
+    #solver.parameters.add_lp_constraints_lazily = True
+    #solver.parameters.stop_after_first_solution = True
         
     model.Minimize(makespan)
 
@@ -792,6 +799,7 @@ if __name__ == '__main__':
         solver_new.parameters.cp_model_presolve = False
         solver_new.parameters.log_search_progress = True
         solver_new.parameters.num_search_workers = os.cpu_count()
+        #solver_new.parameters.stop_after_first_solution = True
 
         stat = solver_new.Solve(model)
 
@@ -804,8 +812,6 @@ if __name__ == '__main__':
         variables = model_proto.variables
         constraints = model_proto.constraints
         breakpoint()
-
-    # solver.
 
     '''
     PLOTTING
@@ -824,18 +830,34 @@ if __name__ == '__main__':
                         if solver.Value(A[p,c,m]):
                             prod.machine[c] = m
                     # Setup / Cycle
+                    for o in range(num_operator_groups):
+                        if solver.Value(A_OP_SETUP[o,p,c]):
+                            prod.setup_operator[c] = o
+                            break
                     prod.setup_beg[c] = solver.Value(SETUP_BEG[p,c])
                     prod.setup_end[c] = solver.Value(SETUP_END[p,c])
                     prod.cycle_end[c] = solver.Value(CYCLE_END[p,c])
                     # Velocity
                     prod.velocity[c] = solver.Value(VELOCITY[p,c])
                     # Num Levate
-                    prod.num_levate[c] = solver.Value(NUM_LEVATE[p,c])
+                    prod.num_levate[c] = solver.Value(NUM_LEVATE[p,c])     
                     # Loads / Unloads
                     for l in range(standard_levate[p]):
                         if solver.Value(ACTIVE_LEVATA[p,c,l]):
+                            # load
+                            for o in range(num_operator_groups):
+                                if solver.Value(A_OP[o,p,c,l,0]):
+                                    prod.load_operator[c,l] = o
+                                    break
+                            # Time
                             prod.load_beg[c,l] = solver.Value(LOAD_BEG[p,c,l])
                             prod.load_end[c,l] = solver.Value(LOAD_END[p,c,l])
+                            # unload
+                            for o in range(num_operator_groups):
+                                if solver.Value(A_OP[o,p,c,l,1]):
+                                    prod.unload_operator[c,l] = o
+                                    break
+                            # Time
                             prod.unload_beg[c,l] = solver.Value(UNLOAD_BEG[p,c,l])
                             prod.unload_end[c,l] = solver.Value(UNLOAD_END[p,c,l])
 
@@ -843,10 +865,97 @@ if __name__ == '__main__':
         production_schedule = Schedule(all_products)
         print(production_schedule)
         # save production schedule string form to file
-        with open(f"schedule.txt", "w") as f:
+        with open(OUTPUT_SCHEDULE, "w") as f:
             f.write(str(production_schedule))
-        
-        # Plot schedule
+        # Plot refined schedule
         plot_gantt_chart_1(production_schedule, max_cycles, num_machines, horizon, prohibited_intervals, time_units_from_midnight)
+
+        """
+        GENETIC REFINEMENT
+        """
+        if GENETIC_REFINEMENT :
+            # Prepare input data for GA refinement
+            # making sure to handle running products
+            # base costs correctly
+            corrected_base_setup_cost = {}
+            corrected_base_load_cost = {}
+            corrected_base_levata_cost = {}
+            corrected_base_unload_cost = {}
+            for p, prod in all_products :
+                if isinstance(prod, RunningProduct) :
+                    # Levata correction
+                    if prod.current_op_type == 2 :
+                        corrected_base_levata_cost[p] = prod.remaining_time
+                    elif prod.current_op_type > 2 :
+                        corrected_base_levata_cost[p] = 0
+                    else :
+                        corrected_base_levata_cost[p] = base_levata_cost[p]
+                else :
+                    # copy back base costs for non running products
+                    corrected_base_levata_cost[p] = base_levata_cost[p]
+
+                for m in prod_to_machine_comp[p] :
+                    if isinstance(prod, RunningProduct) :
+                        # Setup correction
+                        if prod.current_op_type == 0 :
+                            corrected_base_setup_cost[p,m] = prod.remaining_time
+                        else :
+                            corrected_base_setup_cost[p,m] = 0
+                        # Load correction
+                        if prod.current_op_type == 1 :
+                            corrected_base_load_cost[p,m] = prod.remaining_time
+                        elif prod.current_op_type > 1 :
+                            corrected_base_load_cost[p,m] = 0
+                        else :
+                            corrected_base_load_cost[p,m] = base_load_cost[p,m]
+                        # Unload correction
+                        if prod.current_op_type == 3 :
+                            corrected_base_unload_cost[p,m] = prod.remaining_time
+                        else :
+                            corrected_base_unload_cost[p,m] = base_unload_cost[p,m]
+                    else :
+                        # Copy back base costs for non running products
+                        corrected_base_setup_cost[p,m] = base_setup_cost[p,m]
+                        corrected_base_load_cost[p,m] = base_load_cost[p,m]
+                        corrected_base_unload_cost[p,m] = base_unload_cost[p,m]
+
+            start_date = {}
+            due_date = {}
+            for p, prod in all_products :
+                start_date[p] = prod.start_date
+                due_date[p] = prod.due_date
+
+            # Dictionary of variables necessary to GA computation
+            vars = {
+                "num_machines" : num_machines,
+                "base_setup_cost" : corrected_base_setup_cost,
+                "base_load_cost" : corrected_base_load_cost,
+                "base_levata_cost" : corrected_base_levata_cost,
+                "base_unload_cost" : corrected_base_unload_cost,
+                "velocity_step_size" : velocity_step_size,
+                "time_units_in_a_day" : time_units_in_a_day,
+                "start_date" : start_date,
+                "due_date" : due_date,
+                "start_shift" : start_shift,
+                "end_shift" : end_shift,
+                "horizon" : horizon,
+                "max_cycles" : max_cycles,
+                "gap_at_day" : gap_at_day,
+                "prohibited_intervals" : prohibited_intervals,
+                "time_units_from_midnight" : start_schedule,
+                "num_operator_groups" : num_operator_groups,
+                "prod_to_machine_comp" : prod_to_machine_comp
+            }
+            # Refine it
+            ga_refiner = GA_Refiner()
+            refinement = ga_refiner.refine_solution(all_products, vars)
+            # Plot refinement
+            refined_schedule = Schedule(refinement)
+            print(refined_schedule)
+            # save production schedule string form to file
+            with open(OUTPUT_REFINED_SCHEDULE, "w") as f:
+                f.write(str(refined_schedule))
+            # Plot refined schedule
+            plot_gantt_chart_1(refined_schedule, max_cycles, num_machines, horizon, prohibited_intervals, time_units_from_midnight)
     else:
         print("No solution found. Try increasing the horizon days.")

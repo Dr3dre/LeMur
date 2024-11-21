@@ -178,8 +178,8 @@ def adjust_operation (point, min_distance, operation_base_cost, operator_overlap
         # If conflicts are found :
         if len(end_overlap_set) > 0 :
             conflicts = sorted(end_overlap_set)
-            #beg = greedy_set_value_in_domain(conflicts[-1].end, operator_overlap_tree)
-            beg = conflicts[-1].end
+            beg = greedy_set_value_in_domain(conflicts[-1].end, operator_overlap_tree)
+            #beg = conflicts[-1].end
             continue
         
         # If no conflicts are found break the loop
@@ -212,7 +212,7 @@ def adjust_machine(machine_queue, machine_id, anchor, operator_overlap_tree, arg
     """
     for cycle in machine_queue :
         if cycle["pos"] >= from_pos :
-            cycle["setup_beg"] = anchor
+            cycle["setup_beg"] = anchor if anchor >= args["start_date"][cycle["product"]] else args["start_date"][cycle["product"]]
             cycle = adjust_cycle(cycle, machine_id, operator_overlap_tree, args)
             anchor = cycle["unload_end"][-1]
     

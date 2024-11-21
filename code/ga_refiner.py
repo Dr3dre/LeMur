@@ -4,24 +4,53 @@ from intervaltree import IntervalTree
 from data_init import RunningProduct
 import matplotlib.pyplot as plt
 import numpy
-
+import copy
 from ga_utils import *
+
+# Customizable parameters
+POPULATION_SIZE = 50
+GENERATIONS = 150
+PENALTY_COEFFICIENT = 3
+TEMPERATURE_PROFILING = False
+
+# Output parameters
+OUTPUT_LOSS_PLOT = "plots/loss_plot.png"
+PLOT_METRICS = True
+
 
 class GA_Refiner:
     def __init__(self, seed=140):
         self.prng = Random()
         self.prng.seed(seed)
 
-    def refine_solution(self, products, args, plot_metrics=True):
-        self.penalty_weight = 1 * args["time_units_in_a_day"]
-        self.seed = self._initialize_seed(products, args)
+    def refine_solution(self, products, args):
+        # Customizable parameters
+        self.penalty_weight = PENALTY_COEFFICIENT * args["time_units_in_a_day"]
+        args["minimize"] = True
+
+        # Variables initialization
         self.products = products
         self.best_candidate = None
-        args["minimize"] = True
-        args["plot_metrics"] = plot_metrics
+        args["curr_generation"] = 0
+        # 1-based to 0-based conversion for input dictionaries (machine indexes are 0-based in genetic optimization while they're 1-based in input)
+        # correct prod-to-machine compatibility
+        prod_to_machine_comp = copy.copy(args["prod_to_machine_comp"])
+        args["prod_to_machine_comp"] = {p: [m-1 for m in prod_to_machine_comp[p]] for p in prod_to_machine_comp.keys()}
+        # correct setup base costs
+        base_setup_cost = copy.copy(args["base_setup_cost"])
+        args["base_setup_cost"] = {(p,m-1) : base_setup_cost[(p,m)] for (p,m) in base_setup_cost.keys()}
+        # correct load base costs
+        base_load_cost = copy.copy(args["base_load_cost"])
+        args["base_load_cost"] = {(p,m-1) : base_load_cost[(p,m)] for (p,m) in base_load_cost.keys()}
+        # correct unload base costs
+        base_unload_cost = copy.copy(args["base_unload_cost"])
+        args["base_unload_cost"] = {(p,m-1) : base_unload_cost[(p,m)] for (p,m) in base_unload_cost.keys()}
+        
+        # Initialize as seed the given schedule
+        self.seed = self._initialize_seed(products, args)
         # Populate overlap Tree for domain gaps
         args["domain_interval_tree"] = IntervalTree.from_tuples(args["prohibited_intervals"])
-        args["curr_generation"] = 0
+
         # EA configuration and execution
         ga = ec.GA(self.prng)
         ga.variator = [ec.variators.uniform_crossover, self.mutation]
@@ -35,32 +64,29 @@ class GA_Refiner:
         #ga.replacer = ec.replacers.steady_state_replacement   
         #ga.replacer = ec.replacers.random_replacement
 
-        generations = 150
-        population = 50
-
         # Probability of applying _compact_and_shift mutation
         # It degrades over generations and is proportional to the
         # number of machines in the input space
         initial_temp = 1
         goal_temp = 0.1
         saturation_point = int(args["num_machines"] * 2)
-        args["temperature"] = [temperature_profile(t, saturation_point, initial_temp, goal_temp) for t in range(generations+1)]
+        args["temperature"] = [temperature_profile(t, saturation_point, initial_temp, goal_temp) for t in range(GENERATIONS+1)]
 
         _ = ga.evolve(
             generator=self.generator,
             evaluator=self.evaluator,
-            pop_size=population,
+            pop_size=POPULATION_SIZE,
             maximize=(not args["minimize"]),
-            num_selected=int(population * 0.5),
+            num_selected=int(POPULATION_SIZE * 0.5),
             mutation_rate=1,
             crossover_rate=0,
-            max_generations=generations,
+            max_generations=GENERATIONS,
             #tournament_size=3,
             **args
         )
 
-        if plot_metrics:
-            plt.savefig(f"plots/ga_loss.png", bbox_inches='tight')
+        if PLOT_METRICS:
+            plt.savefig(OUTPUT_LOSS_PLOT, bbox_inches='tight')
             plt.close()
 
         # extract best candidate found over generations
@@ -82,7 +108,7 @@ class GA_Refiner:
                 c = elem["cycle"]
                 for _, prod in products:
                     if prod.id == p:
-                        prod.machine[c] = m
+                        prod.machine[c] = m + 1     # 0-based to 1-based conversion
                         prod.setup_beg[c] = elem["setup_beg"]
                         prod.setup_end[c] = elem["setup_end"]
                         for l in range(len(elem["load_beg"])) :
@@ -120,7 +146,8 @@ class GA_Refiner:
                     "unload_beg": [prod.unload_beg[c, l] for l in range(prod.num_levate[c])],
                     "unload_end": [prod.unload_end[c, l] for l in range(prod.num_levate[c])]
                 }
-                seed[prod.machine[c]].append(cycle)
+                # Apply 1-based to 0-based conversion to prod.machine[c]
+                seed[prod.machine[c]-1].append(cycle)
 
         for m in range(args["num_machines"]):
             seed[m] = sorted(seed[m], key=lambda x: x["setup_beg"])
@@ -147,7 +174,7 @@ class GA_Refiner:
                 if candidate.fitness > self.best_candidate.fitness :
                     self.best_candidate = candidate
 
-        if args["plot_metrics"]:
+        if PLOT_METRICS:
             if num_generations % 10 == 0:
                 print(f"Gen [{num_generations}] Fitness => {self.best_candidate.fitness}")
             generational_stats_plot(population, num_generations, num_evaluations, args)
@@ -193,14 +220,26 @@ class GA_Refiner:
 
     def mutation(self, random, candidates, args):
         for individual in candidates:
-
-            if random.random() < args["temperature"][args["curr_generation"]] :
-                individual = self._compact_and_shift(individual, random, args)
+            if TEMPERATURE_PROFILING :
+                # Apply mutation based on temperature profile
+                if random.random() < args["temperature"][args["curr_generation"]] :
+                    individual = self._compact_and_shift(individual, random, args)
+                else :
+                    mutation_choice = random.choice([0, 1])
+                    if mutation_choice == 0 :
+                        individual = self._random_swap_two(individual, random, args)
+                    elif mutation_choice == 1 :
+                        individual = self._pop_and_push(individual, random, args)
+                    else:
+                        pass
             else :
-                mutation_choice = random.choice([0, 1])
+                # Uniformly apply mutations
+                mutation_choice = random.choice([0, 1, 2])
                 if mutation_choice == 0 :
-                    individual = self._random_swap_two(individual, random, args)
+                    individual = self._compact_and_shift(individual, random, args)
                 elif mutation_choice == 1 :
+                    individual = self._random_swap_two(individual, random, args)
+                elif mutation_choice == 2 :
                     individual = self._pop_and_push(individual, random, args)
                 else:
                     pass
@@ -252,16 +291,24 @@ class GA_Refiner:
         # "fixed" basically flags if such cycle is a RunningProduct cycle => it cannot be moved
         source_machine_idx = random.choice([m for m in range(args["num_machines"]) if not (len(individual[m]) == 0 or ( (len(individual[m]) == 1) and individual[m][0]["fixed"])) ])
         source_machine = individual[source_machine_idx]
-        # pick compatible machine IN SAME MACHINE GROUP !!!!!!
-        target_machine_idx = random.choice([m for m in range(args["num_machines"]) if m != source_machine_idx])
-        target_machine = individual[target_machine_idx]
-
         # discard fixed cycles from source machine
         source_candidates = [c for c in source_machine if not c["fixed"]]
+        # skip mutation if no source has no machines available
+        if len(source_candidates) == 0 : return individual
+        # pick a random cycle to move from source machine
+        source_cycle = random.choice(source_candidates)
+
+        # pick compatible machine according to the selected cycle on source machine
+        target_candidates = [m for m in args["prod_to_machine_comp"][source_cycle["product"]] if m != source_machine_idx]
+        # skip mutation if no target has no machines available
+        if len(target_candidates) == 0 : return individual
+        # pick a random target machine
+        target_machine_idx = random.choice(target_candidates)
+        target_machine = individual[target_machine_idx]
+
         # skip mutation if no candidates are available
         if len(source_candidates) > 0 :
-            # pick a random cycle to move and remove it from source machine
-            source_cycle = random.choice(source_candidates) 
+            # remove cycle from source machine
             source_machine.remove(source_cycle)
             # gather source info
             source_anchor = source_cycle["setup_beg"]

@@ -6,6 +6,7 @@ import json
 from datetime import datetime
 from datetime import timedelta
 
+
 class Product (object) :
     '''
     A Product is a request for a certain amount of an certain article
@@ -22,11 +23,17 @@ class Product (object) :
         self.machine = {}
         self.velocity = {}
         self.num_levate = {}
+        # setup
+        self.setup_operator = {}
         self.setup_beg = {}
         self.setup_end = {}
         self.cycle_end = {}
+        # load
+        self.load_operator = {}
         self.load_beg = {}
         self.load_end = {}
+        # unload
+        self.unload_operator = {}
         self.unload_beg = {}
         self.unload_end = {}
     
