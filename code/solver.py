@@ -869,6 +869,7 @@ if __name__ == '__main__':
             f.write(str(production_schedule))
         # Plot refined schedule
         plot_gantt_chart_1(production_schedule, max_cycles, num_machines, horizon, prohibited_intervals, time_units_from_midnight)
+        cp_sat_solution_cost = sum([prod.cycle_end[c] for p, prod in all_products for c in range(max_cycles[p])])
 
         """
         GENETIC REFINEMENT
@@ -957,5 +958,10 @@ if __name__ == '__main__':
                 f.write(str(refined_schedule))
             # Plot refined schedule
             plot_gantt_chart_1(refined_schedule, max_cycles, num_machines, horizon, prohibited_intervals, time_units_from_midnight)
+            # Show improvement
+            genetic_refinement_solution_cost = sum([prod.cycle_end[c] for p, prod in all_products for c in range(max_cycles[p])])
+            print(f"CP-SAT solution cost    :: {(cp_sat_solution_cost/time_units_in_a_day):.2f} days")
+            print(f"Genetic refinement cost :: {(genetic_refinement_solution_cost/time_units_in_a_day):.2f} days")
+            print(f"            Improvement => {((cp_sat_solution_cost-genetic_refinement_solution_cost)/time_units_in_a_day):.2f} days")
     else:
         print("No solution found. Try increasing the horizon days.")
