@@ -40,18 +40,18 @@ OUTPUT_REFINED_SCHEDULE = 'output/refined_schedule.txt'
 broken_machines = [] # put here the number of the broken machines
 scheduled_maintenances = {
     # machine : [(start, duration), ...]
-    # 0 : [(50, 150)],
+    #1 : [(20, 50)],
 }
 festivities = [
     # day from scheduling start (0 is the current day, 1 is tomorrow, etc.)
-    1,
+    0,1,2,3,4,5,6 #,...
 ]
 
 num_machines = 72
 machine_velocities = 1
 
 hour_resolution = 1 # 1: hours, 2: half-hours, 4: quarter-hours, ..., 60: minutes
-horizon_days = 200
+horizon_days = 300
 time_units_in_a_day = 24*hour_resolution   # 24 : hours, 48 : half-hours, 96 : quarter-hours, ..., 1440 : minutes
 horizon = horizon_days * time_units_in_a_day
 
@@ -772,7 +772,6 @@ if __name__ == '__main__':
     # Objective based on argument
     if args.minimize == 'makespan':
         print("Criterion: Makespan")
-        print("Searching for a solution...\n")
         makespan = model.NewIntVar(0, horizon, 'makespan')
         model.AddMaxEquality(makespan, [CYCLE_END[p,c] for p, _ in all_products for c in range(max_cycles[p])])
         # product end variables
@@ -782,20 +781,21 @@ if __name__ == '__main__':
     # Solve the model
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = MAKESPAN_SOLVER_TIMEOUT
-    solver.parameters.log_search_progress = True
+    #solver.parameters.log_search_progress = True
     solver.parameters.num_search_workers = os.cpu_count()
     #solver.parameters.add_lp_constraints_lazily = True
     #solver.parameters.stop_after_first_solution = True
-        
+
     model.Minimize(makespan)
-
-
+    print("-----------------------------------------------------")
+    print("Searching...")
     status = solver.Solve(model)
 
-
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
-
-        
+        print("1° stage optimization (Makespan minimization) over.")
+        print(f"    Status: {solver.StatusName(status)}")
+        print(f"    WallTime: {solver.WallTime()}s")
+        print(f"    Objective value: {solver.ObjectiveValue()}")
         # fix as much as possible
         for p, prod in all_products:
             for c in range(max_cycles[p]):
@@ -811,7 +811,6 @@ if __name__ == '__main__':
                 for m in prod_to_machine_comp[p]:
                     model.Add(A[p,c,m] == solver.Value(A[p,c,m]))
 
-        
         solver_new = cp_model.CpSolver()
 
         # minimize makespan on each machine need to check A[p,c,m] for each product
@@ -820,10 +819,11 @@ if __name__ == '__main__':
         solver_new.parameters.max_time_in_seconds = CYCLE_OPTIM_SOLVER_TIMEOUT
         # avoid presolve
         solver_new.parameters.cp_model_presolve = False
-        solver_new.parameters.log_search_progress = True
+        #solver_new.parameters.log_search_progress = True
         solver_new.parameters.num_search_workers = os.cpu_count()
         #solver_new.parameters.stop_after_first_solution = True
-
+        print("-----------------------------------------------------")
+        print("Searching...")
         stat = solver_new.Solve(model)
 
         if stat == cp_model.OPTIMAL or stat == cp_model.FEASIBLE:
@@ -831,6 +831,7 @@ if __name__ == '__main__':
             solver = solver_new
 
     if status == cp_model.UNKNOWN or status == cp_model.MODEL_INVALID:
+        print("Error: Solver status is unknown or model is invalid.")
         model_proto = model.Proto()
         variables = model_proto.variables
         constraints = model_proto.constraints
@@ -841,10 +842,10 @@ if __name__ == '__main__':
     '''
 
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+        print("2° stage optimization (Compactness maximization) over.")
         print(f"    Status: {solver.StatusName(status)}")
         print(f"    WallTime: {solver.WallTime()}s")
         print(f"    Objective value: {solver.ObjectiveValue()}")
-        print("---")        
         for p, prod in all_products:
             for c in range(max_cycles[p]):
                 if solver.Value(ACTIVE_CYCLE[p,c]):
@@ -892,7 +893,6 @@ if __name__ == '__main__':
 
         num_partials = sum([solver.Value(PARTIAL_CYCLE[p,c]) for p, _ in all_products for c in range(max_cycles[p])])
         production_schedule = Schedule(all_products)
-        print(production_schedule)
         # save production schedule string form to file
         with open(OUTPUT_SCHEDULE, "w") as f:
             f.write(str(production_schedule))
@@ -957,40 +957,55 @@ if __name__ == '__main__':
 
             # Dictionary of variables necessary to GA computation
             vars = {
+                # machine info
                 "num_machines" : num_machines,
+                "broken_machines" : broken_machines,
+                "scheduled_maintenances" : scheduled_maintenances,
+                "velocity_step_size" : velocity_step_size,
+                # costs
                 "base_setup_cost" : corrected_base_setup_cost,
                 "base_load_cost" : corrected_base_load_cost,
                 "base_levata_cost" : corrected_base_levata_cost,
                 "base_unload_cost" : corrected_base_unload_cost,
-                "velocity_step_size" : velocity_step_size,
+                # time related
                 "time_units_in_a_day" : time_units_in_a_day,
                 "start_date" : start_date,
                 "due_date" : due_date,
                 "start_shift" : start_shift,
                 "end_shift" : end_shift,
                 "horizon" : horizon,
-                "max_cycles" : max_cycles,
                 "gap_at_day" : gap_at_day,
                 "prohibited_intervals" : prohibited_intervals,
                 "time_units_from_midnight" : start_schedule,
+                # products and operators
+                "max_cycles" : max_cycles,
                 "num_operator_groups" : num_operator_groups,
                 "prod_to_machine_comp" : prod_to_machine_comp
             }
             # Refine it
             ga_refiner = GA_Refiner()
-            refinement = ga_refiner.refine_solution(all_products, vars)
+            print("-----------------------------------------------------")
+            print("Searching...")
+            refinement, validity, fitness = ga_refiner.refine_solution(all_products, vars)
+            genetic_refinement_solution_cost = sum([prod.cycle_end[c] for p, prod in all_products for c in range(max_cycles[p])])
+            print("3° stage optimization (Genetic refinement) over.")
+            print(f"    Valid solution: {validity}")
+            print(f"    Objective value: {fitness}")
+            if not validity : print("    (Invalid => CP-SAT solution will be used instead)")
+            print("-----------------------------------------------------")
+            print(f"    CP-SAT solution cost    :: {(cp_sat_solution_cost/time_units_in_a_day):.2f} days")
+            print(f"    Genetic refinement cost :: {(genetic_refinement_solution_cost/time_units_in_a_day):.2f} days")
+            print(f"                Improvement => {((cp_sat_solution_cost-genetic_refinement_solution_cost)/time_units_in_a_day):.2f} days")
+
             # Plot refinement
             refined_schedule = Schedule(refinement)
-            print(refined_schedule)
             # save production schedule string form to file
             with open(OUTPUT_REFINED_SCHEDULE, "w") as f:
                 f.write(str(refined_schedule))
             # Plot refined schedule
             plot_gantt_chart_1(refined_schedule, max_cycles, num_machines, horizon, prohibited_intervals, time_units_from_midnight)
-            # Show improvement
-            genetic_refinement_solution_cost = sum([prod.cycle_end[c] for p, prod in all_products for c in range(max_cycles[p])])
-            print(f"CP-SAT solution cost    :: {(cp_sat_solution_cost/time_units_in_a_day):.2f} days")
-            print(f"Genetic refinement cost :: {(genetic_refinement_solution_cost/time_units_in_a_day):.2f} days")
-            print(f"            Improvement => {((cp_sat_solution_cost-genetic_refinement_solution_cost)/time_units_in_a_day):.2f} days")
+
     else:
         print("No solution found. Try increasing the horizon days.")
+    
+    print("-+-+- Scheduling completed -+-+-")
