@@ -359,16 +359,20 @@ if __name__ == '__main__':
                     model.Add(LEVATA_COST[p,c,l] == prod.remaining_time - VELOCITY[p,c]*velocity_step_size[p])
                     # constraints.append(f"cost (time) of levata operation 3 {LEVATA_COST[p,c,l]} == {prod.remaining_time - VELOCITY[p,c]*velocity_step_size[p]}")
 
+    gaps = 0
     def make_gap_var(BEGIN, BASE_COST, IS_ACTIVE, enabled=True):
         '''
         Returns a GAP variable to allow setup / load / unload operations
         to be performed over multiple days (if needed)
         '''
+        global gaps
         if not enabled: return 0 # for testing purposes
+        gaps += 1
         
         # Associate day index to relative gap size
-        G = model.NewIntVar(0, horizon_days, 'G')
-        GAP_SIZE = model.NewIntVar(0, max(gap_at_day), 'GAP_SIZE')
+        G = model.NewIntVar(0, horizon_days, f'G_DAY_{gaps}')
+        gap_values = list(set(gap_at_day))
+        GAP_SIZE = model.NewIntVarFromDomain(cp_model.Domain.FromValues(gap_values), f'GAP_SIZE_{gaps}')
         model.AddElement(G, gap_at_day, GAP_SIZE)
         # constraints.append(f"Associate day index to relative gap size {G} == {gap_at_day} {GAP_SIZE}")
         # Get current day
@@ -377,23 +381,22 @@ if __name__ == '__main__':
         UB = end_shift + time_units_in_a_day*G
         # Understand if such operation goes beyond the worktime
         NEEDS_GAP = model.NewBoolVar('NEEDS_GAP')
-        model.Add((BEGIN + BASE_COST) > UB).OnlyEnforceIf(NEEDS_GAP, IS_ACTIVE)
+        model.Add((BEGIN + BASE_COST) > UB).OnlyEnforceIf(NEEDS_GAP)
         # constraints.append(f"Understand if such operation goes beyond the worktime {BEGIN} + {BASE_COST} > {UB}")
-        model.Add((BEGIN + BASE_COST) <= UB).OnlyEnforceIf(NEEDS_GAP.Not(), IS_ACTIVE)
+        model.Add((BEGIN + BASE_COST) <= UB).OnlyEnforceIf(NEEDS_GAP.Not())
         # constraints.append(f"Understand if such operation goes beyond the worktime {BEGIN} + {BASE_COST} <= {UB}")
         # Associate to GAP if needed, otherwise it's zero
-        GAP = model.NewIntVar(0, max(gap_at_day), 'GAP')
-        model.Add(GAP == GAP_SIZE).OnlyEnforceIf(NEEDS_GAP, IS_ACTIVE)
+        GAP = model.NewIntVar(0, max(gap_at_day), f'GAP_{gaps}')
+        model.Add(GAP == GAP_SIZE).OnlyEnforceIf(NEEDS_GAP)
         # constraints.append(f"Associate to GAP if needed, otherwise it's zero {GAP} == {GAP_SIZE}")
-        model.Add(GAP == 0).OnlyEnforceIf(NEEDS_GAP.Not(), IS_ACTIVE)
+        model.Add(GAP == 0).OnlyEnforceIf(NEEDS_GAP.Not())
         # constraints.append(f"Associate to GAP if needed, otherwise it's zero {GAP} == 0")
         # If not active, GAP is also zero
-        model.Add(GAP == 0).OnlyEnforceIf(IS_ACTIVE.Not())
+        model.AddImplication(IS_ACTIVE.Not(), NEEDS_GAP.Not())
         # constraints.append(f"If not active, GAP is also zero {GAP} == 0")
         
         return GAP
 
-    gaps = 0
     def make_gap_var_linear(model: cp_model.CpModel, BEGIN, BASE_COST, IS_ACTIVE, gap_at_day, time_units_in_a_day, end_shift, horizon_days, enabled=True):
         '''
         Returns a GAP variable to allow setup / load / unload operations
@@ -410,7 +413,12 @@ if __name__ == '__main__':
         
         values_gap = list(set(gap_at_day))
         GAP_SIZE = model.NewIntVarFromDomain(cp_model.Domain.FromValues(values_gap), f'GAP_SIZE_{gaps}')
-        # constraints.append(f"Associate day index to relative gap size {GAP_SIZE} == {gap} {G} == {i}")
+        for i, gap in enumerate(gap_at_day):
+            G_i = model.NewBoolVar(f'G_{i}_{gaps}')
+            model.Add(G == i).OnlyEnforceIf(G_i)
+            model.Add(G != i).OnlyEnforceIf(G_i.Not())
+            model.Add(GAP_SIZE == gap).OnlyEnforceIf(G_i)
+            # constraints.append(f"Associate day index to relative gap size {GAP_SIZE} == {gap} {G} == {i}")
 
         # constraints.append(f"Get current day {G} == {BEGIN} / {time_units_in_a_day}")
         UB = end_shift + time_units_in_a_day*(G)
@@ -562,11 +570,7 @@ if __name__ == '__main__':
 
     # 2 : At most one partial cycle per product
     for p, prod in all_products:
-        # TODO: benchmark which one is faster
-        no_partial = model.NewBoolVar(f'NO PARTIAL_CYCLE[{p}]')
-        model.AddBoolAnd([PARTIAL_CYCLE[p,c].Not() for c in range(max_cycles[p])]).OnlyEnforceIf(no_partial)
-        model.AddBoolXOr([PARTIAL_CYCLE[p,c] for c in range(max_cycles[p])] + [no_partial])
-        # model.AddAtMostOne([PARTIAL_CYCLE[p,c] for c in range(max_cycles[p])])
+        model.AddAtMostOne([PARTIAL_CYCLE[p,c] for c in range(max_cycles[p])])
         # constraints.append(f"At most one partial cycle per product")
 
     # 3 : Connect cycle specific variables
@@ -574,6 +578,10 @@ if __name__ == '__main__':
         for c in range(max_cycles[p]):            
             # 3.1 The complete cycles must be active (only implication to allow for partials)
             model.AddImplication(COMPLETE[p,c], ACTIVE_CYCLE[p,c])
+            model.AddImplication(PARTIAL_CYCLE[p,c], ACTIVE_CYCLE[p,c]) 
+            model.AddImplication(ACTIVE_CYCLE[p,c].Not(), PARTIAL_CYCLE[p,c].Not())
+            model.AddImplication(ACTIVE_CYCLE[p,c].Not(), COMPLETE[p,c].Not())
+            model.AddImplication(COMPLETE[p,c], PARTIAL_CYCLE[p,c].Not())
             # constraints.append(f"The complete cycles must be active {COMPLETE[p,c]} => {ACTIVE_CYCLE[p,c]}")
             # 3.2 The partial cycle is the active but not complete
             # (this carries the atmost one from partial to active so it needs to be a iff)

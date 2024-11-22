@@ -84,7 +84,7 @@ class Schedule(object):
     def __str__(self):
         output = "Production Schedule:\n"
         for p, prod in self.products :
-            output += f"Product : {prod.id} Article : {prod.article} Request : {prod.kg_request} Kg\n"
+            output += f"Product : {prod.id} - Article : {prod.article} - Request : {prod.kg_request} Kg - Start Date : {prod.start_date} - Due Date : {prod.due_date}\n\tLevate: {prod.num_levate}\n"
             for c in prod.setup_beg.keys():
                 output += f"    Cycle {c} :\n"
                 output += f"        Machine   : {prod.machine[c]}:\n"
