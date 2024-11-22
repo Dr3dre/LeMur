@@ -3,23 +3,30 @@ from random import Random
 from intervaltree import IntervalTree
 from data_init import RunningProduct
 import matplotlib.pyplot as plt
-import numpy
-import copy
 from ga_utils import *
+from datetime import datetime
 
 # Customizable parameters
-POPULATION_SIZE = 50
-GENERATIONS = 150
+POPULATION_SIZE = 100
+GENERATIONS = 200
 PENALTY_COEFFICIENT = 3
-TEMPERATURE_PROFILING = False
+
+# enable temperature profiling to adjust mutation probabilities over generations
+TEMPERATURE_PROFILING = True
+INITIAL_TEMP = 0.8
+GOAL_TEMP = 0.333
+MIDPOINT = int(GENERATIONS / 2.5) # midpoint of the sigmoid function expressed in generations
+STEEPNESS = 0.125 # steepness of the sigmoid function
+
+RAND_SEED = int(datetime.now().timestamp()) # set fixed seed for reproducibility
 
 # Output parameters
 OUTPUT_LOSS_PLOT = "plots/loss_plot.png"
+OUTPUT_TEMP_PROFILE_PLOT = "plots/temperature_profile.png"
 PLOT_METRICS = True
 
-
 class GA_Refiner:
-    def __init__(self, seed=140):
+    def __init__(self, seed=RAND_SEED):
         self.prng = Random()
         self.prng.seed(seed)
 
@@ -27,24 +34,16 @@ class GA_Refiner:
         # Customizable parameters
         self.penalty_weight = PENALTY_COEFFICIENT * args["time_units_in_a_day"]
         args["minimize"] = True
-
         # Variables initialization
         self.products = products
         self.best_candidate = None
         args["curr_generation"] = 0
-        # 1-based to 0-based conversion for input dictionaries (machine indexes are 0-based in genetic optimization while they're 1-based in input)
-        # correct prod-to-machine compatibility
-        prod_to_machine_comp = copy.copy(args["prod_to_machine_comp"])
-        args["prod_to_machine_comp"] = {p: [m-1 for m in prod_to_machine_comp[p]] for p in prod_to_machine_comp.keys()}
-        # correct setup base costs
-        base_setup_cost = copy.copy(args["base_setup_cost"])
-        args["base_setup_cost"] = {(p,m-1) : base_setup_cost[(p,m)] for (p,m) in base_setup_cost.keys()}
-        # correct load base costs
-        base_load_cost = copy.copy(args["base_load_cost"])
-        args["base_load_cost"] = {(p,m-1) : base_load_cost[(p,m)] for (p,m) in base_load_cost.keys()}
-        # correct unload base costs
-        base_unload_cost = copy.copy(args["base_unload_cost"])
-        args["base_unload_cost"] = {(p,m-1) : base_unload_cost[(p,m)] for (p,m) in base_unload_cost.keys()}
+        
+        # Correct some aspects input arguments, for instance :
+        #  - 1-based to 0-based conversion for input referring to machines, as
+        #    machine indexes are 0-based in genetic optimization while they're 1-based in input
+        #  - Modify prohibited_intervals for easier control in the genetic optimization
+        convert_args(args)
         
         # Initialize as seed the given schedule
         self.seed = self._initialize_seed(products, args)
@@ -67,10 +66,14 @@ class GA_Refiner:
         # Probability of applying _compact_and_shift mutation
         # It degrades over generations and is proportional to the
         # number of machines in the input space
-        initial_temp = 1
-        goal_temp = 0.1
-        saturation_point = int(args["num_machines"] * 2)
-        args["temperature"] = [temperature_profile(t, saturation_point, initial_temp, goal_temp) for t in range(GENERATIONS+1)]
+        args["temperature"] = [temperature_profile(t, MIDPOINT, STEEPNESS, INITIAL_TEMP, GOAL_TEMP) for t in range(GENERATIONS+1)]
+        if PLOT_METRICS and TEMPERATURE_PROFILING :
+            visualize_temperature_profile(temperature_profile, (0, GENERATIONS+1), OUTPUT_TEMP_PROFILE_PLOT,
+                midpoint=MIDPOINT,
+                steepness=STEEPNESS,
+                initial_temp=INITIAL_TEMP,
+                goal_temp=GOAL_TEMP
+            )
 
         _ = ga.evolve(
             generator=self.generator,
@@ -91,35 +94,34 @@ class GA_Refiner:
 
         # extract best candidate found over generations
         solution = self.best_candidate.candidate
-
         # solution go through conformity check
         # to ensure it is feasible
         is_valid = check_solution_conformity(solution, args)
-        if not is_valid:
-            print("GA refinement returned INVALID SOLUTION, returning original solution")
-            return products
+        solution_fitness = self.best_candidate.fitness if is_valid else -1
 
-        print("\nGA refinement returned VALID SOLUTION !!!")
-        print(f"Solution Fitness => {self.best_candidate.fitness}\n")
-        # Assign back values to product instances
-        for m, machine_queue in enumerate(solution):
-            for elem in machine_queue:
-                p = elem["product"]
-                c = elem["cycle"]
-                for _, prod in products:
-                    if prod.id == p:
-                        prod.machine[c] = m + 1     # 0-based to 1-based conversion
-                        prod.setup_beg[c] = elem["setup_beg"]
-                        prod.setup_end[c] = elem["setup_end"]
-                        for l in range(len(elem["load_beg"])) :
-                            prod.load_beg[c,l] = elem["load_beg"][l]
-                            prod.load_end[c,l] = elem["load_end"][l]
-                            prod.unload_beg[c,l] = elem["unload_beg"][l]
-                            prod.unload_end[c,l] = elem["unload_end"][l]
-                        
-                        prod.cycle_end[c] = elem["unload_end"][-1]
-                        break
-        return products
+        if is_valid :
+            # Assign back values to product instances
+            for m, machine_queue in enumerate(solution):
+                for elem in machine_queue:
+                    p = elem["product"]
+                    c = elem["cycle"]
+                    for _, prod in products:
+                        if prod.id == p:
+                            # 0-based to 1-based conversion upon returning values as 
+                            # they're corrected to 0-based for the whole genetic optimization process
+                            prod.machine[c] = (m + 1)
+                            prod.setup_beg[c] = elem["setup_beg"]
+                            prod.setup_end[c] = elem["setup_end"]
+                            for l in range(len(elem["load_beg"])) :
+                                prod.load_beg[c,l] = elem["load_beg"][l]
+                                prod.load_end[c,l] = elem["load_end"][l]
+                                prod.unload_beg[c,l] = elem["unload_beg"][l]
+                                prod.unload_end[c,l] = elem["unload_end"][l]
+                            
+                            prod.cycle_end[c] = elem["unload_end"][-1]
+                            break
+        
+        return products, is_valid, solution_fitness
     
     def _initialize_seed(self, products, args):
         seed = [[] for _ in range(args["num_machines"])]
@@ -175,8 +177,6 @@ class GA_Refiner:
                     self.best_candidate = candidate
 
         if PLOT_METRICS:
-            if num_generations % 10 == 0:
-                print(f"Gen [{num_generations}] Fitness => {self.best_candidate.fitness}")
             generational_stats_plot(population, num_generations, num_evaluations, args)
 
 
@@ -188,8 +188,7 @@ class GA_Refiner:
         for individual in candidates :
             # penalties are assigned to discourage unfeasible spaces
             penalty = 0
-            schedule_makespan = 0
-            cumulative_schedule_makespan = 0
+            individual_fitness = 0
             for machine_queue in individual :
                 for cycle in machine_queue :
                     # Strong penalty for not respecting time window (Start Date & Due Date)
@@ -201,18 +200,9 @@ class GA_Refiner:
                     if cycle["unload_end"][-1] > ub:
                         #penalty += cycle["unload_end"][-1] - ub
                         penalty += 1
-                # Schedule makespan is the maximum among all cycle end times
-                machine_makespan = 0 if len(machine_queue) == 0 else machine_queue[-1]["unload_end"][-1]
-                schedule_makespan = max(schedule_makespan, machine_makespan)
-                # Cumulative makespan accounts for all cycle ends instead of the maximum one only
-                cumulative_schedule_makespan += sum([cycle["unload_end"][-1] for cycle in machine_queue])
-            
-            # Fitness accounts both for schedule makespan and compactness of solution
-            # This allows tune machines which doesn't represent a bottleneck
-            weight_compactness = 1 / (args["horizon"] * sum([args["max_cycles"][p] for p, _ in self.products]))
-            schedule_fitness = schedule_makespan + cumulative_schedule_makespan*weight_compactness
-            # Final fitness accounts for both schedule makespan and penalty
-            individual_fitness = schedule_fitness + self.penalty_weight*penalty
+                # Fitness score is the cumulative makespan, which accounts for all
+                # cycle ends instead of the maximum one only (as in traditional makespan)
+                individual_fitness += sum([cycle["unload_end"][-1] for cycle in machine_queue])
             # Store fitness
             fitness.append(individual_fitness)
 
@@ -220,20 +210,23 @@ class GA_Refiner:
 
     def mutation(self, random, candidates, args):
         for individual in candidates:
+            # Enabling temperature profiling assign much stronger probability to _pop_and_push mutation
+            #   => That's because it's the most effective mutation in terms of potential fitness improvement
+            # After a certain number of generations, the probability of applying _pop_and_push mutation
+            # decreases with a sigmoid function, allowing other minor mutations (_compact_and_shift + _random_swap_two) to be performed
             if TEMPERATURE_PROFILING :
-                # Apply mutation based on temperature profile
                 if random.random() < args["temperature"][args["curr_generation"]] :
-                    individual = self._compact_and_shift(individual, random, args)
+                    individual = self._pop_and_push(individual, random, args)
                 else :
                     mutation_choice = random.choice([0, 1])
                     if mutation_choice == 0 :
                         individual = self._random_swap_two(individual, random, args)
                     elif mutation_choice == 1 :
-                        individual = self._pop_and_push(individual, random, args)
-                    else:
+                        individual = self._compact_and_shift(individual, random, args)
+                    else :
                         pass
+            # Otherwise, apply mutations uniformly
             else :
-                # Uniformly apply mutations
                 mutation_choice = random.choice([0, 1, 2])
                 if mutation_choice == 0 :
                     individual = self._compact_and_shift(individual, random, args)
@@ -253,36 +246,39 @@ class GA_Refiner:
         # choose a random machine queue in the solution
         machine_idx = random.choice([m for m in range(args["num_machines"]) if len(individual[m]) > 0])
         machine_queue = individual[machine_idx]
-        # Generate overlap tree for each operator group (excluding selected machines)
-        operator_interval_tree = build_operator_inter_tree(individual, args, exclude_machines=[machine_idx])  
 
         # Anchor "Now" as new starting point for machine
         # the algorithm will assign in a greedy way the first
         # available slot for each cycle operation
-        anchor = args["time_units_from_midnight"]
-        machine_queue = adjust_machine(machine_queue, machine_idx, anchor, operator_interval_tree, args)
-        
+        machine_queues = {machine_idx: machine_queue}
+        anchors = {machine_idx: args["time_units_from_midnight"]}
+        adjustment_start = {machine_idx: 0}
+        # Adjust machine
+        res = adjust_machines(random, individual, machine_queues, anchors, adjustment_start, args)
+        machine_queue = res[machine_idx]
+
         return individual
 
     def _random_swap_two(self, individual, random, args):
        # choose a random machine queue in the solution
         machine_idx = random.choice([m for m in range(args["num_machines"]) if not (len(individual[m]) == 0 or ( (len(individual[m]) == 1) and individual[m][0]["fixed"])) ])
         machine_queue = individual[machine_idx]
-        # Generate overlap tree for each operator group (excluding selected machines)
-        operator_interval_tree = build_operator_inter_tree(individual, args, exclude_machines=[machine_idx])
 
         # change cycle position
         cycle_candidates = [c for c in machine_queue if not c["fixed"]]
         cycle1 = random.choice(cycle_candidates)
         cycle2 = random.choice(cycle_candidates)
         if cycle1["pos"] != cycle2["pos"] :
-            # swap cycles
+            # Swap cycles
             machine_queue[cycle1["pos"]], machine_queue[cycle2["pos"]] = machine_queue[cycle2["pos"]], machine_queue[cycle1["pos"]]
             cycle1["pos"], cycle2["pos"] = cycle2["pos"], cycle1["pos"]
-            # find which cycle starts first between the two
-            anchor = min(cycle1["setup_beg"], cycle2["setup_beg"])
+            # Setup parameters for machine adjustment
+            machine_queues = {machine_idx: machine_queue}
+            anchors = {machine_idx: min(cycle1["setup_beg"], cycle2["setup_beg"])}
+            adjustment_start = {machine_idx: min(cycle1["pos"], cycle2["pos"])}
             # Adjust machine
-            machine_queue = adjust_machine(machine_queue, machine_idx, anchor, operator_interval_tree, args, from_pos=min(cycle1["pos"], cycle2["pos"]))
+            res = adjust_machines(random, individual, machine_queues, anchors, adjustment_start, args)
+            machine_queue = res[machine_idx]
         
         return individual
 
@@ -293,64 +289,52 @@ class GA_Refiner:
         source_machine = individual[source_machine_idx]
         # discard fixed cycles from source machine
         source_candidates = [c for c in source_machine if not c["fixed"]]
-        # skip mutation if no source has no machines available
-        if len(source_candidates) == 0 : return individual
+        if len(source_candidates) == 0 : return individual # skip mutation if source has no cycles available
         # pick a random cycle to move from source machine
         source_cycle = random.choice(source_candidates)
+        source_pos = source_cycle["pos"]
+        # remove cycle from source machine
+        source_machine.remove(source_cycle)
+        source_anchor = source_cycle["setup_beg"] # set anchor point for source machine
+        # fix machine positions on source machine
+        for i, cycle in enumerate(source_machine):
+            cycle["pos"] = i
 
         # pick compatible machine according to the selected cycle on source machine
-        target_candidates = [m for m in args["prod_to_machine_comp"][source_cycle["product"]] if m != source_machine_idx]
-        # skip mutation if no target has no machines available
-        if len(target_candidates) == 0 : return individual
+        target_machine_candidates = [m for m in args["prod_to_machine_comp"][source_cycle["product"]] if m != source_machine_idx and m not in args["broken_machines"]]
+        if len(target_machine_candidates) == 0 : return individual # skip mutation if no target has no machines available
         # pick a random target machine
-        target_machine_idx = random.choice(target_candidates)
+        target_machine_idx = random.choice(target_machine_candidates)
         target_machine = individual[target_machine_idx]
-
-        # skip mutation if no candidates are available
-        if len(source_candidates) > 0 :
-            # remove cycle from source machine
-            source_machine.remove(source_cycle)
-            # gather source info
-            source_anchor = source_cycle["setup_beg"]
-            source_from_pos = source_cycle["pos"]
-            # fix machine positions on source machine
-            for i, cycle in enumerate(source_machine):
-                cycle["pos"] = i
-
-            # gather target info
-            target_anchor = args["time_units_from_midnight"] if len(target_machine) == 0 else target_machine[-1]["unload_end"][-1]
-            target_from_pos = len(target_machine)
-            # append cycle to target machine
-            target_machine.append(source_cycle)
-            for i, cycle in enumerate(target_machine):
-                cycle["pos"] = i
-            
-            # cycles to exclude are the ones requiring an adjustment
-            #   1) those in source machine starting from source_from_pos
-            cycles_to_exclude = [(elem["product"], elem["cycle"]) for elem in source_machine if elem["pos"] >= source_from_pos]
-            #   2) the last cycle in target machine which was previously appended
-            cycles_to_exclude.append((target_machine[-1]["product"], target_machine[-1]["cycle"]))
-            # Generate overlap tree excluding the specified cycles
-            operator_interval_tree = build_operator_inter_tree(individual, args, exclude_cycles=cycles_to_exclude)
-
-            # Choose which machine to adjust first
-            # (it matters due to operator overlaps)
-            if random.choice([0, 1]) == 0 :
-                # Adjust first Source machine
-                source_machine = adjust_machine(source_machine, source_machine_idx, source_anchor, operator_interval_tree, args, from_pos=source_from_pos)
-                # Add source intervals to overlap tree
-                operator_interval_tree = add_intervals_to_tree (operator_interval_tree, source_machine, from_pos=source_from_pos)
-                # fix target machine
-                target_machine = adjust_machine(target_machine, target_machine_idx, target_anchor, operator_interval_tree, args, from_pos=target_from_pos)
-            else :
-                # Adjust first Target machine
-                target_machine = adjust_machine(target_machine, target_machine_idx, target_anchor, operator_interval_tree, args, from_pos=target_from_pos)
-                # Add source intervals to overlap tree
-                operator_interval_tree = add_intervals_to_tree (operator_interval_tree,target_machine, from_pos=target_from_pos)
-                # fix source machine
-                source_machine = adjust_machine(source_machine, source_machine_idx, source_anchor, operator_interval_tree, args, from_pos=source_from_pos)
+        # look for a position to insert the cycle in the target machine
+        target_candidates_pos = [c["pos"] for c in individual[target_machine_idx] if not c["fixed"]]
+        target_candidates_pos.append(len(target_machine)) # dummy position to append cycle at the end
+        target_pos = random.choice(target_candidates_pos)
         
+        # set anchor point for target machine
+        if target_pos == 0 :
+            # if first position is chosen then use source cycle setup_beg as anchor
+            target_anchor = args["time_units_from_midnight"]
+        elif 0 < target_pos < len(target_machine) :
+            # if a middle position is chosen then use setup_beg as anchor
+            target_anchor = target_machine[target_pos]["setup_beg"]
+        else :
+            # if dummy position is chosen then use last cycle unload_end as anchor
+            target_anchor = target_machine[-1]["unload_end"][-1]
+        
+        # insert source cycle to target machine at specified position
+        target_machine.insert(target_pos, source_cycle)
+        # fix machine positions on target machine
+        for i, cycle in enumerate(target_machine):
+            cycle["pos"] = i
+        
+        # Setup parameters for machine adjustment
+        machine_queue = {source_machine_idx: source_machine, target_machine_idx: target_machine}
+        anchor = {source_machine_idx: source_anchor, target_machine_idx: target_anchor}
+        adjustment_start = {source_machine_idx: source_pos, target_machine_idx: target_pos}
+        # Adjust machines
+        res = adjust_machines(random, individual, machine_queue, anchor, adjustment_start, args)
+        source_machine = res[source_machine_idx]
+        target_machine = res[target_machine_idx]
+
         return individual
-
-
-    

@@ -2,6 +2,8 @@ from inspyred import ec
 from intervaltree import IntervalTree, Interval
 import matplotlib.pyplot as plt
 import numpy as np
+import copy
+import math
 
 """
 Data Visualization Functions
@@ -67,30 +69,90 @@ def print_solution (candidate) :
     format output for a candidate solution
     """
     for cycle in candidate :
-        print(f"Product {chr(cycle['product']+65)}, Cycle {cycle['cycle']}, Pos [{cycle['pos']}] :")
+        print(f"Job {cycle['product']}, Cycle {cycle['cycle']}, Pos [{cycle['pos']}] :")
         print(f"    Setup : ({cycle['setup_beg']}, {cycle['setup_end']})")
         for l in range(len(cycle["load_beg"])) :
             print(f"        [{l}] : ({cycle['load_beg'][l]}, {cycle['load_end'][l]}) => ({cycle['unload_beg'][l]}, {cycle['unload_end'][l]})")
 
 
-def temperature_profile(t, saturation_point, initial_temp, goal_temp):
+def temperature_profile(t, midpoint, steepness, initial_temp, goal_temp):
     """
+    Generates a sigmoid curve bounded between initial_temp and goal_temp.
+    
+    Parameters:
     - t : current time step
-    - saturation_point : last time step
-    - initial_temp : temperature at t=0
-    - goal_temp : temperature at t=saturation_point
+    - midpoint : the t-value where the temperature reaches the midpoint between initial_temp and goal_temp
+    - steepness : controls the steepness of the sigmoid transition
+    - initial_temp : lower bound of the temperature
+    - goal_temp : upper bound of the temperature
     """
-    if t >= saturation_point:
-        # If we've reached the last iteration, T is constrant
-        return goal_temp
-    # Sigmoid-like curve: stays high, then drops
-    return initial_temp - (initial_temp - goal_temp) * ((t / saturation_point) ** 8)
+    # Calculate the range of temperatures
+    temp_range = goal_temp - initial_temp
+    # Compute the sigmoid value
+    sigmoid = 1 / (1 + math.exp(-steepness * (t - midpoint)))
+    # Scale and shift the sigmoid to the desired range
+    return initial_temp + temp_range * sigmoid
+
+def visualize_temperature_profile(temperature_function, time_range, out_filepath, **kwargs):
+    """
+    Visualizes the temperature profile over a given time range.
+    """
+    # Unpack the time range
+    start_time, end_time = time_range
+    # Generate time steps
+    times = range(start_time, end_time + 1)
+    # Compute temperature values
+    temperatures = [temperature_function(t, **kwargs) for t in times]
+    # Plot the profile
+    plt.figure(figsize=(8, 6))
+    plt.plot(times, temperatures, label="Temperature Profile", color="blue")
+    plt.scatter(times, temperatures, color="red", s=10, label="Data Points")
+    plt.title("Temperature Profile Visualization")
+    plt.xlabel("Time Steps")
+    plt.ylabel("Temperature")
+    plt.grid(alpha=0.4)
+    plt.legend()
+    plt.savefig(out_filepath)
+    plt.close()
+
+def convert_args(args) :
+    """
+    Apply corrections to the arguments dictionary, such as
+    - converting 1-indexed to 0-indexed (keys referring to machines)
+        - This is necessary because the code input data is 1-indexed while the genetic algorithm works with 0-indexed data
+    - modifying scheduled maintenances content
+    - modifying prod-to-machine compatibility content
+    """
+    # FIXING INDEXES (1-indexed to 0-indexed) for all machine-related data
+    # correct broken machines list
+    broken_machines = copy.copy(args["broken_machines"])
+    args["broken_machines"] = [m-1 for m in broken_machines]
+    # correct scheduled maintenances
+    scheduled_maintenances = copy.copy(args["scheduled_maintenances"])
+    args["scheduled_maintenances"] = {(m-1) : [(beg, beg+length) for beg, length in scheduled_maintenances[m]] for m in scheduled_maintenances.keys()}
+    # correct prod-to-machine compatibility
+    prod_to_machine_comp = copy.copy(args["prod_to_machine_comp"])
+    args["prod_to_machine_comp"] = {p: [m-1 for m in prod_to_machine_comp[p]] for p in prod_to_machine_comp.keys()}
+    # correct setup base costs
+    base_setup_cost = copy.copy(args["base_setup_cost"])
+    args["base_setup_cost"] = {(p,m-1) : base_setup_cost[(p,m)] for (p,m) in base_setup_cost.keys()}
+    # correct load base costs
+    base_load_cost = copy.copy(args["base_load_cost"])
+    args["base_load_cost"] = {(p,m-1) : base_load_cost[(p,m)] for (p,m) in base_load_cost.keys()}
+    # correct unload base costs
+    base_unload_cost = copy.copy(args["base_unload_cost"])
+    args["base_unload_cost"] = {(p,m-1) : base_unload_cost[(p,m)] for (p,m) in base_unload_cost.keys()}
+
+    # FIXING PROHIBITED INTERVALS
+    # shift by 1 unit beginning to allow allocation on such position
+    prohibited_intervals = copy.copy(args["prohibited_intervals"])
+    args["prohibited_intervals"] = [(beg+1, end) for beg, end in prohibited_intervals]
 
 """
 DOMAIN ADJUSTMENT FUNCTIONS
 """
 
-def build_operator_inter_tree (individual, args, exclude_machines=[], exclude_cycles=[]) :
+def build_operator_inter_tree (individual, args, exclude_cycles=[]) :
     """
     Generate overlap tree for each operator group
     excluding specified machines and cycles
@@ -99,16 +161,14 @@ def build_operator_inter_tree (individual, args, exclude_machines=[], exclude_cy
     overlap_tree = {}
     operator_intervals = {o: [] for o in range(args["num_operator_groups"])}
     for m in range(args["num_machines"]) :
-        # machines in "exclude_machines" list are not included in the tree
-        if m not in exclude_machines :
-            for elem in individual[m] :
-                # tuples (p,c) in "exclude_cycles" list are also not inserted in the tree
-                if (elem["product"], elem["cycle"]) not in exclude_cycles :
-                    # assign intervals to relative groups (always excluding width zero tuples)
-                    if (elem["setup_end"] - elem["setup_beg"]) > 0 : operator_intervals[elem["setup_operator"]].append((elem["setup_beg"], elem["setup_end"]))
-                    for l in range(len(elem["load_operator"])) :
-                        if (elem["load_end"][l] - elem["load_beg"][l]) > 0 : operator_intervals[elem["load_operator"][l]].append((elem["load_beg"][l], elem["load_end"][l]))
-                        if (elem["unload_end"][l] - elem["unload_beg"][l]) > 0 : operator_intervals[elem["unload_operator"][l]].append((elem["unload_beg"][l], elem["unload_end"][l]))
+        for elem in individual[m] :
+            # tuples (p,c) in "exclude_cycles" list are also not inserted in the tree
+            if (elem["product"], elem["cycle"]) not in exclude_cycles :
+                # assign intervals to relative groups (always excluding width zero tuples)
+                if (elem["setup_end"] - elem["setup_beg"]) > 0 : operator_intervals[elem["setup_operator"]].append((elem["setup_beg"], elem["setup_end"]))
+                for l in range(len(elem["load_operator"])) :
+                    if (elem["load_end"][l] - elem["load_beg"][l]) > 0 : operator_intervals[elem["load_operator"][l]].append((elem["load_beg"][l], elem["load_end"][l]))
+                    if (elem["unload_end"][l] - elem["unload_beg"][l]) > 0 : operator_intervals[elem["unload_operator"][l]].append((elem["unload_beg"][l], elem["unload_end"][l]))
     
     # Generate overlap tree for each operator group from extracted tuples
     for o in range(args["num_operator_groups"]) :
@@ -116,20 +176,6 @@ def build_operator_inter_tree (individual, args, exclude_machines=[], exclude_cy
     
     return overlap_tree
 
-def add_intervals_to_tree (tree, machine_queue, from_pos=0) :
-    """
-    Add intervals from a machine queue to an overlap tree
-    excluding the ones before "from_pos"
-    """
-    for cycle in machine_queue :
-        if cycle["pos"] >= from_pos :
-            # Add setup interval
-            if (cycle["setup_end"] - cycle["setup_beg"]) > 0 : tree[cycle["setup_operator"]].add(Interval(cycle["setup_beg"], cycle["setup_end"]))
-            # Add Load & Unload intervals
-            for l in range(len(cycle["load_beg"])) :
-                if (cycle["load_end"][l] - cycle["load_beg"][l]) > 0 : tree[cycle["load_operator"][l]].add(Interval(cycle["load_beg"][l], cycle["load_end"][l]))
-                if (cycle["unload_end"][l] - cycle["unload_beg"][l]) > 0 : tree[cycle["unload_operator"][l]].add(Interval(cycle["unload_beg"][l], cycle["unload_end"][l]))
-    return tree
 
 def greedy_set_value_in_domain (value, overlap_tree) :
     """
@@ -205,20 +251,67 @@ def adjust_cycle (cycle, machine_id, operator_overlap_tree, args) :
     
     return cycle
 
-def adjust_machine(machine_queue, machine_id, anchor, operator_overlap_tree, args, from_pos=0) :
-    """
-    Adjust all cycles ina machine queue in a greedy way,
-    such that no overlaps are produced
-    """
-    for cycle in machine_queue :
-        if cycle["pos"] >= from_pos :
-            cycle["setup_beg"] = anchor if anchor >= args["start_date"][cycle["product"]] else args["start_date"][cycle["product"]]
-            cycle = adjust_cycle(cycle, machine_id, operator_overlap_tree, args)
-            anchor = cycle["unload_end"][-1]
+
+def adjust_machines (random, individual, machine_queue, anchor, adjustment_start, args) :
+    # exclude cycles starting from specified positions untill the end of machines
+    cycles_to_exclude = []
+    for m in machine_queue.keys() :
+        cycles_to_exclude += [(elem["product"], elem["cycle"]) for elem in machine_queue[m] if elem["pos"] >= adjustment_start[m]]
+    # Generate overlap tree for each operator group excluding the specified cycles
+    operator_overlap_tree = build_operator_inter_tree(individual, args, exclude_cycles=cycles_to_exclude)
+
+    # Extract scheduled maintenances for the machine as overlap tree (if any)
+    scheduled_maintenances_tree = {}
+    for m in machine_queue.keys() :
+        scheduled_maintenances_tree[m] = None if m not in args["scheduled_maintenances"].keys() else IntervalTree.from_tuples(args["scheduled_maintenances"][m])
+
+    # keep track of advancement status for each machine
+    cycle_to_adjust = {m: adjustment_start[m] for m in machine_queue.keys()}
+    # Keep advancing until all cycles are adjusted
+    while len(cycle_to_adjust.keys()) > 0 :
+        # Select a random machine to advance
+        m = random.choice(list(cycle_to_adjust.keys()))
+        # If the machine has no more cycles to adjust, remove it from the dictionary
+        if cycle_to_adjust[m] >= len(machine_queue[m]):
+            cycle_to_adjust.pop(m, None)
+            continue
+        # pick the cycle
+        cycle = machine_queue[m][cycle_to_adjust[m]]
+        # Adjust the machine queue
+        cycle["setup_beg"] = anchor[m] if anchor[m] >= args["start_date"][cycle["product"]] else args["start_date"][cycle["product"]]
+        cycle = adjust_cycle(cycle, m, operator_overlap_tree, args)
+        
+        while scheduled_maintenances_tree[m] is not None :
+            # Check for if cycle assignment is feasible according to scheduled maintenances
+            maintenance_overlap_set = scheduled_maintenances_tree[m].overlap(cycle["setup_beg"], cycle["unload_end"][-1])
+            # if set is not empty, find the first maintenance end point
+            if len(maintenance_overlap_set) > 0 :
+                conflicts = sorted(maintenance_overlap_set)
+                cycle["setup_beg"] = conflicts[0].end
+                cycle = adjust_cycle(cycle, m, operator_overlap_tree, args)
+                continue
+            # Go ahead as there are no conflicts
+            break
+        
+        # Update operator overlap tree with new cycle intervals
+        if (cycle["setup_end"] - cycle["setup_beg"]) > 0 :
+            # Add Setup interval
+            operator_overlap_tree[cycle["setup_operator"]].add(Interval(cycle["setup_beg"], cycle["setup_end"]))
+        for l in range(len(cycle["load_beg"])) :
+            # Add Load & Unload intervals
+            if (cycle["load_end"][l] - cycle["load_beg"][l]) > 0 :
+                operator_overlap_tree[cycle["load_operator"][l]].add(Interval(cycle["load_beg"][l], cycle["load_end"][l]))
+            if (cycle["unload_end"][l] - cycle["unload_beg"][l]) > 0 :
+                operator_overlap_tree[cycle["unload_operator"][l]].add(Interval(cycle["unload_beg"][l], cycle["unload_end"][l]))
+
+        # next cycle will have as anchor point the end of this cycle
+        anchor[m] = cycle["unload_end"][-1]
+        # Update the advancement dictionary
+        cycle_to_adjust[m] += 1
     
     return machine_queue
 
-
+    
 """
 Test Cases Functions
 """
@@ -226,12 +319,59 @@ Test Cases Functions
 def check_solution_conformity(solution, args):
     """
     Check if a solution conforms to the problem constraints.
-    Prints conflicts if found and returns False. Otherwise, returns True.
+    Prints conflicts if found any and returns False. Otherwise, returns True.
     """
-    has_conflicts = False
+    is_valid_solution = True
+
+    # LOOK FOR DOMAIN VIOLATIONS
+    for m, machine_queue in enumerate(solution):
+        for elem in machine_queue:
+            p = elem["product"]
+            c = elem["cycle"]
+            # Check for setup start/end points
+            if len(args["domain_interval_tree"].overlap(elem["setup_beg"], elem["setup_beg"]+1)) > 0:
+                print(
+                    f"Domain Violation : Job {p}, Cycle {c}, on machine {m+1}\n"
+                    f"      Setup beginning is outside worktime domain"
+                )
+                is_valid_solution = False
+            if len(args["domain_interval_tree"].overlap(elem["setup_end"], elem["setup_end"]+1)) > 0:
+                print(
+                    f"Domain Violation : Job {p}, Cycle {c}, on machine {m+1}\n"
+                    f"      Setup end is outside worktime domain"
+                )
+                is_valid_solution = False
+            # Check for load/unload start/end points
+            for l in range(len(elem["load_beg"])):
+                if len(args["domain_interval_tree"].overlap(elem["load_beg"][l], elem["load_beg"][l]+1)) > 0:
+                    print(
+                        f"Domain Violation : Job {p}, Cycle {c}, Levata {l}, on machine {m+1}\n"
+                        f"      Load beginning is outside worktime domain"
+                    )
+                    is_valid_solution = False
+                if len(args["domain_interval_tree"].overlap(elem["load_end"][l], elem["load_end"][l]+1)) > 0:
+                    print(
+                        f"Domain Violation : Job {p}, Cycle {c}, Levata {l}, on machine {m+1}\n"
+                        f"      Load end is outside worktime domain"
+                    )
+                    is_valid_solution = False
+                if len(args["domain_interval_tree"].overlap(elem["unload_beg"][l], elem["unload_beg"][l]+1)) > 0:
+                    print(
+                        f"Domain Violation : Job {p}, Cycle {c}, Levata {l}, on machine {m+1}\n"
+                        f"      Unload beginning is outside worktime domain"
+                    )
+                    is_valid_solution = False
+                if len(args["domain_interval_tree"].overlap(elem["unload_end"][l], elem["unload_end"][l]+1)) > 0:
+                    print(
+                        f"Domain Violation : Job {p}, Cycle {c}, Levata {l}, on machine {m+1}\n"
+                        f"      Unload end is outside worktime domain"
+                    )
+                    is_valid_solution = False
+    
 
     # LOOK FOR WITHIN MACHINE OVERLAPS
     for m, machine_queue in enumerate(solution):
+        # Generate intervals for each machine
         intervals = []
         for cycle in machine_queue:
             if (cycle["setup_end"] - cycle["setup_beg"]) > 0:
@@ -241,16 +381,16 @@ def check_solution_conformity(solution, args):
                     intervals.append((cycle["load_beg"][l], cycle["load_end"][l]))
                 if (cycle["unload_end"][l] - cycle["unload_beg"][l]) > 0:
                     intervals.append((cycle["unload_beg"][l], cycle["unload_end"][l]))
-
+        # Check for overlaps within the machine
         machine_interval_tree = IntervalTree.from_tuples(intervals)
         for beg, end in intervals:
             conflict = machine_interval_tree.overlap(beg, end)
             if len(conflict) > 1:
                 print(
-                    f"Within-Machine Overlap Found on Machine {m}\n"
-                    f"{print_solution(machine_queue)}"
+                    f"Within-Machine Overlap :\n"
+                    f"  Machine [{m+1}] : some cycles are scheduled at the same time"
                 )
-                has_conflicts = True
+                is_valid_solution = False
 
     # LOOK FOR OPERATOR OVERLAPS
     operator_interval_tree = build_operator_inter_tree(solution, args)
@@ -262,55 +402,83 @@ def check_solution_conformity(solution, args):
             setup_overlaps = operator_interval_tree[elem["setup_operator"]].overlap(elem["setup_beg"], elem["setup_end"])
             if len(setup_overlaps) > 1:
                 print(
-                    f"operatorSETUP OVERLAP: {(chr(p + 65), c)} - "
-                    f"{(elem['setup_beg'], elem['setup_end'])} => "
-                    f"{setup_overlaps}"
+                    f"Operator overlap (SETUP) : An operator group is assigned to more than one operation at the same time\n"
+                    f"      Product [{p+65}], Cycle [{c}] has conflicts"
                 )
-                has_conflicts = True
+                is_valid_solution = False
 
             for l in range(len(elem["load_beg"])):
                 load_overlaps = operator_interval_tree[elem["load_operator"][l]].overlap(elem["load_beg"][l], elem["load_end"][l])
                 if len(load_overlaps) > 1:
                     print(
-                        f"LOAD OVERLAP: {(chr(p + 65), c)} - "
-                        f"{(elem['load_beg'][l], elem['load_end'][l])} => "
-                        f"{load_overlaps}"
+                        f"Operator overlap (LOAD) : An operator group is assigned to more than one operation at the same time\n"
+                        f"      Product [{p+65}], Cycle [{c}], Levata [{l}], has conflicts"
                     )
-                    has_conflicts = True
+                    is_valid_solution = False
 
                 unload_overlaps = operator_interval_tree[elem["unload_operator"][l]].overlap(elem["unload_beg"][l], elem["unload_end"][l])
                 if len(unload_overlaps) > 1:
                     print(
-                        f"UNLOAD OVERLAP: {(chr(p + 65), c)} - "
-                        f"{(elem['unload_beg'][l], elem['unload_end'][l])} => "
-                        f"{unload_overlaps}"
+                        f"Operator overlap (UNLOAD) : An operator group is assigned to more than one operation at the same time\n"
+                        f"      Product [{p+65}], Cycle [{c}], Levata [{l}], has conflicts"
                     )
-                    has_conflicts = True
+                    is_valid_solution = False
 
     # LOOK FOR TIME WINDOW VIOLATIONS
     for m, machine_queue in enumerate(solution):
         for elem in machine_queue:
-            if elem["setup_beg"] < args["start_date"][elem["product"]]:
+            p = elem["product"]
+            c = elem["cycle"]
+
+            if elem["setup_beg"] < args["start_date"][p]:
                 print(
-                    f"Start Date violation: {(chr(elem['product'] + 65), elem['cycle'])} - "
-                    f"{(elem['setup_beg'], elem['setup_end'])}"
+                    f"Start Date Violation : Job {p}, Cycle {c}, on machine {m+1}\n"
+                    f"      Start date => {args['start_date'][p]}\n"
+                    f"      But cycle starts at => {elem['setup_beg']}"
                 )
-                has_conflicts = True
+                is_valid_solution = False
             
-            if elem["unload_end"][-1] > args["due_date"][elem["product"]]:
+            if elem["unload_end"][-1] > args["due_date"][p]:
                 print(
-                    f"Due Date Violation: {(chr(elem['product'] + 65), elem['cycle'])} - "
-                    f"{(elem['unload_beg'][-1], elem['unload_end'][-1])}"
+                    f"Due Date Violation : Job {p}, Cycle {c}, on machine {m+1}\n"
+                    f"      Due date => {args['due_date'][p]}\n"
+                    f"      But cycle ends at => {(elem['unload_beg'][-1])}"
                 )
-                has_conflicts = True
+                is_valid_solution = False
 
-    if has_conflicts:
-        print("CONFLICTS FOUND\n")
-        for m, machine_queue in enumerate(solution):
-            print(f"Machine {m}\n{print_solution(machine_queue)}")
-        print("\n--------------------")
-        return False
+    # LOOK FOR MACHINE ASSIGNMENT CORRECTNESS
+    for m, machine_queue in enumerate(solution):
+        for elem in machine_queue:
+            p = elem["product"]
+            c = elem["cycle"]
 
-    return True
+            if m not in args["prod_to_machine_comp"][p] :
+                print(f"Machine Assignment Violation :\n"
+                      f"    Job {p}, Cycle {c}, on invalid machine {m+1}"
+                )
+                is_valid_solution = False
+
+    # LOOK FOR BROKEN MACHINE VIOLATIONS
+    for m, machine_queue in enumerate(solution):
+        if m in args["broken_machines"] and len(machine_queue) > 0:
+            print(f"Machine {m+1} is Broken, still some cycles have been allocated")
+            is_valid_solution = False
+    
+    # LOOK FOR SCHEDULED MANTENANCE VIOLATION
+    for m, machine_queue in enumerate(solution):
+        machine_scheduled_maintenances_tree = None if m not in args["scheduled_maintenances"].keys() else IntervalTree.from_tuples(args["scheduled_maintenances"][m])
+        if machine_scheduled_maintenances_tree is not None :
+            for elem in machine_queue:
+                p = elem["product"]
+                c = elem["cycle"]
+                maintenance_overlap_set = machine_scheduled_maintenances_tree.overlap(elem["setup_beg"], elem["unload_end"][-1])
+                if len(maintenance_overlap_set) > 0 :
+                    print(
+                        f"Scheduled Maintenance Violation :\n"
+                        f"    Job {p}, Cycle {c}, on machine {m+1} violates scheduled maintenance"
+                    )
+                    is_valid_solution = False
+
+    return is_valid_solution
 
 
