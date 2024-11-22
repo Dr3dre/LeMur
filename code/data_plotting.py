@@ -232,7 +232,7 @@ def plot_gantt_chart_1(production_schedule, max_cycles, num_machines, horizon, p
                     f'Product ID: {prod.id}<br>'
                     f'Article: {prod.article}<br>'
                     f'Velocity: {prod.velocity[c]}<br>'
-                    f'Cycle: {c+1}'
+                    f'Cycle: {c}'
                 )
 
                 # Add Setup Bar
@@ -251,7 +251,7 @@ def plot_gantt_chart_1(production_schedule, max_cycles, num_machines, horizon, p
                 setup_traces[setup_key]['y'].append(machine_pos)
                 setup_traces[setup_key]['base'].append(setup_start)
                 setup_traces[setup_key]['hovertext'].append(
-                    f'Job Setup for Product ID: {prod.id}, Cycle: {c+1}'
+                    f'Job Setup for Product ID: {prod.id}, Cycle: {c}'
                 )
 
                 # Add Load/Unload Bars
@@ -275,7 +275,7 @@ def plot_gantt_chart_1(production_schedule, max_cycles, num_machines, horizon, p
                     load_traces[load_key]['y'].append(machine_pos)
                     load_traces[load_key]['base'].append(load_start)
                     load_traces[load_key]['hovertext'].append(
-                        f'Load for Product ID: {prod.id}, Cycle: {c+1}, Load: {l+1}'
+                        f'Load for Product ID: {prod.id}, Cycle: {c}, Load: {l}'
                     )
 
                     # Unload
@@ -297,7 +297,7 @@ def plot_gantt_chart_1(production_schedule, max_cycles, num_machines, horizon, p
                     unload_traces[unload_key]['y'].append(machine_pos)
                     unload_traces[unload_key]['base'].append(unload_start)
                     unload_traces[unload_key]['hovertext'].append(
-                        f'Unload for Product ID: {prod.id}, Cycle: {c+1}, Unload: {l+1}'
+                        f'Unload for Product ID: {prod.id}, Cycle: {c}, Unload: {l}'
                     )
 
                 # Add Text Annotation
@@ -305,7 +305,7 @@ def plot_gantt_chart_1(production_schedule, max_cycles, num_machines, horizon, p
                 fig.add_trace(go.Scatter(
                     x=[setup_start + setup_duration + cycle_duration / 2],
                     y=[machine_pos],
-                    text=[f'JOB {prod.id} C {c + 1} V[{prod.velocity[c]}]'],
+                    text=[f'JOB {prod.id} C {c} V[{prod.velocity[c]}]'],
                     mode='text',
                     textposition='middle center',
                     showlegend=False,

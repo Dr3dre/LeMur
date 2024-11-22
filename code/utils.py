@@ -56,7 +56,7 @@ def get_time_intervals (horizon_days, time_units_in_a_day, start_shift, end_shif
         
         gap_start, gap_end = prohibited_intervals[gap_idx]
         if gap_start <= time_step <= gap_end:
-            gap_at_day.append(-1)  # Day inside a prohibited interval
+            gap_at_day.append(1000000000)  # Day inside a prohibited interval
         else :
             gap_at_day.append(gap_end-gap_start)
 

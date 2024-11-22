@@ -28,14 +28,20 @@ class Product (object) :
         self.setup_beg = {}
         self.setup_end = {}
         self.cycle_end = {}
+        self.setup_base_cost = {}
+        self.setup_gap = {}
         # load
         self.load_operator = {}
         self.load_beg = {}
         self.load_end = {}
+        self.load_base_cost = {}
+        self.load_gap = {}
         # unload
         self.unload_operator = {}
         self.unload_beg = {}
         self.unload_end = {}
+        self.unload_base_cost = {}
+        self.unload_gap = {}
     
     def __str__(self) :
         return f"Product {self.id}\n    Article : {self.article}\n    Request : {self.kg_request} Kg\n    Start date : {self.start_date}\n    Due date : {self.due_date}\n---"
@@ -84,7 +90,7 @@ class Schedule(object):
                 output += f"        Machine   : {prod.machine[c]}:\n"
                 output += f"        Velocity  : {prod.velocity[c]}\n"
                 output += f"        Cycle End : {prod.cycle_end[c]}\n"
-                output += f"        Setup     : ({prod.setup_beg[c]}, {prod.setup_end[c]})\n"
+                output += f"        Setup     : ({prod.setup_beg[c]}, {prod.setup_end[c]}) COST: {prod.setup_base_cost[c]} GAP: {prod.setup_gap[c]}\n"
                 for l in range(prod.num_levate[c]) :
                     if (c,l) in prod.load_beg.keys() : 
                         # compute load and unload times from the current day at 00:00 (remove the current time of the day)
@@ -92,7 +98,7 @@ class Schedule(object):
                         load_end_datetime = datetime.now() + timedelta(hours=prod.load_end[c,l]) - timedelta(hours=datetime.now().hour, minutes=datetime.now().minute, seconds=datetime.now().second)
                         unload_beg_datetime = datetime.now() + timedelta(hours=prod.unload_beg[c,l]) - timedelta(hours=datetime.now().hour, minutes=datetime.now().minute, seconds=datetime.now().second)
                         unload_end_datetime = datetime.now() + timedelta(hours=prod.unload_end[c,l]) - timedelta(hours=datetime.now().hour, minutes=datetime.now().minute, seconds=datetime.now().second)
-                        output += f"            Levata [{l}] : LOAD({load_beg_datetime}, {load_end_datetime}) UNLOAD({unload_beg_datetime}, {unload_end_datetime})\n"
+                        output += f"            Levata [{l}] : LOAD({load_beg_datetime}, {load_end_datetime}, COST: {prod.load_base_cost[c,l]} GAP: {prod.load_gap[c,l]}) UNLOAD({unload_beg_datetime}, {unload_end_datetime}, COST: {prod.unload_base_cost[c,l]} GAP: {prod.unload_gap[c,l]})\n"
             output += "\n"
         
         return output
