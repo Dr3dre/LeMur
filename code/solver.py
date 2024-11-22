@@ -42,28 +42,34 @@ scheduled_maintenances = {
     # machine : [(start, duration), ...]
     # 0 : [(50, 150)],
 }
+festivities = [
+    # day from scheduling start (0 is the current day, 1 is tomorrow, etc.)
+    1,
+]
 
 num_machines = 72
 machine_velocities = 1
 
+hour_resolution = 1 # 1: hours, 2: half-hours, 4: quarter-hours, ..., 60: minutes
 horizon_days = 200
-time_units_in_a_day = 24   # 24 : hours, 48 : half-hours, 96 : quarter-hours, ..., 1440 : minutes
+time_units_in_a_day = 24*hour_resolution   # 24 : hours, 48 : half-hours, 96 : quarter-hours, ..., 1440 : minutes
 horizon = horizon_days * time_units_in_a_day
 
-start_shift = 8       # 8:00 MUST BE COMPATIBLE WITH time_units_in_a_day
-end_shift = 16        # 16:00 MUST BE COMPATIBLE WITH time_units_in_a_day
+start_shift = int(8*hour_resolution)       # 8:00 MUST BE COMPATIBLE WITH time_units_in_a_day
+end_shift = int(16*hour_resolution)       # 16:00 MUST BE COMPATIBLE WITH time_units_in_a_day
 num_operator_groups = 2
 num_operators_per_group = 4
 
-setup_cost = 4
-load_hours_fuso_person = 6/256
-unload_hours_fuso_person = 2/256
+setup_cost = 4*hour_resolution
+load_hours_fuso_person = 6/256 *hour_resolution
+unload_hours_fuso_person = 2/256 *hour_resolution
 
 costs=(
-    setup_cost,                                      # Setup hours
-    load_hours_fuso_person / num_operators_per_group,  # Load hours for 1 "fuso"
-    unload_hours_fuso_person / num_operators_per_group   # Unload hours for 1 "fuso"
+    setup_cost,                                      # Setup time
+    load_hours_fuso_person / num_operators_per_group,  # Load time for 1 "fuso"
+    unload_hours_fuso_person / num_operators_per_group   # Unload time for 1 "fuso"
 )
+
 
 if machine_velocities % 2 == 0 :
     raise ValueError("Machine velocities must be odd numbers.")
@@ -110,7 +116,7 @@ for p, prod in all_products:
 '''
 DERIVED CONSTANTS
 '''
-worktime_intervals, prohibited_intervals, gap_at_day, time_units_from_midnight, start_schedule = get_time_intervals(horizon_days, time_units_in_a_day, start_shift, end_shift)
+worktime_intervals, prohibited_intervals, gap_at_day, time_units_from_midnight, start_schedule = get_time_intervals(horizon_days, time_units_in_a_day, start_shift, end_shift, festivities)
 
 # Velocity gears
 velocity_levels = list(range(-(machine_velocities//2), (machine_velocities//2) + 1)) # machine velocities = 3 => [-1, 0, 1]
