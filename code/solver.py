@@ -408,7 +408,8 @@ if __name__ == '__main__':
         # Get current day
         model.AddDivisionEquality(G, BEGIN, time_units_in_a_day)
         
-        GAP_SIZE = model.NewIntVarFromDomain(cp_model.Domain.FromValues(gap_at_day), f'GAP_SIZE_{gaps}')
+        values_gap = list(set(gap_at_day))
+        GAP_SIZE = model.NewIntVarFromDomain(cp_model.Domain.FromValues(values_gap), f'GAP_SIZE_{gaps}')
         # constraints.append(f"Associate day index to relative gap size {GAP_SIZE} == {gap} {G} == {i}")
 
         # constraints.append(f"Get current day {G} == {BEGIN} / {time_units_in_a_day}")
