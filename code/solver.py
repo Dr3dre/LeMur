@@ -22,6 +22,7 @@ INPUT DATA
 MAKESPAN_SOLVER_TIMEOUT = 60
 CYCLE_OPTIM_SOLVER_TIMEOUT = 60
 GENETIC_REFINEMENT = True
+PLOT_GANTT = True
 
 USE_ADD_ELEMENT = False
 
@@ -40,11 +41,11 @@ OUTPUT_REFINED_SCHEDULE = 'output/refined_schedule.txt'
 broken_machines = [] # put here the number of the broken machines
 scheduled_maintenances = {
     # machine : [(start, duration), ...]
-    #1 : [(20, 50)],
+    # 1 : [(0, 10), (100, 24), ...],
 }
 festivities = [
     # day from scheduling start (0 is the current day, 1 is tomorrow, etc.)
-    0,1,2,3,4,5,6 #,...
+    # 0,1,2,...
 ]
 
 num_machines = 72
@@ -70,7 +71,6 @@ costs=(
     unload_hours_fuso_person / num_operators_per_group   # Unload time for 1 "fuso"
 )
 
-
 if machine_velocities % 2 == 0 :
     raise ValueError("Machine velocities must be odd numbers.")
 
@@ -92,16 +92,16 @@ gaps_load={}
 base_unload_cost={}
 gaps_unload={}
 for p, prod in all_products:
-    standard_levate[p] = standard_levate_art[prod.article]
-    base_levata_cost[p] = base_levata_art_cost[prod.article]
-    for m in article_to_machine_comp[prod.article]:
-        try:
+    try:
+        standard_levate[p] = standard_levate_art[prod.article]
+        base_levata_cost[p] = base_levata_art_cost[prod.article]
+        for m in article_to_machine_comp[prod.article]:
             kg_per_levata[m,p] = kg_per_levata_art[m,prod.article]
             base_setup_cost[p,m] = base_setup_art_cost[prod.article,m]
             base_load_cost[p,m] = base_load_art_cost[prod.article,m]
             base_unload_cost[p,m] = base_unload_art_cost[prod.article,m]
-        except:
-            breakpoint()
+    except :
+        ValueError(f"ERROR : Inconsistency in assigning standard levate and kg to articles for product {prod.article}\nBreaking execution...")
 
 # convert machine and article compatibility to be indexed on product id
 prod_to_machine_comp = {}
@@ -109,10 +109,13 @@ machine_to_prod_comp = {}
 for m in range(1,num_machines+1):
     machine_to_prod_comp[m] = []
 for p, prod in all_products:
-    prod_to_machine_comp[p] = article_to_machine_comp[prod.article]
-    for m in article_to_machine_comp[prod.article]:
-        machine_to_prod_comp[m].append(p)
-# breakpoint()
+    try :
+        prod_to_machine_comp[p] = article_to_machine_comp[prod.article]
+        for m in article_to_machine_comp[prod.article]:
+            machine_to_prod_comp[m].append(p)
+    except :
+        ValueError(f"ERROR : Inconsistency in assigning machines to articles compatibility for product {prod.article}\nBreaking execution...")
+
 '''
 DERIVED CONSTANTS
 '''
@@ -362,8 +365,11 @@ if __name__ == '__main__':
                     # constraints.append(f"cost (time) of levata operation 2 {LEVATA_COST[p,c,l]} == 0")
                 elif prod.current_op_type == 2 :
                     # set as base cost the remaining for running products (if theh're in levata)
-                    model.Add(LEVATA_COST[p,c,l] == prod.remaining_time - VELOCITY[p,c]*velocity_step_size[p])
-                    # constraints.append(f"cost (time) of levata operation 3 {LEVATA_COST[p,c,l]} == {prod.remaining_time - VELOCITY[p,c]*velocity_step_size[p]}")
+                    #   N.B. => for .remaining_time relative to a setting .current_op_type = 2 (product is running)
+                    #           we assume .remaining_time already takes account for the velocity & time in between
+                    #           now and start_schedule in the case scheduling starts outside working hours 
+                    model.Add(LEVATA_COST[p,c,l] == prod.remaining_time)
+                    # constraints.append(f"cost (time) of levata operation 3 {LEVATA_COST[p,c,l]} == {prod.remaining_time}")
 
     gaps = 0
     def make_gap_var(BEGIN, BASE_COST, IS_ACTIVE, enabled=True):
@@ -687,7 +693,6 @@ if __name__ == '__main__':
         # constraints.append(f"No overlap between product cycles on same machine {machine_intervals}")
         
 
-    
     # 9. Operators constraints
     for p, _ in all_products:
         for c in range(max_cycles[p]):
@@ -810,9 +815,9 @@ if __name__ == '__main__':
                     model.Add(UNLOAD_END[p,c,l] <= solver.Value(UNLOAD_END[p,c,l]))
                 for m in prod_to_machine_comp[p]:
                     model.Add(A[p,c,m] == solver.Value(A[p,c,m]))
-
+        stage_1_makespan = solver.ObjectiveValue() # store 1° stage makespan apart for GA refinement
+        
         solver_new = cp_model.CpSolver()
-
         # minimize makespan on each machine need to check A[p,c,m] for each product
         model.Minimize(sum([CYCLE_END[p,c] for p, _ in all_products for c in range(max_cycles[p])]))
         
@@ -831,11 +836,12 @@ if __name__ == '__main__':
             solver = solver_new
 
     if status == cp_model.UNKNOWN or status == cp_model.MODEL_INVALID:
-        print("Error: Solver status is unknown or model is invalid.")
+        print("ERROR : Solver status is unknown or model is invalid.")
+        print("Hints => \n  Horizon days might be too short, try increasing it.\n  Input might be invalid.\nBreaking execution...")
         model_proto = model.Proto()
         variables = model_proto.variables
         constraints = model_proto.constraints
-        breakpoint()
+        raise ValueError("Solver status is unknown or model is invalid.")
 
     '''
     PLOTTING
@@ -897,63 +903,13 @@ if __name__ == '__main__':
         with open(OUTPUT_SCHEDULE, "w") as f:
             f.write(str(production_schedule))
         # Plot refined schedule
-        plot_gantt_chart_1(production_schedule, max_cycles, num_machines, horizon, prohibited_intervals, time_units_from_midnight)
-        cp_sat_solution_cost = sum([prod.cycle_end[c] for p, prod in all_products for c in range(max_cycles[p])])
+        if PLOT_GANTT : plot_gantt_chart_1(production_schedule, max_cycles, num_machines, horizon, prohibited_intervals, time_units_from_midnight)
+        cp_sat_solution_cost = sum([prod.cycle_end[c] for _, prod in all_products for c in prod.cycle_end.keys()])
 
         """
         GENETIC REFINEMENT
         """
         if GENETIC_REFINEMENT :
-            # Prepare input data for GA refinement
-            # making sure to handle running products
-            # base costs correctly
-            corrected_base_setup_cost = {}
-            corrected_base_load_cost = {}
-            corrected_base_levata_cost = {}
-            corrected_base_unload_cost = {}
-            for p, prod in all_products :
-                if isinstance(prod, RunningProduct) :
-                    # Levata correction
-                    if prod.current_op_type == 2 :
-                        corrected_base_levata_cost[p] = prod.remaining_time
-                    elif prod.current_op_type > 2 :
-                        corrected_base_levata_cost[p] = 0
-                    else :
-                        corrected_base_levata_cost[p] = base_levata_cost[p]
-                else :
-                    # copy back base costs for non running products
-                    corrected_base_levata_cost[p] = base_levata_cost[p]
-
-                for m in prod_to_machine_comp[p] :
-                    if isinstance(prod, RunningProduct) :
-                        # Setup correction
-                        if prod.current_op_type == 0 :
-                            corrected_base_setup_cost[p,m] = prod.remaining_time
-                        else :
-                            corrected_base_setup_cost[p,m] = 0
-                        # Load correction
-                        if prod.current_op_type == 1 :
-                            corrected_base_load_cost[p,m] = prod.remaining_time
-                        elif prod.current_op_type > 1 :
-                            corrected_base_load_cost[p,m] = 0
-                        else :
-                            corrected_base_load_cost[p,m] = base_load_cost[p,m]
-                        # Unload correction
-                        if prod.current_op_type == 3 :
-                            corrected_base_unload_cost[p,m] = prod.remaining_time
-                        else :
-                            corrected_base_unload_cost[p,m] = base_unload_cost[p,m]
-                    else :
-                        # Copy back base costs for non running products
-                        corrected_base_setup_cost[p,m] = base_setup_cost[p,m]
-                        corrected_base_load_cost[p,m] = base_load_cost[p,m]
-                        corrected_base_unload_cost[p,m] = base_unload_cost[p,m]
-
-            start_date = {}
-            due_date = {}
-            for p, prod in all_products :
-                start_date[p] = prod.start_date
-                due_date[p] = prod.due_date
 
             # Dictionary of variables necessary to GA computation
             vars = {
@@ -963,22 +919,20 @@ if __name__ == '__main__':
                 "scheduled_maintenances" : scheduled_maintenances,
                 "velocity_step_size" : velocity_step_size,
                 # costs
-                "base_setup_cost" : corrected_base_setup_cost,
-                "base_load_cost" : corrected_base_load_cost,
-                "base_levata_cost" : corrected_base_levata_cost,
-                "base_unload_cost" : corrected_base_unload_cost,
+                "base_setup_cost" : base_setup_cost,
+                "base_load_cost" : base_load_cost,
+                "base_levata_cost" : base_levata_cost,
+                "base_unload_cost" : base_unload_cost,
                 # time related
-                "time_units_in_a_day" : time_units_in_a_day,
-                "start_date" : start_date,
-                "due_date" : due_date,
+                "makespan_limit" : stage_1_makespan,
+                "horizon" : horizon,
                 "start_shift" : start_shift,
                 "end_shift" : end_shift,
-                "horizon" : horizon,
+                "time_units_in_a_day" : time_units_in_a_day,
                 "gap_at_day" : gap_at_day,
                 "prohibited_intervals" : prohibited_intervals,
-                "time_units_from_midnight" : start_schedule,
+                "start_schedule" : start_schedule,
                 # products and operators
-                "max_cycles" : max_cycles,
                 "num_operator_groups" : num_operator_groups,
                 "prod_to_machine_comp" : prod_to_machine_comp
             }
@@ -987,7 +941,7 @@ if __name__ == '__main__':
             print("-----------------------------------------------------")
             print("Searching...")
             refinement, validity, fitness = ga_refiner.refine_solution(all_products, vars)
-            genetic_refinement_solution_cost = sum([prod.cycle_end[c] for p, prod in all_products for c in range(max_cycles[p])])
+            genetic_refinement_solution_cost = sum([prod.cycle_end[c] for _, prod in all_products for c in prod.cycle_end.keys()])
             print("3° stage optimization (Genetic refinement) over.")
             print(f"    Valid solution: {validity}")
             print(f"    Objective value: {fitness}")
@@ -1003,7 +957,7 @@ if __name__ == '__main__':
             with open(OUTPUT_REFINED_SCHEDULE, "w") as f:
                 f.write(str(refined_schedule))
             # Plot refined schedule
-            plot_gantt_chart_1(refined_schedule, max_cycles, num_machines, horizon, prohibited_intervals, time_units_from_midnight)
+            if PLOT_GANTT : plot_gantt_chart_1(refined_schedule, max_cycles, num_machines, horizon, prohibited_intervals, time_units_from_midnight)
 
     else:
         print("No solution found. Try increasing the horizon days.")
