@@ -48,8 +48,6 @@ class GA_Refiner:
         
         # Initialize as seed the given schedule
         self.seed = self._initialize_seed(products, args)
-        # Populate overlap Tree for domain gaps
-        args["domain_interval_tree"] = IntervalTree.from_tuples(args["prohibited_intervals"])
 
         # EA configuration and execution
         ga = ec.GA(self.prng)

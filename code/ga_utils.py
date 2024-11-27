@@ -148,8 +148,11 @@ def adapt_args(products, args) :
 
     # FIXING PROHIBITED INTERVALS
     # shift by 1 unit beginning to allow allocation on such position
-    #prohibited_intervals = copy.copy(args["prohibited_intervals"])
-    #args["prohibited_intervals"] = [(beg+1, end) for beg, end in prohibited_intervals]
+    prohibited_intervals = copy.copy(args["prohibited_intervals"])
+    args["prohibited_intervals"] = [(beg+1, end) for beg, end in prohibited_intervals]
+    # Populate overlap Tree for domain gaps
+    args["domain_interval_tree"] = IntervalTree.from_tuples(args["prohibited_intervals"])
+    args["domain_interval_tree"].merge_overlaps()
 
     return args
 
@@ -257,7 +260,6 @@ def gather_operation_info (cycle, machine_id, levata_id, operation_to_adjust, ar
 DOMAIN ADJUSTMENT FUNCTIONS
 """
 
-
 def greedy_set_value_in_domain (value, overlap_tree) :
     """
     given a value, it shifts it to the first feasible value
@@ -279,7 +281,7 @@ def set_end_in_domain (beg, base_cost, args) :
     ub_day = args["end_shift"] + day*args["time_units_in_a_day"]
     # end is contained withing beg day
     end = beg + base_cost
-    if end >= ub_day and 0 <= day < len(args["gap_at_day"]):
+    if end > ub_day and 0 <= day < len(args["gap_at_day"]):
         end += args["gap_at_day"][day]
         
     return end
@@ -306,8 +308,8 @@ def adjust_operation (point, min_distance, operation_base_cost, operator_overlap
         # If conflicts are found :
         if len(end_overlap_set) > 0 :
             conflicts = sorted(end_overlap_set)
-            beg = greedy_set_value_in_domain(conflicts[-1].end, operator_overlap_tree)
-            #beg = conflicts[-1].end
+            #beg = greedy_set_value_in_domain(conflicts[-1].end, operator_overlap_tree)
+            beg = conflicts[-1].end
             continue
         # If no conflicts are found break the loop
         break
@@ -430,40 +432,52 @@ def check_solution_conformity(solution, args):
             # Check for setup start/end points
             if len(args["domain_interval_tree"].overlap(elem["setup_beg"], elem["setup_beg"]+1)) > 0:
                 print(
-                    f"Domain Violation : Job {p}, Cycle {c}, on machine {m+1}\n"
-                    f"      Setup beginning is outside worktime domain"
+                    f"Domain Violation : Job {p}, Cycle {c}, on machine {m+1}\n",
+                    f"      Setup beginning is outside worktime domain",
+                    f"{args['domain_interval_tree'].overlap(elem['setup_beg'], elem['setup_beg']+1)}",
+                    f"{elem['setup_beg'], elem['setup_beg']+1}"
                 )
                 is_valid_solution = False
             if len(args["domain_interval_tree"].overlap(elem["setup_end"], elem["setup_end"]+1)) > 0:
                 print(
-                    f"Domain Violation : Job {p}, Cycle {c}, on machine {m+1}\n"
-                    f"      Setup end is outside worktime domain"
+                    f"Domain Violation : Job {p}, Cycle {c}, on machine {m+1}\n",
+                    f"      Setup end is outside worktime domain",
+                    f"{args['domain_interval_tree'].overlap(elem['setup_end'], elem['setup_end']+1)}",
+                    f"{elem['setup_end'], elem['setup_end']+1}"
                 )
                 is_valid_solution = False
             # Check for load/unload start/end points
             for l in range(len(elem["load_beg"])):
                 if len(args["domain_interval_tree"].overlap(elem["load_beg"][l], elem["load_beg"][l]+1)) > 0:
                     print(
-                        f"Domain Violation : Job {p}, Cycle {c}, Levata {l}, on machine {m+1}\n"
-                        f"      Load beginning is outside worktime domain"
+                        f"Domain Violation : Job {p}, Cycle {c}, Levata {l}, on machine {m+1}\n",
+                        f"      Load beginning is outside worktime domain",
+                        f"{args['domain_interval_tree'].overlap(elem['load_beg'][l], elem['load_beg'][l]+1)}",
+                        f"{elem['load_beg'][l], elem['load_beg'][l]+1}"
                     )
                     is_valid_solution = False
                 if len(args["domain_interval_tree"].overlap(elem["load_end"][l], elem["load_end"][l]+1)) > 0:
                     print(
-                        f"Domain Violation : Job {p}, Cycle {c}, Levata {l}, on machine {m+1}\n"
-                        f"      Load end is outside worktime domain"
+                        f"Domain Violation : Job {p}, Cycle {c}, Levata {l}, on machine {m+1}\n",
+                        f"      Load end is outside worktime domain",
+                        f"{args['domain_interval_tree'].overlap(elem['load_end'][l], elem['load_end'][l]+1)}",
+                        f"{elem['load_end'][l], elem['load_end'][l]+1}"
                     )
                     is_valid_solution = False
                 if len(args["domain_interval_tree"].overlap(elem["unload_beg"][l], elem["unload_beg"][l]+1)) > 0:
                     print(
-                        f"Domain Violation : Job {p}, Cycle {c}, Levata {l}, on machine {m+1}\n"
-                        f"      Unload beginning is outside worktime domain"
+                        f"Domain Violation : Job {p}, Cycle {c}, Levata {l}, on machine {m+1}\n",
+                        f"      Unload beginning is outside worktime domain",
+                        f"{args['domain_interval_tree'].overlap(elem['unload_beg'][l], elem['unload_beg'][l]+1)}",
+                        f"{elem['unload_beg'][l], elem['unload_beg'][l]+1}"
                     )
                     is_valid_solution = False
                 if len(args["domain_interval_tree"].overlap(elem["unload_end"][l], elem["unload_end"][l]+1)) > 0:
                     print(
-                        f"Domain Violation : Job {p}, Cycle {c}, Levata {l}, on machine {m+1}\n"
-                        f"      Unload end is outside worktime domain"
+                        f"Domain Violation : Job {p}, Cycle {c}, Levata {l}, on machine {m+1}\n",
+                        f"      Unload end is outside worktime domain",
+                        f"{args['domain_interval_tree'].overlap(elem['unload_end'][l], elem['unload_end'][l]+1)}",
+                        f"{elem['unload_end'][l], elem['unload_end'][l]+1}"
                     )
                     is_valid_solution = False
     
