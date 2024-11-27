@@ -1,137 +1,168 @@
-import plotly.graph_objects as go
+import gradio as gr
+import pandas as pd
+import json
 import matplotlib.pyplot as plt
-from data_init import RunningProduct
+import matplotlib.dates as mdates
+from datetime import datetime, timedelta
+import tempfile
+import os
+import plotly.graph_objects as go
 import numpy as np
 import matplotlib.patches as mpatches  # For legend elements
 
-def plot_gantt_chart(production_schedule, max_cycles, num_machines, horizon, prohibited_intervals, time_units_from_midnight):
-    """
-    Plot a Gantt chart for the given job schedule, excluding unused machines.
-    """
-    # Step 1: Identify used machines
-    used_machines = set()
-    for p, prod in production_schedule.products:
-        for c in range(max_cycles[p]):
-            if c in prod.machine.keys():
+# Import your solver and data_init functions
+from solver import solve
+from data_init import init_csv_data, RunningProduct
+
+def upload_file(file):
+    if file is not None:
+        # If multiple files are uploaded, take the first one
+        if isinstance(file, list):
+            file = file[0]
+        
+        # If file is a dictionary with 'data' key
+        if isinstance(file, dict) and 'data' in file:
+            file_path = file['data']
+        elif isinstance(file, str):
+            # If file is a path string
+            file_path = file
+        else:
+            return "Unsupported file format."
+        
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            return content
+        except Exception as e:
+            return f"Error reading file: {str(e)}"
+    
+    return ""
+    
+def save_common_products(content):
+    try:
+        with open("new_orders.csv", "w", encoding='utf-8') as f:
+            f.write(content)
+        return "✅ `new_orders.csv` saved successfully."
+    except Exception as e:
+        return f"❌ Error saving `new_orders.csv`: {str(e)}"
+
+def save_article_machine_compatibility(content):
+    try:
+        data = json.loads(content)
+        with open("articoli_macchine.json", "w", encoding='utf-8') as f:
+            json.dump(data, f, indent=4)
+        return "✅ `articoli_macchine.json` saved successfully."
+    except json.JSONDecodeError as e:
+        return f"❌ JSON Decode Error: {str(e)}"
+    except Exception as e:
+        return f"❌ Error saving `articoli_macchine.json`: {str(e)}"
+
+def save_machine_info(content):
+    try:
+        data = json.loads(content)
+        with open("macchine_info.json", "w", encoding='utf-8') as f:
+            json.dump(data, f, indent=4)
+        return "✅ `macchine_info.json` saved successfully."
+    except json.JSONDecodeError as e:
+        return f"❌ JSON Decode Error: {str(e)}"
+    except Exception as e:
+        return f"❌ Error saving `macchine_info.json`: {str(e)}"
+
+def save_article_list(content):
+    try:
+        with open("lista_articoli.csv", "w", encoding='utf-8') as f:
+            f.write(content)
+        return "✅ `lista_articoli.csv` saved successfully."
+    except Exception as e:
+        return f"❌ Error saving `lista_articoli.csv`: {str(e)}"
+
+def run_solver():
+    # Paths to the files saved above
+    COMMON_P_PATH = "new_orders.csv"
+    J_COMPATIBILITY_PATH = "articoli_macchine.json"
+    M_INFO_PATH = "macchine_info.json"
+    ARTICLE_LIST_PATH = "lista_articoli.csv"
+
+    # Check if all required files exist
+    required_files = [COMMON_P_PATH, J_COMPATIBILITY_PATH, M_INFO_PATH, ARTICLE_LIST_PATH]
+    missing_files = [f for f in required_files if not os.path.exists(f)]
+    if missing_files:
+        return f"❌ Missing files: {', '.join(missing_files)}", None
+
+    try:
+        # Initialize data
+        common_products, running_products, article_to_machine_comp, base_setup_art_cost, base_load_art_cost, base_unload_art_cost, base_levata_art_cost, standard_levate_art, kg_per_levata_art = init_csv_data(
+            COMMON_P_PATH,
+            J_COMPATIBILITY_PATH,
+            M_INFO_PATH,
+            ARTICLE_LIST_PATH,
+            costs=(4, 6/256, 2/256)
+        )
+
+        # Solve the scheduling problem
+        schedule = solve(
+            common_products,
+            running_products,
+            article_to_machine_comp,
+            base_setup_art_cost,
+            base_load_art_cost,
+            base_unload_art_cost,
+            base_levata_art_cost,
+            standard_levate_art,
+            kg_per_levata_art,
+        )
+
+        # Convert the schedule to a string to display
+        schedule_str = str(schedule)
+
+        # Prepare data for plotting
+        # Build max_cycles
+        max_cycles = {}
+        for p, prod in schedule.products:
+            if prod.setup_beg:
+                max_cycle = max(prod.setup_beg.keys())
+                max_cycles[prod.id] = max_cycle + 1  # Assuming cycles are zero-indexed
+            else:
+                max_cycles[prod.id] = 0
+
+        # Get num_machines
+        used_machines = set()
+        for p, prod in schedule.products:
+            for c in prod.setup_beg.keys():
                 used_machines.add(prod.machine[c])
-    used_machines = sorted(used_machines)
-    machine_mapping = {machine: idx for idx, machine in enumerate(used_machines)}
-    num_used_machines = len(used_machines)
+        num_machines = len(used_machines)
 
-    # Initialize plot with dynamic height based on used machines
-    _, gnt = plt.subplots(figsize=(10, num_used_machines * 0.75))
-
-    # Add indicators for prohibited intervals (e.g., night shifts, holidays, weekends)
-    for x_start, x_end in prohibited_intervals:
-        gnt.axvspan(x_start, x_end, color='gray', alpha=0.4, zorder=10, linewidth=0)
-    
-    # Mark past time in red
-    gnt.axvspan(0, time_units_from_midnight, color='red', alpha=0.3, zorder=5)
-
-    # Colormap for different products
-    cmap = plt.get_cmap("tab20")
-    colors = cmap(np.linspace(0, 1, len(production_schedule.products)))
-    rectangle_height = 7
-
-    # Plot each job
-    for p_idx, (p, prod) in enumerate(production_schedule.products):
-        color = colors[p_idx % len(colors)]
-        for c in range(max_cycles[p]):
-            if c in prod.machine.keys():
-                machine_id = prod.machine[c]
-                machine_pos = machine_mapping[machine_id] * 10 + 5  # Dynamic y-position based on used machines
-
-                # Cycle patch
-                edgecolor = 'red' if isinstance(prod, RunningProduct) and c == 0 else 'black'
-                linewidth = 0.8 if isinstance(prod, RunningProduct) and c == 0 else 0.25
-                gnt.broken_barh(
-                    [(prod.setup_beg[c], prod.cycle_end[c] - prod.setup_beg[c])],
-                    (machine_pos - rectangle_height / 2, rectangle_height),
-                    facecolors=(color,),
-                    edgecolors=(edgecolor,),
-                    linewidth=linewidth
-                )
-                
-                # Job annotation
-                gnt.text(
-                    (prod.setup_beg[c] + (prod.cycle_end[c] - prod.setup_beg[c]) / 2),
-                    machine_pos,
-                    f'JOB {prod.id} C {c + 1} V[{prod.velocity[c]}]',
-                    color='black',
-                    ha='center',
-                    va='center',
-                    fontsize=8
-                )
-                
-                # Setup patch
-                gnt.add_patch(
-                    mpatches.Rectangle(
-                        (prod.setup_beg[c], machine_pos - rectangle_height / 2),
-                        prod.setup_end[c] - prod.setup_beg[c],
-                        rectangle_height,
-                        linewidth=0.8,
-                        edgecolor='red',
-                        facecolor='none',
-                        hatch='///',
-                        linestyle='-',
-                        alpha=0.75
-                    )
-                )
-                
-                # Load / Unload patches
+        # Calculate horizon
+        horizon = 0
+        for p, prod in schedule.products:
+            for c in prod.setup_beg.keys():
+                horizon = max(horizon, prod.cycle_end[c])
+                # Also consider unload_end times
                 for l in range(prod.num_levate[c]):
-                    # Load patch
-                    gnt.add_patch(
-                        mpatches.Rectangle(
-                            (prod.load_beg[c, l], machine_pos - rectangle_height / 2),
-                            prod.load_end[c, l] - prod.load_beg[c, l],
-                            rectangle_height,
-                            linewidth=0.8,
-                            edgecolor='black',
-                            facecolor='none',
-                            hatch='///',
-                            linestyle='-',
-                            alpha=0.75
-                        )
-                    )
-                    # Unload patch
-                    gnt.add_patch(
-                        mpatches.Rectangle(
-                            (prod.unload_beg[c, l], machine_pos - rectangle_height / 2),
-                            prod.unload_end[c, l] - prod.unload_beg[c, l],
-                            rectangle_height,
-                            linewidth=0.8,
-                            edgecolor='black',
-                            facecolor='none',
-                            hatch='///',
-                            linestyle='-',
-                            alpha=0.75
-                        )
-                    )
+                    if (c,l) in prod.unload_end.keys():
+                        horizon = max(horizon, prod.unload_end[c,l])
 
-    # X-axis appearance
-    gnt.set_xlabel('Time (hours)')
-    gnt.set_xlim(0, horizon)
-    gnt.set_xticks(np.linspace(0, horizon, 10))
-    
-    # Y-axis appearance based on used machines
-    gnt.set_ylabel('Machine ID')
-    gnt.set_ylim(0, num_used_machines * 10)
-    gnt.set_yticks([10 * i + 5 for i in range(num_used_machines)])
-    gnt.set_yticklabels([f'[{m}]' for m in used_machines])
+        # Define prohibited_intervals (if available), otherwise set to empty list
+        prohibited_intervals = []
 
-    # Legend
-    legend_elements = [
-        mpatches.Patch(facecolor='none', edgecolor='red', hatch='///', label='Job Setup'),
-        mpatches.Patch(facecolor='none', edgecolor='black', hatch='///', label='Load/Unload'),
-        mpatches.Patch(facecolor='gray', alpha=0.4, label='Non-working Hours'),
-        mpatches.Patch(facecolor='red', alpha=0.3, label='Past')
-    ]
-    gnt.legend(handles=legend_elements, loc='upper right', bbox_to_anchor=(1, 1.125), fontsize=8)
+        # Define time_units_from_midnight (if available), otherwise set to 0
+        time_units_from_midnight = 0
 
-    # Final touches
-    plt.tight_layout()
-    plt.show()
+        # Call the plotting function
+        fig = plot_gantt_chart_1(
+            production_schedule=schedule,
+            max_cycles=max_cycles,
+            num_machines=num_machines,
+            horizon=horizon,
+            prohibited_intervals=prohibited_intervals,
+            time_units_from_midnight=time_units_from_midnight
+        )
+
+        # Return the schedule and the Gantt chart figure
+        return schedule_str, fig
+
+    except Exception as e:
+        return f"❌ An error occurred during solving: {str(e)}", None
 
 def plot_gantt_chart_1(production_schedule, max_cycles, num_machines, horizon, prohibited_intervals, time_units_from_midnight):
     """
@@ -198,7 +229,7 @@ def plot_gantt_chart_1(production_schedule, max_cycles, num_machines, horizon, p
     # Plot each job
     for idx, (p, prod) in enumerate(production_schedule.products):
         color = colors[idx]
-        for c in range(max_cycles[p]):
+        for c in range(max_cycles[prod.id]):
             if c in prod.machine.keys():
                 machine = prod.machine[c]
                 machine_pos = machine_id_map[machine]
@@ -488,5 +519,86 @@ def plot_gantt_chart_1(production_schedule, max_cycles, num_machines, horizon, p
     # Final Touches: Ensure legend entries are unique and not duplicated
     fig.update_traces(showlegend=False)
 
-    # Show the figure
-    fig.show()
+    return fig
+
+# Create Gradio interface
+with gr.Blocks() as demo:
+    gr.Markdown("## LeMur Scheduling Web App")
+    with gr.Tabs():
+        # Tab 1: Common Products
+        with gr.TabItem("Upload Common Products (CSV)"):
+            gr.Markdown("### Upload and Edit `new_orders.csv`")
+            common_products_file = gr.File(label="Upload `new_orders.csv`")
+            common_products_content = gr.TextArea(label="Edit `new_orders.csv` content", lines=20)
+            common_products_file.change(fn=upload_file, inputs=common_products_file, outputs=common_products_content)
+            save_common_products_button = gr.Button("Save `new_orders.csv`")
+            save_common_products_status = gr.Textbox(label="Status", interactive=False)
+            save_common_products_button.click(
+                fn=save_common_products,
+                inputs=common_products_content,
+                outputs=save_common_products_status
+            )
+
+        # Tab 2: Article-Machine Compatibility
+        with gr.TabItem("Upload Article-Machine Compatibility (JSON)"):
+            gr.Markdown("### Upload and Edit `articoli_macchine.json`")
+            article_machine_file = gr.File(label="Upload `articoli_macchine.json`")
+            article_machine_content = gr.TextArea(label="Edit `articoli_macchine.json` content", lines=20)
+            article_machine_file.change(fn=upload_file, inputs=article_machine_file, outputs=article_machine_content)
+            save_article_machine_button = gr.Button("Save `articoli_macchine.json`")
+            save_article_machine_status = gr.Textbox(label="Status", interactive=False)
+            save_article_machine_button.click(
+                fn=save_article_machine_compatibility,
+                inputs=article_machine_content,
+                outputs=save_article_machine_status
+            )
+
+        # Tab 3: Machine Info
+        with gr.TabItem("Upload Machine Info (JSON)"):
+            gr.Markdown("### Upload and Edit `macchine_info.json`")
+            machine_info_file = gr.File(label="Upload `macchine_info.json`")
+            machine_info_content = gr.TextArea(label="Edit `macchine_info.json` content", lines=20)
+            machine_info_file.change(fn=upload_file, inputs=machine_info_file, outputs=machine_info_content)
+            save_machine_info_button = gr.Button("Save `macchine_info.json`")
+            save_machine_info_status = gr.Textbox(label="Status", interactive=False)
+            save_machine_info_button.click(
+                fn=save_machine_info,
+                inputs=machine_info_content,
+                outputs=save_machine_info_status
+            )
+
+        # Tab 4: Article List
+        with gr.TabItem("Upload Article List (CSV)"):
+            gr.Markdown("### Upload and Edit `lista_articoli.csv`")
+            article_list_file = gr.File(label="Upload `lista_articoli.csv`")
+            article_list_content = gr.TextArea(label="Edit `lista_articoli.csv` content", lines=20)
+            article_list_file.change(fn=upload_file, inputs=article_list_file, outputs=article_list_content)
+            save_article_list_button = gr.Button("Save `lista_articoli.csv`")
+            save_article_list_status = gr.Textbox(label="Status", interactive=False)
+            save_article_list_button.click(
+                fn=save_article_list,
+                inputs=article_list_content,
+                outputs=save_article_list_status
+            )
+
+        # Tab 5: Run Solver
+        with gr.TabItem("Run Solver"):
+            gr.Markdown("### Execute the Scheduler and View Results")
+            run_solver_button = gr.Button("Run Solver")
+            run_solver_status = gr.Textbox(label="Solver Output", lines=10, interactive=False)
+            gantt_output = gr.Plot(label="Gantt Chart")
+            run_solver_button.click(
+                fn=run_solver,
+                inputs=None,
+                outputs=[run_solver_status, gantt_output]
+            )
+
+    gr.Markdown("### Note:")
+    gr.Markdown("""
+    - Ensure all required files are uploaded and saved before running the solver.
+    - The Gantt chart visualizes the scheduling of operations on machines over time.
+    - Time units are based on the solver's configuration (e.g., hours).
+    """)
+
+# Launch the Gradio app
+demo.launch()

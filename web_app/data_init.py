@@ -3,8 +3,6 @@ import random
 import copy
 import csv
 import json
-import pandas as pd
-
 from datetime import datetime
 from datetime import timedelta
 
@@ -108,26 +106,16 @@ class Schedule(object):
     def __len__(self):
         return len(self.products)
 
-
-def date_hours_parser(start_date, due_date, current_datetime=datetime.now()):
+def date_hours_parser(start_date, due_date):
     """
     Parser for start and due date from strings to hours
     """
-    
     # Parse input dates
-    print(f'start_date:  {start_date} - type: {type(start_date)}, due_date: {due_date} - type: {type(due_date)}')
+    start = datetime.strptime(start_date, "%Y-%m-%d")
+    due = datetime.strptime(due_date, "%Y-%m-%d")
     
-    if pd.isna(start_date) or pd.isna(due_date):
-        return None, None
-    
-    if isinstance(start_date, str):
-        start = datetime.strptime(start_date, "%Y-%m-%d")
-        due = datetime.strptime(due_date, "%Y-%m-%d")
-    elif isinstance(start_date, pd.Timestamp):
-        start = start_date.to_pydatetime()
-        due = due_date.to_pydatetime()
-    else:
-        return None, None
+    # Get current date and time
+    current_datetime = datetime.now()
 
     # Calculate differences in hours
     start_hours = int((start - current_datetime).total_seconds() // 3600)
@@ -138,135 +126,7 @@ def date_hours_parser(start_date, due_date, current_datetime=datetime.now()):
 
     return start_hours, due_hours
 
-def get_input_data(stato_path, plan_path):
-    """
-    -> pd.DataFrame, pd.DataFrame
-    """
-
-    stato = pd.read_excel(stato_path)
-    plan = pd.read_excel(plan_path)
-
-    running = stato.join(plan.set_index('n. ordine interno'), on='N° codice Interno', how='left', rsuffix='_plan')
-    running.dropna(subset=['N° codice Interno'], inplace=True)
-
-    running.fillna(value={
-        'data ora\npartenza': pd.Timestamp.now(),
-        'data ora\nfine': pd.Timestamp(2027, 1, 1),
-    }, inplace=True)
-
-    return running
-
-
-def get_running_products(df, time_units_in_a_day=24, current_datetime=datetime.now()):
-    '''
-    This function reads the production and machine state files and returns a list of RunningProduct objects
-    '''
-    
-    running_products = []
-
-    for index, row in df.iterrows():
-
-        id = row['N° codice Interno']
-        article = row['codarticolo']
-        kg_request = row['quantità']
-        # start_date = row['data ora\npartenza'].date()
-        # due_date = row['data ora\nfine'].date()
-        print(id)
-        start_date, due_date = date_hours_parser(row['data ora\npartenza'], row['data ora\nfine'], current_datetime)
-        machine = row['N° MC']
-        operator = pd.NA
-
-        giorni_passati = ((pd.Timestamp.now() - pd.to_datetime(start_date)).days) * time_units_in_a_day
-        tempo_levata = row['N° levate att.'] / giorni_passati
-
-        velocity = tempo_levata             #NOTE: not sure about this
-        if row['N° levate ord'] == 'C':     #continuato
-            remaining_levate = 1000
-        else:
-            remaining_levate = int(row['N° levate ord']) - row['N° levate att.']
-        current_op_type = 3      #running   #NOTE: possiamo capire gli altri stati da qui?
-        remaining_time = remaining_levate * tempo_levata
-
-        running_products.append(RunningProduct(id, article, kg_request, start_date, due_date, machine, operator, velocity, remaining_levate, current_op_type, remaining_time))
-    
-    return running_products
-
-def get_orders(common_p_path):
-        with open(common_p_path, newline='') as csvfile:
-            
-            csv_data = csv.reader(csvfile, delimiter=',', quotechar='|')
-            orders = []
-            str_out = ""
-            for idx, row in enumerate(csv_data):
-                if idx > 0:
-                    str_out = str_out + ', '.join(row) 
-                    str_out += '\n'
-                    # print(f'start_date:  {row[3]} - type: {type(row[3])}')
-                    start_date, due_date = date_hours_parser(row[3], row[4])
-                    orders.append(Product(idx, row[1], int(float(row[2])), start_date, due_date))
-        return orders
-
-def check_consistency_compatibility(articoli_macchine, macchine_articoli):
-    #check consistency between articoli_macchine and macchine_articoli
-    print(articoli_macchine)
-    print(macchine_articoli)
-    for a in articoli_macchine:
-        for m in articoli_macchine[a]:
-            if a not in macchine_articoli[m]:
-                print(f'Inconsistency between articoli_macchine and macchine_articoli: {a} not in {m}')
-    
-def get_infos(articoli_macchine_path, macchine_info_path, article_list_path, costs = (2,1,1)):
-
-    const_setup_cost, const_load_cost, const_unload_cost = costs
-
-    base_setup_cost = {}
-    base_load_cost = {}
-    base_unload_cost = {}
-
-    m_info = json.load(open(macchine_info_path))
-    articoli_macchine = json.load(open(articoli_macchine_path))
-    fuses_machines_associations = {int(machine):m_info[machine]['n_fusi'] for machine in m_info}
-
-    for a in articoli_macchine:
-        for m in fuses_machines_associations:
-            base_setup_cost[a,int(m)] = int(math.ceil(float(const_setup_cost)))
-            base_load_cost[a,int(m)] = int(math.ceil(float(const_load_cost) * float(fuses_machines_associations[m])))
-            base_unload_cost[a,int(m)] = int(math.ceil(float(const_unload_cost) * float(fuses_machines_associations[m])))
-
-
-    # 8-9-10. base_levata_cost, standard_levate, kg_per_levata
-    base_levata_cost = {}
-    standard_levate = {}
-    kg_per_levata = {}
-
-    with open(article_list_path, newline='') as csvfile:
-        csv_data = csv.reader(csvfile, delimiter=',', quotechar='"')
-        for idx, row in enumerate(csv_data):
-            # row[0] is the article code, row[10] is the hours needed for a single "levata"
-            if idx > 0:
-                # print(f'article: {row[0]}')
-                base_levata_cost[row[0]] = int(float(row[10]))
-                standard_levate[row[0]] = int(float(row[9]))
-                # print(f'costo levata: {int(float(row[10]))}')
-                if row[0] in articoli_macchine:
-                    for m in articoli_macchine[row[0]]:
-                        # print(f'kg_ora: {float(row[6])} - ore_levata: {float(row[10])} - fusi: {fuses_machines_associations[m]} - kg_per_levata: {int((float(row[10]) * float(row[6])) * float(fuses_machines_associations[m]) / 256.0)} - kg_ciclo: {int((float(row[10]) * float(row[6])) * float(fuses_machines_associations[m]) / 256.0) * int(float(row[9]))}')
-                        kg_per_levata[m,row[0]] = int((float(row[10]) * float(row[6])) * float(fuses_machines_associations[m]) / 256.0)
-    
-    return base_setup_cost, base_load_cost, base_unload_cost, base_levata_cost, standard_levate, kg_per_levata
-
-def init_data(
-        orders_path: str, 
-        articoli_macchine_path: str, 
-        macchine_articoli_path: str, 
-        macchine_info_path: str, 
-        article_list_path: str, 
-        status_path: str,
-        plan_path: str,
-        costs = (2,1,1), 
-        running_products =  {},
-        current_datetime = datetime.now()
-    ):
+def init_csv_data(common_p_path: str, j_compatibility_path: str, m_info_path: str, article_list_path: str, costs = (2,1,1), running_products =  {}):
     """
 
     - `costs:` a tuple representing the costs of the operation made by the human operators, cost expressed *per fuse*:
@@ -285,11 +145,8 @@ def init_data(
     2.`running_products: {Product}`
         Assuming an empty list right now
 
-    3.`articoli_macchine[article]: {str : [int]}`
+    3.`job_compatibility[article]: {str : [int]}`
         From "articoli_macchine.json" we retrieve the associations, is the dict containing which article goes on which machine
-    
-    4.`macchine_articoli[machine]: {int: [str]}`
-        From "macchine_articoli.json" we retrieve the associations, is the dict containing which machine can produce which article
     
     5.`base_setup_cost[article, machine]: {(str,int) : float}`
         Costant taken from input, machine dependent (number of fuses)
@@ -310,31 +167,73 @@ def init_data(
         See from "lista_articoli" the "kg_ora" and the "ore_levata", ASSUMING THAT the obtained data have been made in a 256 fuses machine
     
 """
+    const_setup_cost, const_load_cost, const_unload_cost = costs    
 
     # 1. common_products
-    orders = get_orders(orders_path)
-    
+    with open(common_p_path, newline='') as csvfile:
+        
+        csv_data = csv.reader(csvfile, delimiter=',', quotechar='|')
+        common_products = []
+        str_out = ""
+        for idx, row in enumerate(csv_data):
+            if idx > 0:
+                str_out = str_out + ', '.join(row) 
+                str_out += '\n'
+                # print(f'start_date:  {row[3]} - type: {type(row[3])}')
+                start_date, due_date = date_hours_parser(row[3], row[4])
+                common_products.append(Product(idx, row[1], int(float(row[2])), start_date, due_date))
     # 2. running_products
-    df = get_input_data(status_path, plan_path)
-    running_products = get_running_products(df, current_datetime)
+    # there is nothing here for now
 
-    # 3. articoli_macchine      #TODO: has to be updated
-    articoli_macchine = json.load(open(articoli_macchine_path))
+    # 3. job_compatibility
+    job_compatibility = json.load(open(j_compatibility_path))
 
-    # 4. macchine_articoli
-    # macchine_articoli = {}
-    # for a in articoli_macchine:
-    #     for m in articoli_macchine[a]:
-    #         if m not in macchine_articoli:
-    #             macchine_articoli[m] = []
-    #         macchine_articoli[m].append(a)
-    # print(len(macchine_articoli))
-    macchine_articoli = json.load(open(macchine_articoli_path))
+    # 4. machine_compatibility
+    machine_compatibility = {}
+    for a in job_compatibility:
+        for m in job_compatibility[a]:
+            if m not in machine_compatibility:
+                machine_compatibility[m] = []
+            machine_compatibility[m].append(a)
+    print(len(machine_compatibility))
 
-    # check_consistency_compatibility(articoli_macchine, macchine_articoli)
+    #check consistency between job_compatibility and machine_compatibility
+    for a in job_compatibility:
+        for m in job_compatibility[a]:
+            if a not in machine_compatibility[m]:
+                print(f'Inconsistency between job_compatibility and machine_compatibility: {a} not in {m}')
 
     # 5-6-7. base_setup_cost, base_load_cost, base_unload_cost
-    base_setup_cost, base_load_cost, base_unload_cost, base_levata_cost, standard_levate, kg_per_levata = get_infos(articoli_macchine_path, macchine_info_path, article_list_path, costs)
-    
+    base_setup_cost = {}
+    base_load_cost = {}
+    base_unload_cost = {}
+
+    m_info = json.load(open(m_info_path))
+    fuses_machines_associations = {int(machine):m_info[machine]['n_fusi'] for machine in m_info}
+
+    for a in job_compatibility:
+        for m in fuses_machines_associations:
+            base_setup_cost[a,int(m)] = int(math.ceil(float(const_setup_cost)))
+            base_load_cost[a,int(m)] = int(math.ceil(float(const_load_cost) * float(fuses_machines_associations[m])))
+            base_unload_cost[a,int(m)] = int(math.ceil(float(const_unload_cost) * float(fuses_machines_associations[m])))
+
+    # 8-9-10. base_levata_cost, standard_levate, kg_per_levata
+    base_levata_cost = {}
+    standard_levate = {}
+    kg_per_levata = {}
+
+    with open(article_list_path, newline='') as csvfile:
+        csv_data = csv.reader(csvfile, delimiter=',', quotechar='"')
+        for idx, row in enumerate(csv_data):
+            # row[0] is the article code, row[10] is the hours needed for a single "levata"
+            if idx > 0:
+                # print(f'article: {row[0]}')
+                base_levata_cost[row[0]] = int(float(row[10]))
+                standard_levate[row[0]] = int(float(row[9]))
+                print(f'costo levata: {int(float(row[10]))}')
+                if row[0] in job_compatibility:
+                    for m in job_compatibility[row[0]]:
+                        print(f'kg_ora: {float(row[6])} - ore_levata: {float(row[10])} - fusi: {fuses_machines_associations[m]} - kg_per_levata: {int((float(row[10]) * float(row[6])) * float(fuses_machines_associations[m]) / 256.0)} - kg_ciclo: {int((float(row[10]) * float(row[6])) * float(fuses_machines_associations[m]) / 256.0) * int(float(row[9]))}')
+                        kg_per_levata[m,row[0]] = int((float(row[10]) * float(row[6])) * float(fuses_machines_associations[m]) / 256.0)
     # breakpoint()
-    return orders, running_products, articoli_macchine, macchine_articoli, base_setup_cost, base_load_cost, base_unload_cost, base_levata_cost, standard_levate, kg_per_levata
+    return common_products, running_products, job_compatibility, base_setup_cost, base_load_cost, base_unload_cost, base_levata_cost, standard_levate, kg_per_levata
