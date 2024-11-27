@@ -126,7 +126,7 @@ Install required packages using `pip install ortools protobuf`.
     ```
     scheduled_maintenances = {
         # machine : [(start, duration)],
-        0 : [(50, 150)]
+        1 : [(50, 150)]
     }
     ```
 - `festivities`: list of the days (ordered starting from 0 == today) where no operators are available
