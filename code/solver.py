@@ -31,6 +31,12 @@ M_COMPATIBILITY_PATH = 'data/utils/macchine_articoli.json'
 M_INFO_PATH = 'data/utils/macchine_info.json'
 ARTICLE_LIST_PATH = 'data/valid/lista_articoli.csv'
 
+# SIMULATION DATA
+path = 'data/input/Dati per simulazione/'
+data = '19.11.2024'
+STATUS_MACHINES_PATH = path + 'Stato_Macchine_' + data + '.xlsx'
+PLANNING_PATH = path + 'Pianificazione_' + data + '.xlsx'
+
 # output txt files
 OUTPUT_SCHEDULE = 'output/schedule.txt'
 OUTPUT_REFINED_SCHEDULE = 'output/refined_schedule.txt'
@@ -57,7 +63,22 @@ num_operators_per_group = 4
 if machine_velocities % 2 == 0 :
     raise ValueError("Machine velocities must be odd numbers.")
 
-common_products, running_products, article_to_machine_comp, machine_to_article_comp, base_setup_art_cost, base_load_art_cost, base_unload_art_cost, base_levata_art_cost, standard_levate_art, kg_per_levata_art = init_csv_data(COMMON_P_PATH, J_COMPATIBILITY_PATH, M_COMPATIBILITY_PATH, M_INFO_PATH, ARTICLE_LIST_PATH, costs=(4, 6/256, 2/256))
+current_datetime = datetime.strptime(data, '%d.%m.%Y')
+
+common_products, running_products, article_to_machine_comp, machine_to_article_comp, base_setup_art_cost, base_load_art_cost, base_unload_art_cost, base_levata_art_cost, standard_levate_art, kg_per_levata_art = init_data(
+    COMMON_P_PATH, 
+    J_COMPATIBILITY_PATH,
+    M_COMPATIBILITY_PATH, 
+    M_INFO_PATH, 
+    ARTICLE_LIST_PATH, 
+    STATUS_MACHINES_PATH, 
+    PLANNING_PATH, 
+    costs=(4, 6/256, 2/256),
+    current_datetime=current_datetime
+)
+
+stato_plan = get_input_data(STATUS_MACHINES_PATH, PLANNING_PATH)
+running_products = get_running_products(stato_plan, time_units_in_a_day)
 
 # Make joint tuples (for readability purp.)
 common_products = [(prod.id, prod) for prod in common_products]
@@ -71,9 +92,28 @@ base_levata_cost={}
 base_setup_cost={}
 base_load_cost={}
 base_unload_cost={}
+
+provide_info = []
+
 for p, prod in all_products:
+    
+    if prod.article not in standard_levate_art:
+        print("NO info for ",prod.article)
+        print(p)
+        provide_info.append(prod.article)
+
+        continue
+    
     standard_levate[p] = standard_levate_art[prod.article]
     base_levata_cost[p] = base_levata_art_cost[prod.article]
+
+    if prod.article not in article_to_machine_comp:
+        print("NO machine compatibility for ",prod.article)
+        print(p)
+        provide_info.append(prod.article)
+
+        continue
+
     for m in article_to_machine_comp[prod.article]:
         try:
             kg_per_levata[m,p] = kg_per_levata_art[m,prod.article]
@@ -82,6 +122,11 @@ for p, prod in all_products:
             base_unload_cost[p,m] = base_unload_art_cost[prod.article,m]
         except:
             breakpoint()
+
+all_products = [(p,prod) for p, prod in all_products if prod.article not in provide_info]
+# print(all_products)
+# print(provide_info)
+
 
 # convert machine and article compatibility to be indexed on product id
 prod_to_machine_comp = {}
@@ -111,6 +156,8 @@ for p, prod in all_products :
     adjusted_intervals = []
     current_start = prod.start_date
     for start, end in worktime_intervals:
+        # print(p, prod)
+        # print(start, end, prod.start_date, prod.due_date) 
         if end <= prod.start_date:
             continue 
         interval_start = max(start, current_start)
@@ -130,8 +177,10 @@ for p, prod in all_products :
         if interval[0] < interval[1]:
             valid = True
     if not valid:
-        print("EMPTY DOMAIN FOR ARTICLE",prod.article)
-        raise ValueError
+        print(start, end, prod.start_date, prod.due_date) 
+        print("EMPTY DOMAIN FOR ARTICLE",p, prod.article)
+        # raise ValueError
+        continue
     
     # generate worktime domain for p
     worktime_domain[p] = cp_model.Domain.FromIntervals(adjusted_intervals)

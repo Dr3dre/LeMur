@@ -1,0 +1,83 @@
+Cliente,n. ordine cliente,n. ordine ns,data inserimento ordine,n. ordine interno,cod articolo,descrizione,quantità,data di consegna,nr. fusi,N° MC,n° levate,gg per produrre,data arrivo materia prima,Completamento ordine,prodotto kg,consegnato kg,giacenza prodotto finito,note,Evaso
+SANYLEG,163,,03/06/2024,188,33002DN,"Ly330/22f7 dc tpm 1200 st. 4,8 (EI)","414,0",,256,1,"1,99","11,27",,26/11/2024,"4,59","99,40",,,Falso
+ATHENA,250624,19078,26/06/2024,208,4463S+ZN1,"Cr44/44f34 colorwise S+Z tpm 650 st. 3,2 (DC)","660,0",15/07/2024,256,1,"3,09","14,95",,30/11/2024,0,,"0,0",,Falso
+W.ZIMMERMANN,10419,19240,04/10/2024,,4465SN1,"Ro44/16f10 S tpm 1250 st. 2,9 (CL)","300,0",27/11/2024,264,,,,,,,,"0,0",,Falso
+FISHER & PAYKEL,,,02/09/2024,255,S19-60064V3DN,"Mu600/78f34 dc  tpm 700 dc st. 4,5 (EF)","360,0",,256,1,"4,03","3,19",,18/11/2024,"596,43",,,"Muriel e nylon ci sono, ma aspettare inizio ottobre prima di mettere in produzione",Falso
+SCORTA,,,12/09/2024,264,1730S+ZN mini,"K17/11f16 S+Z tpm 2150 st.2,8 (CI)","176,0",,256,1,"1,99","27,16",,12/12/2024,"0,81",,,usare mobilon K17 usato per non rovinarlo,Falso
+SCORTA,,,12/09/2024,265,1724S+ZN 2cicli,"K17/10f2 S+Z tpm 2100 st. 2,6 (CG)","236,0",,256,1,"2,01","39,33",,24/12/2024,"206,96",,,,Falso
+CALZIFICIO GENNY,,,07/10/2024,293,X24-4403V2DN,"Ly 44-11f5 dc tpm 1900 st. 3,5 (DF)","90,0",20/11/2024,256,1,"0,96","13,39",,28/11/2024,"0,84",,"0,0",,Falso
+APPLE,,19245,07/10/2024,294,,,"26,0",,,,,,,,,,,,Falso
+DIAMANT,40098,19253,09/10/2024,297,39502DN-14446,"Ly395/167f96 dc tpm 800 st. 4,15 (EBF)","165,0",15/10/2024,206,1,"0,99","1,53",,17/11/2024,"20,84",,"0,0",kg 160 col.14446 e kg 5 col.15081,Falso
+FALKE,2058537,19260,14/10/2024,301,ManilaS+ZN1,"K22/11f5 S+Z tpm 2500 st. 2,6 (CG)","240,0",04/11/2024,256,1,"1,9","43,48",,28/12/2024,"0,69",,"0,0",,Falso
+RADICI,29547,19264,15/10/2024,303,X23-7899ZN,"Cr 78/44f34 Z tpm 600 st.3,2 (DC)","4.000,0",30/11/2024,,1,,,,,,"229,80",,att.ne FARE V2,Falso
+SANYLEG,337,19265,15/10/2024,,31002DN1,"Cr310/22f7 DC tpm 1200 st. 3,8  (DI)","540,0",04/11/2024,,,,,,,,"369,0","220,0",,Falso
+FGP,3500,19219,15/10/2024,302,31003DN220274,"Ly310/78f68 dc tpm 1200 st. 3,8","1.610,0",04/11/2024,256,1,"7,26","28,43",,13/12/2024,"7,08","707,90",,,Falso
+MANIFATTURA ITALIA CUCIRINI,1124,19269,18/10/2024,307,X23-2279ZF,"Ro 22/78f24 Z tpm 400 st. 3,5 (DF)","1.050,0",25/10/2024,256,1,"5,88","11,45",,26/11/2024,"11,46",,"0,0","kg 500 per ordine, resto scorta",Falso
+MICHELE LETIZIA,177,19271,18/10/2024,308,X24-7802S+ZN,Cr 78-44f72 S+Z tpm 900 st. 3.4 (DE),"600,0",04/11/2024,256,1,"4,01","15,72",,01/12/2024,"4,77","435,0","0,0","prod.ne per ordito, servono  502 bob - peso/bob. 600 gr. FARE 2 LEVATE SULLA MC DA 256 POSIZIONI IN MODO DA AVERE 512 bobine MENO EVT ROTTURE. Utilizzeremo PES 44/72 Kg 60 vecchio lotto + 20 Kg di nuo",Falso
+SANYLEG,347,19273,22/10/2024,309,2274ZN2,"Cr22/78f24 Z tpm 600 st. 3,4 (DE)","200,0",,256,1,1,"2,82",,18/11/2024,"8,88",,,nero + carta da zucchero,Falso
+SANYLEG,346,,,310,X24-2213ZN2,"Cr22/78f70 Z tpm 1000 st.3,2 (DC)","200,0",,256,1,2,"3,86",,19/11/2024,"6,48","162,0",,Fare 1 levata di oltremare con spole da 400 gr (se MC da 264) o 410 gr (se MC da 256) - 2 levata di nero con spole da 380 gr (se MC da 256) o 370 gr (se MC da 264),Falso
+FISHER & PAYKEL,149481,19275,23/10/2024,312,X21-39599V7DN0333,"Ly395/78f34x2 dc tpm 700 st. 4,6 (EG) Grey","190,0",01/02/2025,256,1,"0,88","1,47",,16/11/2024,0,,,1 LEVATA SCARSA -FINIRE FILO - Attenzione: usare la Lycra 395 903 C,Falso
+APPLE,742471,19215,24/09/2024,263,S180001DN,"Muriel 1800/62f18 dc tpm 700 st. 3,6",,,,,,,,,,,,art.S180002dn100,Falso
+CALZIFICIO TREVER,2001238442,19282,25/10/2025,,X23-13097V8ZF,"Cr 130/33f20 par Z tpm 900 st. 4,2 (EC)","2.000,0",02/12/2024,,,,,,,,,,,Falso
+CALZIFICIO TREVER,2001238442,19283,25/10/2025,,X23-13097V8ZF,"Cr 130/33f20 par Z tpm 900 st. 4,2 (EC)","1.000,0",07/01/2025,,,,,,,,,,,Falso
+CALZIFICIO TREVER,2001238442,19284,25/10/2025,,2270SN,"KL22/11f5 S  tpm 1900 st. 2,8 (CI)","1.000,0",02/12/2024,,,,,,,,,,,Falso
+CALZIFICIO TREVER,2001238442,19285,25/10/2025,,2270SN,"KL22/11f5 S  tpm 1900 st. 2,8 (CI)","1.000,0",07/01/2025,,,,,,,,,,,Falso
+CALZIFICIO TREVER,2001238442,19286,25/10/2025,,2270SN,"KL22/11f5 S  tpm 1900 st. 2,8 (CI)","1.000,0",20/01/2025,,,,,,,,,,,Falso
+CALZIFICIO TREVER,2001238442,19287,25/10/2025,,2270ZN,"KL22/11f5 Z  tpm 1900 st. 2,8 (CI)","1.000,0",02/12/2024,,,,,,,,,,,Falso
+CALZIFICIO TREVER,2001238442,19290,25/10/2025,,2271DN 20000 mini,"K22/8f5 dc tpm 3000 st. 2,8 CI","1.500,0",07/01/2025,,,,,,,,,,,Falso
+CALZIFICIO GENNY,301024,19292,30/10/2024,319,X23-7892DN mini,"Ly 78/13f7 dc tpm 1750 st. 3,8 (DI)","210,0",25/11/2024,264,1,"2,24","20,2",,05/12/2024,0,,,"V2 - VELOCITA'=750/1400, TENSIONE=4 GR, METRI=176,923- Dividere il peso del nylon che arriva su 2 levate (MC da 264 - 528 spole)",Falso
+FISHER & PAYKEL,149910,19291,30/10/2024,318,X21-39599V7DN0332,"Ly395/78f34x2 dc tpm 700 st. 4,6 (EG) Blu","190,0",08/01/2025,256,1,"0,88","1,47",,16/11/2024,0,,,1 LEVATA SCARSA -FINIRE FILO - Attenzione: usare la Lycra 395 903 C-  valutare di fare in coda all'ordine interno nr.312 perché la consegna sia di quest'ordine che del 312 è per inizio gennaio 2025.,Falso
+CALZIFICIO TREVER,,,06/11/2024,323,X23-13097V11ZF,"Ro 130/33f20 par Z tpm 900 st. 4,3 (ED)","1.960,0",11/11/2024,,,,,,,,,,FARE LA PRIMA LEVATA E POI FERMARSI E ATTENDERE DISP.NI,Falso
+CALZIFICIO TREVER,,,06/11/2024,324,,,"90,0",11/11/2024,,,,,,,,,,X24-13097V14,Falso
+DUELEGS,,,06/11/2024,322,X23-31095ZN,Cr 310 H300 - 44f12 tpm 600 st. 3,"65,0",11/11/2024,,,,,,,,,,X24-31095ZN1 - finire nylon,Falso
+MEDI,97562,19311,07/11/2024,325,S21-100011DN100 A230,"Mu 1000/62f18 dc tpm 800 st. 2,2 (CC)","80,0",07/01/2025,,,,,,,,,,,Falso
+MEDI,79552,19312,07/11/2024,326,,,"20,0",11/11/2024,,,,,,,,,,X24-124001V2DN,Falso
+FALKE,1900199,,23/02/2023,67,X24-1301V2S+ZN mini,"Ly 13/11f8 S+Z tpm 2400 st. 2,9 (CL)","900,0",,256,1,"8,59","170,45",,04/05/2025,"1,32","499,0","0,0",prima levata caricare lycra vecchio lotto 1A303 - 264 pos per 84 gr - per questa levata servono spole più piccole da 245 gr e andrà ca. 16 gg rispetto ai 20 gg di cilco standard - NUOVO LOTTO LYCRA 13,Falso
+SCORTA,,,19/04/2024,137,7034ZN,"Cr 78/22f7 Z tpm 1900 st. 4,0 (EA)","1.930,0",,256,1,"11,58","113,26",,08/03/2025,"2,13",,,,Falso
+MEDI,5933,19112,16/07/2024,238,X23-4493S+ZF,"Ly 44/22f20 S+Z tpm 1600 st. 3,7","5.921,0",,256,1,"44,42","397,92",,18/12/2025,0,"1.985,0","0,0",,Falso
+RADICI,29270,19186,06/09/2024,259,2276S+ZN,"Cr22/44f30 S+Z tpm 650 st. 3,2 (DC)","5.750,0",,256,1,"25,65","147,89",,12/04/2025,"9,72","3.932,0",,,Falso
+RADICI,29270,19186,06/09/2024,260,2279ZNB10A 13200,Cr22/78f68 Z pink tpm 600 st- 3.2 (DC),"2.926,0",,256,1,"14,08","44,01",,29/12/2024,"2325,78","2.847,0",,,Falso
+RADICI,29270,19186,06/09/2024,261,2275S+ZN-B10A,"Cr22/44f34 S+Z tpm 600 st. 3,2 (DC)","5.200,0",,256,1,"22,83","112,26",,07/03/2025,"2232,98","1.741,0",,ATTENZIONE DARE PRECEDENZA A QUEST'ORDINE RISPETTO AGLI ALTRI,Falso
+SANYLEG,318,19225,27/09/2024,283,X23-47097DN366,"Ro 470/33f34 dc  tpm 1030 stiro 5,0 (FA)","1.428,0",01/12/2024,256,1,"11,88","29,46",,14/12/2024,"6,06",,"0,0",Consegnare kg 230/mese da dicembre a maggio.,Falso
+SANYLEG,318,19225,27/09/2024,284,X23-4491DF366,"Ly 44/33f34 dc tpm 1150 st. 2,1 (CB)","1.236,0",01/12/2024,256,1,"11,64","57,22",,11/01/2025,"2,7",,"0,0",il cliente chiede 230 Kg al mese da DICEMBRE,Falso
+CALZIFICIO TREVER,1223610,19230,30/09/2024,,X23-13097V8ZF,"Cr 130/33f20 par Z tpm 900 st. 4,2 (EC)","2.000,0",04/11/2024,,,,,,,,"1.758,0","0,0",,Falso
+CALZIFICIO GENNY,270924,,01/10/2024,286,X24-4403V2DN,"Ly 44-11f5 dc tpm 1900 st. 3,5 (DF)","115,0",,256,1,"1,22","17,11",,02/12/2024,"0,84","64,0",,,Falso
+INVENTEX,107546,,02/10/2024,288,S21-60083V3DN1,"Mu600/120/1 Aramidico dc 1400 st. 4,5 (EF)","430,0",,256,1,"9,48","9,48",,24/11/2024,0,,,,Falso
+W.ZIMMERMANN,10416,,02/10/2024,291,4465SN1,"Ro44/16f10 S tpm 1250 st. 2,9 (CL)","300,0",,264,1,"1,97","17,57",,03/12/2024,"2,01",,,USARE MC DA 264 POSIZIONI- 3 cariche da 170-176 bobine cadauna che equivalgono a 2 levate su mc da 264 spole - bobine da ca. 580 gr senza nodo - usare il 16f10 text CONTROLLATO PER TINTORIA - minimo 5,Falso
+SANYLEG,364,19298,05/11/2024,,2274ZN2,"Cr22/78f24 Z tpm 600 st. 3,4 (DE)","240,0",05/11/2024,,,,,,,,"146,0","200,0",,Falso
+W.ZIMMERMANN,,,24/10/2024,313,X24-80001V2DN,Cr 800-7008-110f34 dc tpm 600 st. 4,"30,0",13/11/2024,48,1,"1,79","1,49",,16/11/2024,0,,"0,0",Creora 800 dc 7008 + 110f34 - PER ORDINE ord.45 bob. da 670 gr su tub. da 155,Falso
+FALKE,2058538,19261,14/10/2024,,2277DN,"Ly22/8f5 dc tpm 2100 st. 3,4 (DE)","840,0",07/01/2025,,,,,,,,,"250,0",,Falso
+UTEXBEL,10454387,19279,24/10/2024,317,S19-60058V2DN,"Muriel 600/70/1/23 dc 1100 st. 4,5 (EF)","75,0",15/11/2024,256,1,"0,37","0,74",,16/11/2024,"12,63",,"0,0",lavorare prima questo ordine e solo dopo ordine n. 316,Falso
+UTEXBEL,10454386,19280,24/10/2024,316,S19-60052DN,"Mu600/70/1 Ker/Vfr/arm DC tpm 1100 st. 4,4 (EE)","512,0",15/11/2024,256,1,"4,09","7,84",,23/11/2024,"8,16",,"0,0","metri doppi 1 carrello da bobinatura = 2 levate in spiralatura - FINIRE NOMEX- 4 levate piene, 5 levata scarsissima per finire NOMEX",Falso
+BBF GAMBETTI,158,19313,07/11/2024,,2011DN,"Ly 20/13f10 dc  tpm 2400 st. 3,0 (DA)","700,0",11/11/2024,,,,,,,,,,,Falso
+SANYLEG,295,,12/09/2024,,62002DN2,"Cr620/78f18  dc tpm 800 st. 4,8","720,0",,,,,,,,,,,,Falso
+FOCENZA FACTORY,6,19214,23/09/2024,276,4424S+ZN/F,"Ly44/44f34 S+Z tpm 1000 st. 3,8 (DI)","460,0",20/10/2024,256,1,"2,01","15,71",,01/12/2024,"3,66","252,60",,,Falso
+FOCENZA FACTORY,6,19214,23/09/2024,277,4424S+ZN/F,"Ly44/44f34 S+Z tpm 1000 st. 3,8 (DI)","920,0",20/11/2024,256,1,"4,02","31,42",,16/12/2024,"3,66",,,SOLO TORSIONE S,Falso
+FISHER & PAYKEL,148742,,07/10/2024,292,S19-60064V3DN,"Mu600/78f34 dc  tpm 700 dc st. 4,5 (EF)","90,0",,256,1,"1,01","0,8",,16/11/2024,"6,19",,, RIBOBINARE IN PROSSIMITA' DELLA DATA DI PARTENZA (MARZO 2025),Falso
+FALKE,2058539,19262,14/10/2024,,749DN,"Ly20/8f5 dc tpm 3000 st. 2,8 (CI)","550,0",14/10/2024,,,,,,,,,"50,0",,Falso
+SCORTA,,,19/09/2024,272,4407DN,"Ly44/13f7 dc tpm 1750 st. 3,8 (DI)","960,0",,256,1,"8,04","102,56",,26/02/2025,"1,17",,,"ATTENZIONE- SE USIAMO SEMPRE LA BESTIA - MC61- SU CUI STA GIRANDO ADESSO, LE LEVATE DA FARE SARANNO 4 E NON 8",Falso
+SCORTA,,,26/09/2024,280,2269ZN/F2,"Cr22/22f7 Z nero tpm 1100 st. 2,8 (CI)","114,0",,256,1,"0,81","5,94",,21/11/2024,"2,4",,"0,0",Filato che potrebbe essere richiesto fissato- mettere  su tubetto del fissaggio ma NON FISSARE né ribobinare finchè non arriva l'ordine effettivo. - ATT.NE: prima di produrre verrà fatta una prova sul,Falso
+CALZE OLONA,311024,19295,04/11/2024,320,X24-13003V2ZF1,"Ly 130-22f7x2 Z tpm 900 st. 3,5","220,0",15/11/2024,256,1,"1,44","4,2",,19/11/2024,"214,22","82,40","0,0","32 SPOLE GIA' FATTE - 1° LEVATA DA 256 SPOLE, 2° LEVATA DA 88 SPOLE",Falso
+FGP,3556,19236,03/10/2024,,31004DN220379,"Cr310/78f68  dc tpm 1200 st. 2,7  (CH)","700,0",08/01/2025,,,,,,,,"466,80","1.040,0",,Falso
+SCORTA,,,15/10/2024,304,S18-200014DN,"Mu2000/62f18 DC tpm 700 st. 3,6 (DG)","80,0",,256,1,"0,61","0,56",,16/11/2024,"17,88","44,0","0,0",ci sono kg 24-25  di Muriel in casa- iniziare con questo che è in casa.,Falso
+CALZIFICIO TREVER,1197896,19139,26/07/2024,,2271DN1,"MO 22/8f5DC3000 tmp st. 2,8 (CI)","1.500,0",26/07/2024,,,,,,,,"1.387,0","5.000,0",,Falso
+CALZIFICIO TREVER,1184417,19088,28/06/2024,,2270SN,"KL22/11f5 S  tpm 1900 st. 2,8 (CI)","1.000,0",22/07/2024,,,,,,,,"527,0",,,Falso
+CALZIFICIO TREVER,1184417,19088,28/06/2024,,2270ZN,"KL22/11f5 Z  tpm 1900 st. 2,8 (CI)","1.000,0",22/07/2024,,,,,,,,,,,Falso
+CSP INTERNATIONAL,159945,19297,04/11/2024,,1724S+ZN,"K17/10f2 S+Z tpm 2100 st. 2,6 (CG)","150,0",02/12/2024,,,,,,,,,"0,0",,Falso
+BBF GAMBETTI,52,18936,12/04/2024,,2011DN,"Ly 20/13f10 dc  tpm 2400 st. 3,0 (DA)","2.900,0",01/09/2024,,,,,,,,"2.438,0","3.000,0",,Falso
+CALZIFICIO TREVER,2001170328,19037,29/05/2024,,13005ZF-14000,"Ly130/33f20 Z tpm 900 st. 4,2 (EC)","1.500,0",,,,,,,,,"517,0",,,Falso
+SANYLEG,281,19183,05/09/2024,,7036ZN,"Ly78/44F34 Z tpm 900 st. 4,2 (EC)","220,0",,,,,,,,,,"175,60",,Falso
+BBF GAMBETTI,150,19300,04/11/2024,,4407DN,"Ly44/13f7 dc tpm 1750 st. 3,8 (DI)","150,0",11/11/2024,,,,,,,,,,,Falso
+BBF GAMBETTI,155,19301,04/11/2024,,2011DN,"Ly 20/13f10 dc  tpm 2400 st. 3,0 (DA)","800,0",02/12/2024,,,,,,,,,"400,0",,Falso
+SANYLEG,295,19200,12/09/2024,,62002DN,"Cr620/78f24 dc tpm 800 st. 4,8","720,0",18/11/2024,,,,,,,,"608,0",,,Falso
+BBF GAMBETTI,157,19302,04/11/2024,,2011DN,"Ly 20/13f10 dc  tpm 2400 st. 3,0 (DA)","3.200,0",04/03/2025,,,,,,,,,"0,0",,Falso
+FISHER & PAYKEL,145792,19172,02/09/2024,253,X21-39599V7DN0332,"Ly395/78f34x2 dc tpm 700 st. 4,6 (EG) Blu","190,0",15/10/2024,256,1,"0,88","1,47",,16/11/2024,"16,11",,"0,0",,Falso
+FISHER & PAYKEL,145792,19172,02/09/2024,254,X21-39599V7DN0333,"Ly395/78f34x2 dc tpm 700 st. 4,6 (EG) Grey","190,0",15/10/2024,256,1,"0,88","1,47",,16/11/2024,"16,11",,"0,0",,Falso
+SCORTA,,,14/10/2024,296,4412ZN,"Ly 44/13f7 S+Z tpm 1700 st. 3,8 (DI)","38,0",,72,1,"0,92","11,73",,27/11/2024,"5,12",,,per pareggio torsioni in magazzino,Falso
+RADICI,29547,19264,14/10/2024,300,2279ZN1 13200,Cr22/78f68 Z tpm 600 st- 3.2 (DC),"836,0",,256,1,"4,03","12,58",,28/11/2024,"8,31","378,0",,,Falso
+GIZETA,1432,19303,04/11/2024,,7036ZN,"Ly78/44F34 Z tpm 900 st. 4,2 (EC)","150,0",14/11/2024,,,,,,,,,,,Falso
+GIZETA,1432,19303,05/11/2024,,13007ZF1,"LY130/33f20 DC 900 tmp st. 4,2 (EC)","240,0",21/11/2024,,,,,,,,,,,Falso
+CSP INTERNATIONAL,107219,19307,05/11/2024,,4466S+ZN,"Ly44/22f7 S+Z tpm 1900 stiro 3,6 (DG)","80,0",07/01/2025,,,,,,,,,"500,0",,Falso
+FOCENZA FACTORY,,,,321,4424ZN,"Ly44/44f34 Z tpm 1000 st. 3,8 (DI)","160,0",15/12/2024,,,,,,,,,"0,0",ripristino vendita spareggiata a Sanyleg10/24,Falso
+DUELEGS,,,11/11/2024,328,X23-4493S+ZF,"Ly 44/22f20 S+Z tpm 1600 st. 3,7","2.500,0",,,,,,,,,,"650,0",,Falso
+SCORTA,,,11/11/2024,327,,"Ly 44/22f20 S+Z tpm 1600 st. 3,7","126,0",,,1,,,,,,,,,Falso
