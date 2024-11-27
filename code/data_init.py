@@ -150,8 +150,8 @@ def get_input_data(stato_path, plan_path):
     running.dropna(subset=['N° codice Interno'], inplace=True)
 
     running.fillna(value={
-        'data ora\npartenza': pd.Timestamp.now(),
-        'data ora\nfine': pd.Timestamp(2027, 1, 1),
+        'data inserimento produzione': pd.Timestamp.now() - pd.Timedelta(days=1),
+        'data di consegna': pd.Timestamp(2025, 6, 1),
     }, inplace=True)
 
     return running
@@ -161,23 +161,32 @@ def get_running_products(df, time_units_in_a_day=24, current_datetime=datetime.n
     '''
     This function reads the production and machine state files and returns a list of RunningProduct objects
     '''
-    
+    due_date_fill = datetime(2025, 6, 1).date()
+    start_date_fill = datetime(2025, 6, 1).date()
     running_products = []
 
     for index, row in df.iterrows():
 
-        id = row['N° codice Interno']
+        id = int(row['N° codice Interno'])
         article = row['codarticolo']
-        kg_request = row['quantità']
-        # start_date = row['data ora\npartenza'].date()
-        # due_date = row['data ora\nfine'].date()
-        print(id)
-        start_date, due_date = date_hours_parser(row['data ora\npartenza'], row['data ora\nfine'], current_datetime)
-        machine = row['N° MC']
-        operator = pd.NA
+        kg_request = int(row['quantità']) if not pd.isna(row['quantità']) else 20000
+        start_date = row['data inserimento produzione'].date()
+        due_date = row['data di consegna'].date()
+        machine = int(row['N° MC'])
+        operator = 0
 
-        giorni_passati = ((pd.Timestamp.now() - pd.to_datetime(start_date)).days) * time_units_in_a_day
-        tempo_levata = row['N° levate att.'] / giorni_passati
+        # print(current_datetime)
+        # print(start_date)
+        # print(pd.to_datetime(start_date))
+        # print((current_datetime - pd.to_datetime(start_date)).days)
+        # print(time_units_in_a_day)
+
+        #TODO: gestisci elementi in ritardo
+        if due_date < current_datetime.date():
+            due_date = due_date_fill
+
+        giorni_passati = ((current_datetime - pd.to_datetime(start_date)).days) * time_units_in_a_day
+        tempo_levata = row['N° levate att.'] / giorni_passati if giorni_passati > 0 else 0
 
         velocity = tempo_levata             #NOTE: not sure about this
         if row['N° levate ord'] == 'C':     #continuato
@@ -187,11 +196,20 @@ def get_running_products(df, time_units_in_a_day=24, current_datetime=datetime.n
         current_op_type = 3      #running   #NOTE: possiamo capire gli altri stati da qui?
         remaining_time = remaining_levate * tempo_levata
 
-        running_products.append(RunningProduct(id, article, kg_request, start_date, due_date, machine, operator, velocity, remaining_levate, current_op_type, remaining_time))
+
+        print(index)
+        print(f"id: {id}")
+        print(f"start_date: {start_date}")
+        print(f"current_datetime: {current_datetime}")
+        print(f"due_date: {due_date}")
+        start_hours = int((start_date - current_datetime.date()).total_seconds() // 3600)
+        due_hours = int((due_date - current_datetime.date()).total_seconds() // 3600)
+
+        running_products.append(RunningProduct(id, article, kg_request, start_hours, due_hours, machine, operator, velocity, remaining_levate, current_op_type, remaining_time))
     
     return running_products
 
-def get_orders(common_p_path):
+def get_orders(common_p_path, current_datetime=datetime.now()):
         with open(common_p_path, newline='') as csvfile:
             
             csv_data = csv.reader(csvfile, delimiter=',', quotechar='|')
@@ -202,7 +220,7 @@ def get_orders(common_p_path):
                     str_out = str_out + ', '.join(row) 
                     str_out += '\n'
                     # print(f'start_date:  {row[3]} - type: {type(row[3])}')
-                    start_date, due_date = date_hours_parser(row[3], row[4])
+                    start_date, due_date = date_hours_parser(row[3], row[4], current_datetime)
                     orders.append(Product(idx, row[1], int(float(row[2])), start_date, due_date))
         return orders
 
@@ -265,7 +283,8 @@ def init_data(
         plan_path: str,
         costs = (2,1,1), 
         running_products =  {},
-        current_datetime = datetime.now()
+        current_datetime = datetime.now(),
+        time_units_in_a_day = 24
     ):
     """
 
@@ -312,11 +331,11 @@ def init_data(
 """
 
     # 1. common_products
-    orders = get_orders(orders_path)
+    orders = get_orders(orders_path, current_datetime)
     
     # 2. running_products
     df = get_input_data(status_path, plan_path)
-    running_products = get_running_products(df, current_datetime)
+    running_products = get_running_products(df, time_units_in_a_day, current_datetime)
 
     # 3. articoli_macchine      #TODO: has to be updated
     articoli_macchine = json.load(open(articoli_macchine_path))

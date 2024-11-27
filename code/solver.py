@@ -81,6 +81,7 @@ if machine_velocities % 2 == 0 :
     raise ValueError("Machine velocities must be odd numbers.")
 
 current_datetime = datetime.strptime(data, '%d.%m.%Y')
+print(f"current_datetime: {current_datetime}")
 
 common_products, running_products, article_to_machine_comp, machine_to_article_comp, base_setup_art_cost, base_load_art_cost, base_unload_art_cost, base_levata_art_cost, standard_levate_art, kg_per_levata_art = init_data(
     COMMON_P_PATH, 
@@ -91,11 +92,9 @@ common_products, running_products, article_to_machine_comp, machine_to_article_c
     STATUS_MACHINES_PATH, 
     PLANNING_PATH, 
     costs=(4, 6/256, 2/256),
-    current_datetime=current_datetime
+    current_datetime=current_datetime,
+    time_units_in_a_day=time_units_in_a_day
 )
-
-stato_plan = get_input_data(STATUS_MACHINES_PATH, PLANNING_PATH)
-running_products = get_running_products(stato_plan, time_units_in_a_day)
 
 # Make joint tuples (for readability purp.)
 common_products = [(prod.id, prod) for prod in common_products]
@@ -280,6 +279,7 @@ if __name__ == '__main__':
         for c in range(max_cycles[p]):
             for l in range(standard_levate[p]):
                 if (p,c,l) not in LOAD_EXCL :
+                    print(p,c,l)
                     LOAD_BEG[p,c,l] = model.NewIntVarFromDomain(worktime_domain[p], f'LOAD_BEG[{p},{c},{l}]')
                 else :
                     LOAD_BEG[p,c,l] = model.NewConstant(start_schedule)
@@ -775,6 +775,7 @@ if __name__ == '__main__':
         # Only first cycles / first levate needs adjustments
         cycle = lev = 0
         # Fix Machine assignment
+        print(f"p: {p} cycle: {cycle} machine: {prod.machine[cycle]}")
         model.Add(A[p,cycle,prod.machine[cycle]] == 1)
         # constraints.append(f"Fix Machine assignment {A[p,cycle,prod.machine[cycle]]} == 1")
         # Fix Velocity
