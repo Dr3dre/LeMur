@@ -3,6 +3,7 @@ import csv
 import json
 from datetime import datetime
 from datetime import timedelta
+import pandas as pd
 
 
 class Product(object):
@@ -301,27 +302,25 @@ def init_csv_data(
     standard_levate = {}
     kg_per_levata = {}
 
-    with open(article_list_path, newline="") as csvfile:
-        csv_data = csv.reader(csvfile, delimiter=",", quotechar='"')
-        for idx, row in enumerate(csv_data):
-            # row[0] is the article code, row[10] is the hours needed for a single "levata"
-            if idx > 0:
-                if row[0] == "":
-                    continue
-                # print(f'article: {row[0]}')
-                base_levata_cost[row[0]] = int(float(row[10]))
-                standard_levate[row[0]] = int(float(row[9]))
-                print(f"costo levata: {int(float(row[10]))}")
-                if row[0] in job_compatibility:
-                    for m in job_compatibility[row[0]]:
-                        print(
-                            f"kg_ora: {float(row[6])} - ore_levata: {float(row[10])} - fusi: {fuses_machines_associations[m]} - kg_per_levata: {int((float(row[10]) * float(row[6])) * float(fuses_machines_associations[m]) / 256.0)} - kg_ciclo: {int((float(row[10]) * float(row[6])) * float(fuses_machines_associations[m]) / 256.0) * int(float(row[9]))}"
-                        )
-                        kg_per_levata[m, row[0]] = int(
-                            (float(row[10]) * float(row[6]))
-                            * float(fuses_machines_associations[m])
-                            / 256.0
-                        )
+    df = pd.read_csv(article_list_path)
+
+    for idx, row in df.iterrows():
+        # row['codarticolo'] is the article code, row['ore_levata'] is the hours needed for a single "levata"
+        if pd.isna(row['codarticolo']):
+            continue
+        base_levata_cost[row['codarticolo']] = int(float(row['ore_levata']))
+        standard_levate[row['codarticolo']] = int(float(row['no_cicli']))
+        print(f"costo levata: {int(float(row['ore_levata']))}")
+        if row['codarticolo'] in job_compatibility:
+            for m in job_compatibility[row['codarticolo']]:
+                print(
+                    f"kg_ora: {float(row['kg_ora'])} - ore_levata: {float(row['ore_levata'])} - fusi: {fuses_machines_associations[m]} - kg_per_levata: {int((float(row['ore_levata']) * float(row['kg_ora'])) * float(fuses_machines_associations[m]) / 256.0)} - kg_ciclo: {int((float(row['ore_levata']) * float(row['kg_ora'])) * float(fuses_machines_associations[m]) / 256.0) * int(float(row['no_cicli']))}"
+                )
+                kg_per_levata[m, row['codarticolo']] = int(
+                    (float(row['ore_levata']) * float(row['kg_ora']))
+                    * float(fuses_machines_associations[m])
+                    / 256.0
+                )
     # breakpoint()
     return (
         common_products,

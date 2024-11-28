@@ -1,3 +1,4 @@
+import functools
 import gradio as gr
 import pandas as pd
 import json
@@ -10,10 +11,19 @@ from solver import solve
 from data_init import init_csv_data, RunningProduct
 
 
-def upload_csv_file(file):
+def upload_csv_file(file, columns):
     if file is not None:
         try:
             df = pd.read_csv(file.name)
+            
+            # verify if the columns are at least the same as the ones in the csv file
+            for col in columns:
+                if col not in df.columns:
+                    return f"❌ Invalid CSV file. Please make sure it contains the following columns: {', '.join(columns)}"
+            
+            # filter out columns that are not in the columns list
+            df = df[columns]
+            
             return df
         except Exception as e:
             return f"Error reading CSV file: {str(e)}"
@@ -677,7 +687,7 @@ with gr.Blocks() as demo:
                 label="Upload `articoli_macchine.json`", type="filepath"
             )
             article_machine_content = gr.Code(
-                label="Edit `articoli_macchine.json` content", language="json"
+                label="Edit `articoli_macchine.json` content", language="json", max_lines=20
             )
             article_machine_file.change(
                 fn=upload_file,
@@ -699,7 +709,7 @@ with gr.Blocks() as demo:
                 label="Upload `macchine_info.json`", type="filepath"
             )
             machine_info_content = gr.Code(
-                label="Edit `macchine_info.json` content", language="json"
+                label="Edit `macchine_info.json` content", language="json", max_lines=20
             )
             machine_info_file.change(
                 fn=upload_file, inputs=machine_info_file, outputs=machine_info_content
@@ -718,37 +728,20 @@ with gr.Blocks() as demo:
             article_list_file = gr.File(
                 label="Upload `lista_articoli.csv`", type="filepath"
             )
-            article_list_content = gr.Dataframe(
-                label="Edit `lista_articoli.csv` content",
-                datatype=["str"] * 22,  # Adjust based on your CSV columns
-                headers=[
+            article_list_columns = [
                     "codarticolo",
-                    "descrizione",
-                    "anima",
-                    "copertura",
-                    "spire_reali",
-                    "velocita calcolata",
                     "kg_ora",
-                    "spandex",
-                    "ciclo",
                     "no_cicli",
                     "ore_levata",
-                    "Divisore",
-                    "peso elastomero",
-                    "Peso spola",
-                    "programma ribobinatura S",
-                    "programma ribobinatura Z",
-                    "programma termofissaggio",
-                    "kw tempo",
-                    "kw percentuale",
-                    "fine validita",
-                    "totale_ore",
-                    "totale_kg",
-                ],
+                ]
+            article_list_content = gr.Dataframe(
+                label="Edit `lista_articoli.csv` content",
+                datatype=["str","number","number","number"],  # Adjust based on your CSV columns
+                headers=article_list_columns,
                 row_count=10,  # Replaced max_rows with row_count
             )
             article_list_file.change(
-                fn=upload_csv_file,
+                fn=functools.partial(upload_csv_file, columns=article_list_columns),
                 inputs=article_list_file,
                 outputs=article_list_content,
             )
@@ -761,25 +754,26 @@ with gr.Blocks() as demo:
             )
 
         # Tab 4: Common Products
-        with gr.TabItem("Upload Common Products (CSV)"):
+        with gr.TabItem("Upload New Orders (CSV)"):
             gr.Markdown("### Upload and Edit `new_orders.csv`")
             common_products_file = gr.File(
                 label="Upload `new_orders.csv`", type="filepath"
             )
-            common_products_content = gr.Dataframe(
-                label="Edit `new_orders.csv` content",
-                datatype=["str"] * 5,  # Adjust based on your CSV columns
-                headers=[
+            common_products_columns = [
                     "cliente",
                     "cod_articolo",
                     "quantity",
                     "data inserimento",
                     "data consegna",
-                ],
+                ]
+            common_products_content = gr.Dataframe(
+                label="Edit `new_orders.csv` content",
+                datatype=["str","str","number","date","date"],  # Adjust based on your CSV columns
+                headers=common_products_columns,
                 row_count=10,  # Replaced max_rows with row_count
             )
             common_products_file.change(
-                fn=upload_csv_file,
+                fn=functools.partial(upload_csv_file, columns=common_products_columns),
                 inputs=common_products_file,
                 outputs=common_products_content,
             )
@@ -797,20 +791,17 @@ with gr.Blocks() as demo:
             running_products_file = gr.File(
                 label="Upload `running_products.csv`", type="filepath"
             )
+            running_products_columns = [
+                "EMPTY"
+            ]
             running_products_content = gr.Dataframe(
                 label="Edit `running_products.csv` content",
-                datatype=["str"] * 5,  # Adjust based on your CSV columns
-                headers=[
-                    "column1",
-                    "column2",
-                    "column3",
-                    "column4",
-                    "column5",
-                ],  # Replace with actual headers
+                datatype=["str"],  # Adjust based on your CSV columns
+                headers=running_products_columns,
                 row_count=10,  # Replaced max_rows with row_count
             )
             running_products_file.change(
-                fn=upload_csv_file,
+                fn=functools.partial(upload_csv_file, columns=running_products_columns),
                 inputs=running_products_file,
                 outputs=running_products_content,
             )

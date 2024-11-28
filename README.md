@@ -2,144 +2,192 @@
 
 ## Overview
 
-This README provides an introduction to the configuration and input data required for initialize the solver.
+LeMur Scheduler is a Python-based optimization tool designed to solve scheduling problems using Google's OR-Tools CP-SAT solver. The project incorporates evolutionary algorithms (EAs) for refinement, focusing on job scheduling, machine assignments, and constraints like maintenance, operator availability, and production deadlines.
 
+The solution supports both a graphical user interface (GUI) for managing inputs and outputs and a comprehensive backend for performing advanced optimization tasks.
 
-## Structure
-- `code`
-```
-code/
-┣ __init__.py
-┣ data_init.py
-┣ data_plotting.py
-┣ ga_refiner.py
-┣ ga_utils.py
-┣ solver.py
-┗ utils.py
-```
+---
 
-- `data`
-```
-data/
-┣ input/
-┃ ┣ xlsx/
-┃ ┃ ┣ lista_articoli.xlsx
-┃ ┃ ┗ storico_filtrato.xlsx
-┃ ┣ Gruppi_Macchine_per_articoli.json
-┃ ┣ lista_articoli.csv
-┃ ┣ storico_Lemur.csv
-┃ ┣ storico_filtrato.csv
-┃ ┣ storico_ordini.csv
-┃ ┗ storico_pianificazione.csv
-┣ utils/
-┃ ┣ articoli.json
-┃ ┣ articoli_macchine.json
-┃ ┣ articoli_macchine_storico.json
-┃ ┣ gruppi_macchine.json
-┃ ┣ macchine_articoli.json
-┃ ┣ macchine_info.json
-┃ ┣ ordini_per_client.json
-┃ ┣ quantity_per_client.csv
-┃ ┣ tot_per_client.json
-┃ ┗ uso_per_articolo.json
-┣ valid/
-┃ ┣ lista_articoli.csv
-┃ ┗ storico_ordini.csv
-┗ new_orders.csv
-```
-- `output`
-- `plots`
+## Repository Structure
+
+### Main Folders and Files
+- **web_app/**: Contains the Gradio-based web interface and essential logic.
+    - `app.py`: The entry point for the web application.
+    - Supporting Python files:
+        - `data_init.py`: Handles data preprocessing and initialization.
+        - `solver.py`: Contains the main optimization solver logic.
+        - `ga_refiner.py`: Implements genetic algorithm-based refinement for schedules.
+        - `ga_utils.py`: Utility functions for evolutionary algorithms.
+        - `utils.py`: General helper functions.
+- **code/**: Contains the core solver logic and supporting files.
+    - `solver.py`: Main solver logic for scheduling problems.
+    - Supporting Python files:
+        - `data_init.py`: Data preprocessing and initialization.
+        - `ga_refiner.py`: Genetic algorithm-based refinement for schedules.
+        - `ga_utils.py`: Utility functions for evolutionary algorithms.
+        - `utils.py`: General helper functions.
+        - `data_plotting.py`: Functions for generating Gantt charts.
+- **data/**: Contains script to process the data provided from Lemur to generate the required input files and simulate orders.
+
+---
 
 ## Features
 
-- **Optimization Goals**: ...
-- **Constraint Handling**: Handles advanced constraints such as machine velocities, maintenance windows, and holidays.
+1. **Optimization Goals**:
+   - Minimize makespan while balancing workload.
+   - Optimize machine and operator utilization.
+   
+2. **Constraint Handling**:
+   - Machine compatibility.
+   - Shift and operator scheduling.
+   - Maintenance windows and holidays.
 
+3. **Evolutionary Algorithm Refinement**:
+   - Genetic algorithm to refine solutions.
+   - Handles complex scenarios like overlapping operations.
 
-## Requirements
+4. **Interactive GUI**:
+   - Upload and edit CSV/JSON input files.
+   - Configure solver parameters.
+   - Visualize schedules as Gantt charts.
+
+---
+
+## Setup
 
 ### Dependencies
-
-- **Python Packages**:
-  - `ortools.sat.python.cp_model`: Google's OR-Tools for constraint programming.
-  - `argparse`: For parsing command-line arguments.
-  - `google.protobuf.text_format`: For text formatting in protobufs.
-  - Custom modules: 
-    - `data_init` (Handles data preprocessing and initialization)
-    - `data_plotting` (Optional: For visualizing schedules)
-    - `utils` (General utility functions)
-    - `ga_refiner` (For genetic algorithm-based refinement)
-
-Install required packages using `pip install ortools protobuf`.
-
-## Inputs 
+Install the required Python packages:
+```bash
+pip install ortools gradio matplotlib pandas plotly inspyred
+```
 
 ### Files
+The following input files are required:
+- `new_orders.csv`: Defines the list of jobs to be scheduled.
+- `lista_articoli.csv`: Provides production statistics for each article.
+- `articoli_macchine.json`: Defines the compatibility between articles and machines.
+- `macchine_info.json`: Contains machine-specific details.
 
+---
 
+## How to Use
 
-1. **Path Variables**
-    *str containing the path*
-    -
-    - `COMMON_P_PATH` : csv with the job list to be scheduled 
-    - `J_COMPATIBILITY_PATH` : json with the compatibility between jobs and machines
-    - `M_COMPATIBILITY_PATH` : json with the compatibility between machines and jobs
-    - `M_INFO_PATH` : json containing the info about every machine (like n°fusi)
-    - `ARTICLE_LIST_PATH` : csv containing all the production statistics about each article that can be produced
+### Running the Web Interface
+Run the following command to start the Gradio-based GUI while inside the `web_app/` directory:
+```bash
+python app.py
+```
 
-2. **Files for Product-Machine Compatibility**
-    - `data/new_orders.csv`: List of new orders.
-    - `data/utils/articoli_macchine.json`: Mapping of articles to compatible machines.
-    - `data/utils/macchine_articoli.json`: Mapping of machines to compatible articles.
-    - `data/utils/macchine_info.json`: Additional machine-specific information.
-    - `data/valid/lista_articoli.csv`: A validated list of articles.
+### GUI Features
+1. **Upload Input Files**:
+   - Upload and edit CSV/JSON files.
+   - Save modified data back to the appropriate files.
 
-3. **Output Files**:
-    - `output/schedule.txt`: File to save the initial scheduling output.
-    - `output/refined_schedule.txt`: File to save the refined schedule.
+2. **Configure Solver Parameters**:
+   - Adjust scheduling horizon, shift times, and operator availability.
+   - Define costs for setup, loading, and unloading operations.
 
+3. **Run the Solver**:
+   - Execute the scheduler and view outputs in real-time.
+   - Visualize results as Gantt charts.
 
-### Variables
+---
 
-- `MAKESPAN_SOLVER_TIMEOUT` : For how long the solver can go before early stopping. 60 seconds default
-- `CYCLE_OPTIM_SOLVER_TIMEOUT` : For how long the optimizer part of the solver can go before early stopping. 60 seconds default
-- `GENETIC_REFINEMENT` : Choose if use the EA refinement or not. True default
+## Inputs
 
-- `num_machines` : the number of machines available for the solver. 72 default 
-
-- `horizon_days` : the number of days available for the desired scheduling
-- `num_operator_groups` : 2 default
-- `num_operators_per_group`: 4 default
-- `costs` : tuple containing the specifications for the costs used in the SETTING, LOAD and UNLOAD phases.
-   ```
-    costs=(
-    setup_cost,                                      # Setup time
-    load_hours_fuso_person / num_operators_per_group,  # load time for 1 "fuso"
-    unload_hours_fuso_person / num_operators_per_group   # Unload time for 1 "fuso"
-    )
-  ```
-
-### Exceptions 
-
-- `broken_machines`: list of broken machines on top on those no job can be scheduled
-- `scheduled_maintenances`: dict of the scheduled maintenances where no job can be scheduled on a specific machine in a specific time.
-    ```
-    scheduled_maintenances = {
-        # machine : [(start, duration)],
-        1 : [(50, 150)]
+### Required Input Files
+1. **`new_orders.csv`**:
+   - Format: 
+        - cliente
+        - cod_articolo
+        - quantity
+        - data inserimento
+        - data consegna`
+   - Example: `SCORTA, 4407DN, 472, 2025-04-20, 2025-08-06`
+2. **`lista_articoli.csv`**:
+   - Production data for each article:
+        - codarticolo
+        - kg_ora
+        - no_cicli
+        - ore_levata
+   - Example: `10353ZF, 1.87, 2, 96.0`
+3. **`articoli_macchine.json`**:
+   - Compatibility between articles and machines.
+   - Example:
+   ```json
+     {
+        "2277DN mini": [1,2,4,25,70],
+     }
+     ```
+4. **`macchine_info.json`**:
+   - Contains the `n_fusi` for each machine.
+   - Example:
+    ```json
+    {
+        "1": {
+            "n_fusi": "392",
+        },
     }
     ```
-- `festivities`: list of the days (ordered starting from 0 == today) where no operators are available
+---
+
+## Outputs
+
+1. **Schedules**:
+   - `output/schedule.txt`: Initial schedule.
+   - `output/refined_schedule.txt`: Refined schedule after GA optimization.
+
+2. **Visualizations**:
+   - Gantt charts for visualizing machine schedules.
+
+---
+
+## Customization
+
+### Solver Parameters
+Configure the solver by adjusting the following:
+- **Time Units**:
+  - Set time granularity (e.g., 24, 48, or 96 units per day).
+- **Operator Configuration**:
+  - Define the number of operator groups and members per group.
+- **Costs**:
+  - Adjust costs for setup, load, and unload phases.
+
+### Exceptions
+- Define `broken_machines`, `scheduled_maintenances`, and `festive_days` to customize scheduling constraints.
+
+---
 
 ## Error Handling
 
-- **Missing Files**: Ensure all input files are correctly placed to avoid `FileNotFoundError`.
+- **Missing Files**: Ensure all input files are available before running the solver.
+- **Empty Rows in CSVs**: The GUI automatically removes empty rows from uploaded files.
 
+---
 
-## Initialization Details
+## Example Usage
 
-The `init_csv_data()` function reads input data, processes compatibility matrices, and calculates costs. Products are grouped into:
-1. **Common Products**: Products available for immediate scheduling.
-2. **Running Products**: Products currently in progress.
+1. Upload the following:
+   - `new_orders.csv` (Job list).
+   - `lista_articoli.csv` (Article statistics).
+   - `articoli_macchine.json` (Compatibility data).
+   - `macchine_info.json` (Machine details).
+   
+2. Configure parameters:
+   - Set scheduling horizon and operator availability.
+   
+3. Run the solver:
+   - View results in the "Run Solver" tab.
 
-These are combined into `all_products` for scheduling.
+---
+
+## Developers
+
+This repository is created for **LeMur** for the Industrial AI challenge.
+Contributors:
+- Davide Cavicchini
+- Luca Cazzola
+- Alessandro Lorenzi
+- Emanuele Poiana
+- Andrea Decarlo
+- Silvano Maddonni
