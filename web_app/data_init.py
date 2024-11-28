@@ -1,6 +1,4 @@
 import math
-import random
-import copy
 import csv
 import json
 from datetime import datetime

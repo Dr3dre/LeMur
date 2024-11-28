@@ -1,5 +1,4 @@
 from ortools.sat.python import cp_model
-from google.protobuf import text_format
 import math
 
 from data_init import *

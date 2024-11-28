@@ -1,6 +1,5 @@
 from inspyred import ec
 from random import Random
-from intervaltree import IntervalTree
 from data_init import RunningProduct
 import matplotlib.pyplot as plt
 from ga_utils import *

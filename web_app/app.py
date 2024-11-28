@@ -2,13 +2,8 @@ import gradio as gr
 import pandas as pd
 import json
 import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-from datetime import datetime, timedelta
-import tempfile
 import os
 import plotly.graph_objects as go
-import numpy as np
-import matplotlib.patches as mpatches  # For legend elements
 
 # Import your solver and data_init functions
 from solver import solve
