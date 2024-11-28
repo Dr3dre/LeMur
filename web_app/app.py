@@ -10,6 +10,8 @@ import plotly.graph_objects as go
 from solver import solve
 from data_init import init_csv_data, RunningProduct
 
+os.makedirs("input", exist_ok=True)
+os.makedirs("output", exist_ok=True)
 
 def upload_csv_file(file, columns):
     if file is not None:
@@ -33,7 +35,7 @@ def upload_csv_file(file, columns):
 
 def save_csv_file(df, filename):
     try:
-        df.to_csv(filename, index=False)
+        df.to_csv("input/"+filename, index=False)
         return f"✅ `{filename}` saved successfully."
     except Exception as e:
         return f"❌ Error saving `{filename}`: {str(e)}"
@@ -51,13 +53,13 @@ def upload_file(file_path):
 
 
 def save_common_products(df):
-    return save_csv_file(df, "new_orders.csv")
+    return save_csv_file(df, "input/new_orders.csv")
 
 
 def save_article_machine_compatibility(content):
     try:
         data = json.loads(content)
-        with open("articoli_macchine.json", "w", encoding="utf-8") as f:
+        with open("input/articoli_macchine.json", "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4)
         return "✅ `articoli_macchine.json` saved successfully."
     except json.JSONDecodeError as e:
@@ -69,7 +71,7 @@ def save_article_machine_compatibility(content):
 def save_machine_info(content):
     try:
         data = json.loads(content)
-        with open("macchine_info.json", "w", encoding="utf-8") as f:
+        with open("input/macchine_info.json", "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4)
         return "✅ `macchine_info.json` saved successfully."
     except json.JSONDecodeError as e:
@@ -79,11 +81,11 @@ def save_machine_info(content):
 
 
 def save_article_list(df):
-    return save_csv_file(df, "lista_articoli.csv")
+    return save_csv_file(df, "input/lista_articoli.csv")
 
 
 def save_running_products(df):
-    return save_csv_file(df, "running_products.csv")
+    return save_csv_file(df, "input/running_products.csv")
 
 
 def run_solver(
@@ -104,10 +106,10 @@ def run_solver(
     run_ga,
 ):
     # Paths to the files saved above
-    COMMON_P_PATH = "new_orders.csv"
-    J_COMPATIBILITY_PATH = "articoli_macchine.json"
-    M_INFO_PATH = "macchine_info.json"
-    ARTICLE_LIST_PATH = "lista_articoli.csv"
+    COMMON_P_PATH = "input/new_orders.csv"
+    J_COMPATIBILITY_PATH = "input/articoli_macchine.json"
+    M_INFO_PATH = "input/macchine_info.json"
+    ARTICLE_LIST_PATH = "input/lista_articoli.csv"
 
     # Parse inputs
     try:

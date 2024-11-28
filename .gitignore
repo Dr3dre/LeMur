@@ -1,10 +1,10 @@
 *.code-workspace
 *.pyc
 LeMur
-web_app/new_orders.csv
-web_app/lista_articoli.csv
-web_app/macchine_info.json
+web_app/input/new_orders.csv
+web_app/input/lista_articoli.csv
+web_app/input/macchine_info.json
+web_app/input/articoli_macchine.json
 web_app/.gradio/certificate.pem
 web_app/output/refined_schedule.txt
 web_app/output/schedule.txt
-web_app/articoli_macchine.json
