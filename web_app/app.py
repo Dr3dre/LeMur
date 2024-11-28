@@ -48,9 +48,38 @@ def upload_file(file_path):
                 content = f.read()
             return content
         except Exception as e:
-            return f"Error reading file: {str(e)}"
-    return ""
+            raise f"Error reading file: {str(e)}"
+    else:
+        raise "No file uploaded."
 
+def upload_article_machine_compatibility(file_path):
+    # read the file and verify that it's a valid json file with "article_id" : [machine_id, ...] format
+    content = upload_file(file_path)
+    try:
+        data = json.loads(content)
+        if not all(isinstance(k, str) and isinstance(v, list) and isinstance(i,int) for k, v in data.items() for i in v):
+            return "❌ Invalid JSON format. Please ensure the file is a dictionary with string keys and list values."
+        return content
+    except json.JSONDecodeError as e:
+        return f"❌ JSON Decode Error: {str(e)}"
+
+def upload_machine_info(file_path):
+    # read the file and verify that it's a valid json file with "machine_id" : { "n_fusi": int } format and remove any extra fields
+    content = upload_file(file_path)
+    try:
+        data = json.loads(content)
+        if not all(isinstance(k, str) and isinstance(v, dict) and "n_fusi" in v for k, v in data.items()):
+            return "❌ Invalid JSON format. Please ensure the file is a dictionary with integer keys and 'n_fusi' values."
+        
+        # remove any extra fields
+        for k, v in data.items():
+            data[k] = {"n_fusi": v["n_fusi"]}
+            
+        content = json.dumps(data, indent=4)
+        
+        return content
+    except json.JSONDecodeError as e:
+        return f"❌ JSON Decode Error: {str(e)}"
 
 def save_common_products(df):
     return save_csv_file(df, "input/new_orders.csv")
@@ -692,7 +721,7 @@ with gr.Blocks() as demo:
                 label="Edit `articoli_macchine.json` content", language="json", max_lines=20
             )
             article_machine_file.change(
-                fn=upload_file,
+                fn=upload_article_machine_compatibility,
                 inputs=article_machine_file,
                 outputs=article_machine_content,
             )
@@ -714,7 +743,9 @@ with gr.Blocks() as demo:
                 label="Edit `macchine_info.json` content", language="json", max_lines=20
             )
             machine_info_file.change(
-                fn=upload_file, inputs=machine_info_file, outputs=machine_info_content
+                fn=upload_machine_info,
+                inputs=machine_info_file, 
+                outputs=machine_info_content
             )
             save_machine_info_button = gr.Button("Save `macchine_info.json`")
             save_machine_info_status = gr.Textbox(label="Status", interactive=False)
