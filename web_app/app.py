@@ -76,12 +76,30 @@ def save_article_list(content):
     except Exception as e:
         return f"❌ Error saving `lista_articoli.csv`: {str(e)}"
 
-def run_solver():
+def save_running_products(content):
+    try:
+        with open("running_products.csv", "w", encoding='utf-8') as f:
+            f.write(content)
+        return "✅ `running_products.csv` saved successfully."
+    except Exception as e:
+        return f"❌ Error saving `running_products.csv`: {str(e)}"
+
+def run_solver(horizon_days, broken_machines, maintenance, time_units_in_a_day, start_shift, end_shift, festive_days, num_operators_groups, num_operators_per_group, setup_cost, load_cost, unload_cost, max_seconds, second_run_seconds, run_ga):
     # Paths to the files saved above
     COMMON_P_PATH = "new_orders.csv"
     J_COMPATIBILITY_PATH = "articoli_macchine.json"
     M_INFO_PATH = "macchine_info.json"
     ARTICLE_LIST_PATH = "lista_articoli.csv"
+    
+    # take the values from the configuration tab
+    broken_machines = [int(x) for x in broken_machines.split(",") if x.strip()]
+    festive_days = [int(x) for x in festive_days.split(",") if x.strip()]
+    load_cost = load_cost / 256  # Convert to cost per fuso
+    unload_cost = unload_cost / 256  # Convert to cost per fuso
+    maintenance = [tuple(map(int, x.strip().strip("()").split(","))) for x in maintenance.split("),") if x.strip()]
+    maintenance_schedule = {}
+    for machine, day, duration in maintenance:
+        maintenance_schedule[machine] = maintenance_schedule.get(machine, []) + [(day, duration)]
 
     # Check if all required files exist
     required_files = [COMMON_P_PATH, J_COMPATIBILITY_PATH, M_INFO_PATH, ARTICLE_LIST_PATH]
@@ -96,7 +114,7 @@ def run_solver():
             J_COMPATIBILITY_PATH,
             M_INFO_PATH,
             ARTICLE_LIST_PATH,
-            costs=(4, 6/256, 2/256)
+            costs=(setup_cost, load_cost, unload_cost)
         )
 
         # Solve the scheduling problem
@@ -110,6 +128,17 @@ def run_solver():
             base_levata_art_cost,
             standard_levate_art,
             kg_per_levata_art,
+            broken_machines,
+            maintenance_schedule,
+            num_operators_groups,
+            festive_days,
+            horizon_days,
+            time_units_in_a_day,
+            start_shift,
+            end_shift,
+            max_seconds,
+            second_run_seconds,
+            run_ga
         )
 
         # Convert the schedule to a string to display
@@ -143,7 +172,7 @@ def run_solver():
                         horizon = max(horizon, prod.unload_end[c,l])
 
         # Define prohibited_intervals (if available), otherwise set to empty list
-        prohibited_intervals = []
+        prohibited_intervals = schedule.invalid_intervals
 
         # Define time_units_from_midnight (if available), otherwise set to 0
         time_units_from_midnight = 0
@@ -525,21 +554,8 @@ def plot_gantt_chart_1(production_schedule, max_cycles, num_machines, horizon, p
 with gr.Blocks() as demo:
     gr.Markdown("## LeMur Scheduling Web App")
     with gr.Tabs():
-        # Tab 1: Common Products
-        with gr.TabItem("Upload Common Products (CSV)"):
-            gr.Markdown("### Upload and Edit `new_orders.csv`")
-            common_products_file = gr.File(label="Upload `new_orders.csv`")
-            common_products_content = gr.TextArea(label="Edit `new_orders.csv` content", lines=20)
-            common_products_file.change(fn=upload_file, inputs=common_products_file, outputs=common_products_content)
-            save_common_products_button = gr.Button("Save `new_orders.csv`")
-            save_common_products_status = gr.Textbox(label="Status", interactive=False)
-            save_common_products_button.click(
-                fn=save_common_products,
-                inputs=common_products_content,
-                outputs=save_common_products_status
-            )
-
-        # Tab 2: Article-Machine Compatibility
+    
+        # Tab 1: Article-Machine Compatibility
         with gr.TabItem("Upload Article-Machine Compatibility (JSON)"):
             gr.Markdown("### Upload and Edit `articoli_macchine.json`")
             article_machine_file = gr.File(label="Upload `articoli_macchine.json`")
@@ -553,7 +569,7 @@ with gr.Blocks() as demo:
                 outputs=save_article_machine_status
             )
 
-        # Tab 3: Machine Info
+        # Tab 2: Machine Info
         with gr.TabItem("Upload Machine Info (JSON)"):
             gr.Markdown("### Upload and Edit `macchine_info.json`")
             machine_info_file = gr.File(label="Upload `macchine_info.json`")
@@ -567,7 +583,7 @@ with gr.Blocks() as demo:
                 outputs=save_machine_info_status
             )
 
-        # Tab 4: Article List
+        # Tab 3: Article List
         with gr.TabItem("Upload Article List (CSV)"):
             gr.Markdown("### Upload and Edit `lista_articoli.csv`")
             article_list_file = gr.File(label="Upload `lista_articoli.csv`")
@@ -581,15 +597,88 @@ with gr.Blocks() as demo:
                 outputs=save_article_list_status
             )
 
-        # Tab 5: Run Solver
+        # Tab 4: Common Products
+        with gr.TabItem("Upload Common Products (CSV)"):
+            gr.Markdown("### Upload and Edit `new_orders.csv`")
+            common_products_file = gr.File(label="Upload `new_orders.csv`")
+            common_products_content = gr.TextArea(label="Edit `new_orders.csv` content", lines=20)
+            common_products_file.change(fn=upload_file, inputs=common_products_file, outputs=common_products_content)
+            save_common_products_button = gr.Button("Save `new_orders.csv`")
+            save_common_products_status = gr.Textbox(label="Status", interactive=False)
+            save_common_products_button.click(
+                fn=save_common_products,
+                inputs=common_products_content,
+                outputs=save_common_products_status
+            )
+        
+        # Tab 5: Running Products
+        with gr.TabItem("Upload Running Products (CSV)"):
+            gr.Markdown("### Upload and Edit `running_products.csv`")
+            running_products_file = gr.File(label="Upload `running_products.csv`")
+            running_products_content = gr.TextArea(label="Edit `running_products.csv` content", lines=20)
+            running_products_file.change(fn=upload_file, inputs=running_products_file, outputs=running_products_content)
+            save_running_products_button = gr.Button("Save `running_products.csv`")
+            save_running_products_status = gr.Textbox(label="Status", interactive=False)
+            save_running_products_button.click(
+                fn=save_running_products,
+                inputs=running_products_content,
+                outputs=save_running_products_status
+            )
+
+        # Tab 6: Solver Configuration
+        with gr.TabItem("Solver Configuration"): 
+            gr.Markdown("## General Configuration")
+            # max seconds for the first run of the solver
+            max_seconds = gr.Slider(label="Max Seconds for makespan minimization", minimum=30, maximum=60*10, step=1, value=60)
+            # second run of solve time
+            second_run_seconds = gr.Slider(label="Max seconds for compactness refinement", minimum=0, maximum=60*10, step=1, value=60)
+            # run GA, num of generations and population size
+            run_ga = gr.Slider(label="Genetic refinement number of generations", minimum=0, maximum=500, step=1, value=250)
+            
+            # scheduling horizon in days
+            horizon_days = gr.Slider(label="Scheduling Horizon (Days)", minimum=1, maximum=365, step=1, value=30)
+            # time units in a day
+            time_units_in_a_day = gr.Radio(label="Time Units in a Day", choices=[24, 48, 96], value=24)
+            gr.Markdown("Ensure all the following values are set according to the time units in a day!\n\n")
+            
+            gr.Markdown("## Machine Configurations")
+            # broken machines
+            gr.Markdown("Enter the broken machines as a comma-separated list of integers (e.g., 1, 3, 5).")
+            broken_machines = gr.Textbox(label="Broken Machines", placeholder="e.g., 1, 3, 5", value="")
+            # maintenance, list of tuples (machine, time_unit_start, duration)
+            gr.Markdown("Enter the maintenance schedule as a comma-separated list of tuples (machine, time_unit_start, duration).")
+            maintenance = gr.Textbox(label="Maintenance", placeholder="e.g., (1, 78, 2), (3, 10, 3)", value="")
+            
+            gr.Markdown("## Operator Configurations")
+            # start and end shift times
+            gr.Markdown("Configure the working shift timings and the festive days (as a list of days, note that sundays are already accounted for).")
+            start_shift = gr.Slider(label="Start Shift", minimum=0, maximum=23, step=1, value=8)
+            end_shift = gr.Slider(label="End Shift", minimum=0, maximum=23, step=1, value=16)
+            # festive days (excluding sundays) as a list of integers [0,1,8,...]
+            festive_days = gr.Textbox(label="Festive Days", placeholder="e.g., 1, 8, 25", value="")
+            # operators
+            gr.Markdown("Enter the number of operators available for scheduling.")
+            num_operators_groups = gr.Slider(label="Number of Operators groups", minimum=1, maximum=5, step=1, value=1)
+            num_operators_per_group = gr.Slider(label="Operators per Group", minimum=1, maximum=5, step=1, value=1)
+            # cost factors
+            gr.Markdown("""
+Enter the cost factors for setup, load, and unload operations.
+Setup cost is fixed for all machines.
+Load and unload costs are the time units needed for a single person person to load a single machine with 256 fusi.""")
+            setup_cost = gr.Slider(label="Setup Cost", minimum=0, maximum=10, step=0.1, value=4)
+            load_cost = gr.Slider(label="Load Cost", minimum=0, maximum=10, step=0.1, value=6)
+            unload_cost = gr.Slider(label="Unload Cost", minimum=0, maximum=10, step=0.1, value=2)
+
+        # Tab 7: Run Solver
         with gr.TabItem("Run Solver"):
             gr.Markdown("### Execute the Scheduler and View Results")
+            # Run the solver
             run_solver_button = gr.Button("Run Solver")
             run_solver_status = gr.Textbox(label="Solver Output", lines=10, interactive=False)
             gantt_output = gr.Plot(label="Gantt Chart")
             run_solver_button.click(
                 fn=run_solver,
-                inputs=None,
+                inputs=[horizon_days, broken_machines, maintenance, time_units_in_a_day, start_shift, end_shift, festive_days, num_operators_groups, num_operators_per_group, setup_cost, load_cost, unload_cost, max_seconds, second_run_seconds, run_ga],
                 outputs=[run_solver_status, gantt_output]
             )
 
@@ -598,6 +687,7 @@ with gr.Blocks() as demo:
     - Ensure all required files are uploaded and saved before running the solver.
     - The Gantt chart visualizes the scheduling of operations on machines over time.
     - Time units are based on the solver's configuration (e.g., hours).
+    - Machines are 1-indexed.
     """)
 
 # Launch the Gradio app

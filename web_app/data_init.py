@@ -74,9 +74,10 @@ class Schedule(object):
     '''
     A schedule is the final result of the Job Scheduling Problem (JSP).
     '''
-    def __init__(self, products):
+    def __init__(self, products, invalid_intervals = []) :
         # Reference to products class instances, ensuring proper types
         self.products = products
+        self.invalid_intervals = invalid_intervals
         for _, prod in self.products:
             if not isinstance(prod, (Product, RunningProduct)):
                 raise ValueError("Invalid product type")
@@ -181,7 +182,7 @@ def init_csv_data(common_p_path: str, j_compatibility_path: str, m_info_path: st
                 str_out += '\n'
                 # print(f'start_date:  {row[3]} - type: {type(row[3])}')
                 start_date, due_date = date_hours_parser(row[3], row[4])
-                common_products.append(Product(idx, row[1], int(float(row[2])), start_date, due_date))
+                common_products.append(Product(row[0]+"_"+row[1]+"_"+str(idx), row[1], int(float(row[2])), start_date, due_date))
     # 2. running_products
     # there is nothing here for now
 

@@ -57,6 +57,8 @@ class GA_Refiner:
         ga.selector = ec.selectors.rank_selection
         ga.replacer = ec.replacers.comma_replacement
 
+        MIDPOINT = int(args["generations"] / 2) # midpoint of the sigmoid function expressed in generations
+
         # Probability of applying _compact_and_shift mutation
         # It degrades over generations and is proportional to the
         # number of machines in the input space
@@ -77,7 +79,7 @@ class GA_Refiner:
             num_selected=int(POPULATION_SIZE * 0.5),
             mutation_rate=1,
             crossover_rate=0,
-            max_generations=GENERATIONS,
+            max_generations=args["generations"] if "generations" in args else GENERATIONS,
             **args
         )
 

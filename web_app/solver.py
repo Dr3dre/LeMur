@@ -1,22 +1,11 @@
 from ortools.sat.python import cp_model
 from google.protobuf import text_format
-import argparse
 import math
 
 from data_init import *
 from utils import *
 import os
 from ga_refiner import GA_Refiner
-
-# Parsing args.
-parser = argparse.ArgumentParser(description="Job Scheduling Optimization")
-parser.add_argument(
-    "--minimize",
-    type=str,
-    default="makespan",
-    help="The optimization criterion: ['makespan'].",
-)
-args = parser.parse_args()
 
 """
 INPUT DATA
@@ -25,8 +14,7 @@ INPUT DATA
 # timouts for solver
 MAKESPAN_SOLVER_TIMEOUT = 60
 CYCLE_OPTIM_SOLVER_TIMEOUT = 60
-GENETIC_REFINEMENT = True
-PLOT_GANTT = True
+GENERATIONS = 250
 
 USE_ADD_ELEMENT = False
 
@@ -36,47 +24,7 @@ OUTPUT_REFINED_SCHEDULE = "output/refined_schedule.txt"
 
 # constraints = [] # list of constraints for debugging
 
-broken_machines = []  # put here the number of the broken machines
-scheduled_maintenances = {
-    # machine : [(start, duration), ...]
-    # 1 : [(0, 10), (100, 24), ...],
-}
-festivities = [
-    # day from scheduling start (0 is the current day, 1 is tomorrow, etc.)
-    # 0,1,2,...
-]
-
-num_machines = 72
 machine_velocities = 1
-
-hour_resolution = 1  # 1: hours, 2: half-hours, 4: quarter-hours, ..., 60: minutes
-horizon_days = 300
-time_units_in_a_day = (
-    24 * hour_resolution
-)  # 24 : hours, 48 : half-hours, 96 : quarter-hours, ..., 1440 : minutes
-horizon = horizon_days * time_units_in_a_day
-
-start_shift = int(
-    8 * hour_resolution
-)  # 8:00 MUST BE COMPATIBLE WITH time_units_in_a_day
-end_shift = int(
-    16 * hour_resolution
-)  # 16:00 MUST BE COMPATIBLE WITH time_units_in_a_day
-num_operator_groups = 2
-num_operators_per_group = 4
-
-setup_cost = 4 * hour_resolution
-load_hours_fuso_person = 6 / 256 * hour_resolution
-unload_hours_fuso_person = 2 / 256 * hour_resolution
-
-costs = (
-    setup_cost,  # Setup time
-    load_hours_fuso_person / num_operators_per_group,  # Load time for 1 "fuso"
-    unload_hours_fuso_person / num_operators_per_group,  # Unload time for 1 "fuso"
-)
-
-if machine_velocities % 2 == 0:
-    raise ValueError("Machine velocities must be odd numbers.")
 
 
 def solve(
@@ -89,6 +37,17 @@ def solve(
     base_levata_art_cost,
     standard_levate_art,
     kg_per_levata_art,
+    broken_machines,
+    scheduled_maintenances,
+    num_operator_groups,
+    festivities,
+    horizon_days,
+    time_units_in_a_day,
+    start_shift,
+    end_shift,
+    timeout=MAKESPAN_SOLVER_TIMEOUT,
+    timeout_cycle=CYCLE_OPTIM_SOLVER_TIMEOUT,
+    generations=GENERATIONS,
 ):
     """
     SOLVER
@@ -96,17 +55,30 @@ def solve(
     Args:
         common_products (list): list of common products
         running_products (list): list of running products
-        article_to_machine_comp (dict): article to machine compatibility
+        article_to_machine_comp (dict): article to machine compatibility {article: [machines]}
         base_setup_art_cost (dict): base setup cost for each article
         base_load_art_cost (dict): base load cost for each article
         base_unload_art_cost (dict): base unload cost for each article
         base_levata_art_cost (dict): base levata cost for each article
         standard_levate_art (dict): standard levate for each article
         kg_per_levata_art (dict): kg per levata for each article
+        broken_machines (list): list of broken machines
+        scheduled_maintenances (list): list of scheduled maintenances
+        num_operator_groups (int): number of operator groups
+        festivities (list): list of festivities (days)
+        horizon_days (int): horizon days
+        time_units_in_a_day (int): time units in a day
+        start_shift (int): start shift
+        end_shift (int): end shift
+        timeout (int): timeout for makespan solver
+        timeout_cycle (int): timeout for cycle optimization solver
+        generations (int): number of generations for genetic algorithm
 
     Returns:
         dict: the schedule
     """
+    horizon = horizon_days * time_units_in_a_day
+    num_machines = max([m for a, ms in article_to_machine_comp.items() for m in ms])
 
     # Make joint tuples (for readability purp.)
     common_products = [(prod.id, prod) for prod in common_products]
@@ -205,7 +177,7 @@ def solve(
                 valid = True
         if not valid:
             print("EMPTY DOMAIN FOR ARTICLE", prod.article)
-            raise ValueError
+            raise ValueError(f"EMPTY DOMAIN FOR ARTICLE {prod.article}. This might mean that the horizon is too short for the dates provided for the product.")
 
         # generate worktime domain for p
         worktime_domain[p] = cp_model.Domain.FromIntervals(adjusted_intervals)
@@ -1084,7 +1056,7 @@ def solve(
 
     # Solve the model
     solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = MAKESPAN_SOLVER_TIMEOUT
+    solver.parameters.max_time_in_seconds = timeout
     # solver.parameters.log_search_progress = True
     solver.parameters.num_search_workers = os.cpu_count()
     # solver.parameters.add_lp_constraints_lazily = True
@@ -1126,7 +1098,7 @@ def solve(
             )
         )
 
-        solver_new.parameters.max_time_in_seconds = CYCLE_OPTIM_SOLVER_TIMEOUT
+        solver_new.parameters.max_time_in_seconds = timeout_cycle
         # avoid presolve
         solver_new.parameters.cp_model_presolve = False
         # solver_new.parameters.log_search_progress = True
@@ -1140,15 +1112,12 @@ def solve(
             status = stat
             solver = solver_new
 
-    if status == cp_model.UNKNOWN or status == cp_model.MODEL_INVALID:
+    if status == cp_model.UNKNOWN or status == cp_model.MODEL_INVALID or status == cp_model.INFEASIBLE:
         print("ERROR : Solver status is unknown or model is invalid.")
-        print(
-            "Hints => \n  Horizon days might be too short, try increasing it.\n  Input might be invalid.\nBreaking execution..."
-        )
         model_proto = model.Proto()
         variables = model_proto.variables
         constraints = model_proto.constraints
-        raise ValueError("Solver status is unknown or model is invalid.")
+        raise ValueError("Solver status is unknown or model is invalid.\n Hints => \n  Horizon days might be too short, try increasing it.\n  Input might be invalid.\nBreaking execution")
 
     """
         PLOTTING
@@ -1207,7 +1176,7 @@ def solve(
                         )
                         prod.unload_gap[c, l] = solver.Value(gaps_unload[p, c, l])
 
-    production_schedule = Schedule(all_products)
+    production_schedule = Schedule(all_products, invalid_intervals=prohibited_intervals)
     # save production schedule string form to file
     with open(OUTPUT_SCHEDULE, "w") as f:
         f.write(str(production_schedule))
@@ -1219,7 +1188,7 @@ def solve(
     """
         GENETIC REFINEMENT
         """
-    if GENETIC_REFINEMENT:
+    if generations > 0:
         # Dictionary of variables necessary to GA computation
         vars = {
             # machine info
@@ -1244,6 +1213,7 @@ def solve(
             # products and operators
             "num_operator_groups": num_operator_groups,
             "prod_to_machine_comp": prod_to_machine_comp,
+            "generations": generations,
         }
         # Refine it
         ga_refiner = GA_Refiner()
@@ -1274,7 +1244,7 @@ def solve(
         )
 
         # Plot refinement
-        production_schedule = Schedule(refinement)
+        production_schedule = Schedule(refinement, invalid_intervals=prohibited_intervals)
         # save production schedule string form to file
         with open(OUTPUT_REFINED_SCHEDULE, "w") as f:
             f.write(str(production_schedule))
@@ -1289,13 +1259,54 @@ if __name__ == "__main__":
     M_INFO_PATH = "../data/utils/macchine_info.json"
     ARTICLE_LIST_PATH = "../data/valid/lista_articoli.csv"
 
+    broken_machines = []  # put here the number of the broken machines
+    scheduled_maintenances = {
+        # machine : [(start, duration), ...]
+        # 1 : [(0, 10), (100, 24), ...],
+    }
+    festivities = [
+        # day from scheduling start (0 is the current day, 1 is tomorrow, etc.)
+        # 0,1,2,...
+    ]
+
+    hour_resolution = 1  # 1: hours, 2: half-hours, 4: quarter-hours, ..., 60: minutes
+    horizon_days = 1000
+    time_units_in_a_day = (
+        24 * hour_resolution
+    )  # 24 : hours, 48 : half-hours, 96 : quarter-hours, ..., 1440 : minutes
+    horizon = horizon_days * time_units_in_a_day
+
+    start_shift = int(
+        8 * hour_resolution
+    )  # 8:00 MUST BE COMPATIBLE WITH time_units_in_a_day
+    end_shift = int(
+        16 * hour_resolution
+    )  # 16:00 MUST BE COMPATIBLE WITH time_units_in_a_day
+    num_operator_groups = 2
+    num_operators_per_group = 4
+
+    setup_cost = 4 * hour_resolution
+    load_hours_fuso_person = 6 / 256 * hour_resolution
+    unload_hours_fuso_person = 2 / 256 * hour_resolution
+
+    costs = (
+        setup_cost,  # Setup time
+        load_hours_fuso_person / num_operators_per_group,  # Load time for 1 "fuso"
+        unload_hours_fuso_person / num_operators_per_group,  # Unload time for 1 "fuso"
+    )
+
+    if machine_velocities % 2 == 0:
+        raise ValueError("Machine velocities must be odd numbers.")
+
+
+
     (
         common_products,
         running_products,
         article_to_machine_comp,
         base_setup_art_cost,
         base_load_art_cost,
-        base_unload_art_cost,
+        base_unload_art_cost, 
         base_levata_art_cost,
         standard_levate_art,
         kg_per_levata_art,
@@ -1317,4 +1328,12 @@ if __name__ == "__main__":
         base_levata_art_cost,
         standard_levate_art,
         kg_per_levata_art,
+        broken_machines,
+        scheduled_maintenances,
+        num_operator_groups,
+        festivities,
+        horizon_days,
+        time_units_in_a_day,
+        start_shift,
+        end_shift,
     )
