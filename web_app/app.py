@@ -129,8 +129,8 @@ def run_solver(
         )
 
     try:
-        load_cost = load_cost / 256  # Convert to cost per fuso
-        unload_cost = unload_cost / 256  # Convert to cost per fuso
+        load_cost = load_cost / 256  / num_operators_per_group      # Convert to cost per fuso
+        unload_cost = unload_cost / 256  / num_operators_per_group  # Convert to cost per fuso
     except Exception as e:
         return f"❌ Error processing load/unload costs: {str(e)}", None
 
