@@ -178,6 +178,8 @@ def init_csv_data(common_p_path: str, j_compatibility_path: str, m_info_path: st
         str_out = ""
         for idx, row in enumerate(csv_data):
             if idx > 0:
+                if row[1] == "":
+                    continue
                 str_out = str_out + ', '.join(row) 
                 str_out += '\n'
                 # print(f'start_date:  {row[3]} - type: {type(row[3])}')
@@ -228,6 +230,8 @@ def init_csv_data(common_p_path: str, j_compatibility_path: str, m_info_path: st
         for idx, row in enumerate(csv_data):
             # row[0] is the article code, row[10] is the hours needed for a single "levata"
             if idx > 0:
+                if row[0] == "":
+                    continue
                 # print(f'article: {row[0]}')
                 base_levata_cost[row[0]] = int(float(row[10]))
                 standard_levate[row[0]] = int(float(row[9]))

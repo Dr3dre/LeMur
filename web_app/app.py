@@ -14,37 +14,35 @@ import matplotlib.patches as mpatches  # For legend elements
 from solver import solve
 from data_init import init_csv_data, RunningProduct
 
-def upload_file(file):
+def upload_csv_file(file):
     if file is not None:
-        # If multiple files are uploaded, take the first one
-        if isinstance(file, list):
-            file = file[0]
+        try:
+            df = pd.read_csv(file.name)
+            return df
+        except Exception as e:
+            return f"Error reading CSV file: {str(e)}"
         
-        # If file is a dictionary with 'data' key
-        if isinstance(file, dict) and 'data' in file:
-            file_path = file['data']
-        elif isinstance(file, str):
-            # If file is a path string
-            file_path = file
-        else:
-            return "Unsupported file format."
-        
+    return pd.DataFrame(), 
+
+def save_csv_file(df, filename):
+    try:
+        df.to_csv(filename, index=False)
+        return f"✅ `{filename}` saved successfully."
+    except Exception as e:
+        return f"❌ Error saving `{filename}`: {str(e)}"
+
+def upload_file(file_path):
+    if file_path:
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
             return content
         except Exception as e:
             return f"Error reading file: {str(e)}"
-    
     return ""
-    
-def save_common_products(content):
-    try:
-        with open("new_orders.csv", "w", encoding='utf-8') as f:
-            f.write(content)
-        return "✅ `new_orders.csv` saved successfully."
-    except Exception as e:
-        return f"❌ Error saving `new_orders.csv`: {str(e)}"
+
+def save_common_products(df):
+    return save_csv_file(df, "new_orders.csv")
 
 def save_article_machine_compatibility(content):
     try:
@@ -68,35 +66,48 @@ def save_machine_info(content):
     except Exception as e:
         return f"❌ Error saving `macchine_info.json`: {str(e)}"
 
-def save_article_list(content):
-    try:
-        with open("lista_articoli.csv", "w", encoding='utf-8') as f:
-            f.write(content)
-        return "✅ `lista_articoli.csv` saved successfully."
-    except Exception as e:
-        return f"❌ Error saving `lista_articoli.csv`: {str(e)}"
+def save_article_list(df):
+    return save_csv_file(df, "lista_articoli.csv")
 
-def save_running_products(content):
-    try:
-        with open("running_products.csv", "w", encoding='utf-8') as f:
-            f.write(content)
-        return "✅ `running_products.csv` saved successfully."
-    except Exception as e:
-        return f"❌ Error saving `running_products.csv`: {str(e)}"
+def save_running_products(df):
+    return save_csv_file(df, "running_products.csv")
 
-def run_solver(horizon_days, broken_machines, maintenance, time_units_in_a_day, start_shift, end_shift, festive_days, num_operators_groups, num_operators_per_group, setup_cost, load_cost, unload_cost, max_seconds, second_run_seconds, run_ga):
+def run_solver(
+    horizon_days, broken_machines, maintenance, time_units_in_a_day, start_shift, end_shift, festive_days, 
+    num_operators_groups, num_operators_per_group, setup_cost, load_cost, unload_cost, max_seconds, 
+    second_run_seconds, run_ga
+):
     # Paths to the files saved above
     COMMON_P_PATH = "new_orders.csv"
     J_COMPATIBILITY_PATH = "articoli_macchine.json"
     M_INFO_PATH = "macchine_info.json"
     ARTICLE_LIST_PATH = "lista_articoli.csv"
     
-    # take the values from the configuration tab
-    broken_machines = [int(x) for x in broken_machines.split(",") if x.strip()]
-    festive_days = [int(x) for x in festive_days.split(",") if x.strip()]
-    load_cost = load_cost / 256  # Convert to cost per fuso
-    unload_cost = unload_cost / 256  # Convert to cost per fuso
-    maintenance = [tuple(map(int, x.strip().strip("()").split(","))) for x in maintenance.split("),") if x.strip()]
+    # Parse inputs
+    try:
+        broken_machines = [int(x) for x in broken_machines.split(",") if x.strip()]
+    except ValueError:
+        return "❌ Invalid input for Broken Machines. Please enter a comma-separated list of integers.", None
+
+    try:
+        festive_days = [int(x) for x in festive_days.split(",") if x.strip()]
+    except ValueError:
+        return "❌ Invalid input for Festive Days. Please enter a comma-separated list of integers.", None
+
+    try:
+        load_cost = load_cost / 256  # Convert to cost per fuso
+        unload_cost = unload_cost / 256  # Convert to cost per fuso
+    except Exception as e:
+        return f"❌ Error processing load/unload costs: {str(e)}", None
+
+    try:
+        maintenance = [
+            tuple(map(int, x.strip().strip("()").split(","))) 
+            for x in maintenance.split("),") if x.strip()
+        ]
+    except ValueError:
+        return "❌ Invalid input for Maintenance. Please enter a comma-separated list of tuples like (1,78,2), (3,10,3).", None
+
     maintenance_schedule = {}
     for machine, day, duration in maintenance:
         maintenance_schedule[machine] = maintenance_schedule.get(machine, []) + [(day, duration)]
@@ -141,6 +152,7 @@ def run_solver(horizon_days, broken_machines, maintenance, time_units_in_a_day, 
             run_ga
         )
 
+        print("Generated valid schedule")
         # Convert the schedule to a string to display
         schedule_str = str(schedule)
 
@@ -168,14 +180,16 @@ def run_solver(horizon_days, broken_machines, maintenance, time_units_in_a_day, 
                 horizon = max(horizon, prod.cycle_end[c])
                 # Also consider unload_end times
                 for l in range(prod.num_levate[c]):
-                    if (c,l) in prod.unload_end.keys():
-                        horizon = max(horizon, prod.unload_end[c,l])
+                    if (c, l) in prod.unload_end.keys():
+                        horizon = max(horizon, prod.unload_end[c, l])
 
         # Define prohibited_intervals (if available), otherwise set to empty list
-        prohibited_intervals = schedule.invalid_intervals
+        prohibited_intervals = schedule.invalid_intervals if hasattr(schedule, 'invalid_intervals') else []
 
         # Define time_units_from_midnight (if available), otherwise set to 0
-        time_units_from_midnight = 0
+        time_units_from_midnight = 0  # Update as per your requirements
+
+        print("Generating Gantt chart")
 
         # Call the plotting function
         fig = plot_gantt_chart_1(
@@ -187,6 +201,7 @@ def run_solver(horizon_days, broken_machines, maintenance, time_units_in_a_day, 
             time_units_from_midnight=time_units_from_midnight
         )
 
+        print("Generated Gantt chart")
         # Return the schedule and the Gantt chart figure
         return schedule_str, fig
 
@@ -558,8 +573,8 @@ with gr.Blocks() as demo:
         # Tab 1: Article-Machine Compatibility
         with gr.TabItem("Upload Article-Machine Compatibility (JSON)"):
             gr.Markdown("### Upload and Edit `articoli_macchine.json`")
-            article_machine_file = gr.File(label="Upload `articoli_macchine.json`")
-            article_machine_content = gr.TextArea(label="Edit `articoli_macchine.json` content", lines=20)
+            article_machine_file = gr.File(label="Upload `articoli_macchine.json`", type='filepath')
+            article_machine_content = gr.Code(label="Edit `articoli_macchine.json` content", language='json')
             article_machine_file.change(fn=upload_file, inputs=article_machine_file, outputs=article_machine_content)
             save_article_machine_button = gr.Button("Save `articoli_macchine.json`")
             save_article_machine_status = gr.Textbox(label="Status", interactive=False)
@@ -572,8 +587,8 @@ with gr.Blocks() as demo:
         # Tab 2: Machine Info
         with gr.TabItem("Upload Machine Info (JSON)"):
             gr.Markdown("### Upload and Edit `macchine_info.json`")
-            machine_info_file = gr.File(label="Upload `macchine_info.json`")
-            machine_info_content = gr.TextArea(label="Edit `macchine_info.json` content", lines=20)
+            machine_info_file = gr.File(label="Upload `macchine_info.json`", type='filepath')
+            machine_info_content = gr.Code(label="Edit `macchine_info.json` content", language='json')
             machine_info_file.change(fn=upload_file, inputs=machine_info_file, outputs=machine_info_content)
             save_machine_info_button = gr.Button("Save `macchine_info.json`")
             save_machine_info_status = gr.Textbox(label="Status", interactive=False)
@@ -586,13 +601,25 @@ with gr.Blocks() as demo:
         # Tab 3: Article List
         with gr.TabItem("Upload Article List (CSV)"):
             gr.Markdown("### Upload and Edit `lista_articoli.csv`")
-            article_list_file = gr.File(label="Upload `lista_articoli.csv`")
-            article_list_content = gr.TextArea(label="Edit `lista_articoli.csv` content", lines=20)
-            article_list_file.change(fn=upload_file, inputs=article_list_file, outputs=article_list_content)
+            article_list_file = gr.File(label="Upload `lista_articoli.csv`", type='filepath')
+            article_list_content = gr.Dataframe(
+                label="Edit `lista_articoli.csv` content",
+                datatype=["str"] * 22,  # Adjust based on your CSV columns
+                headers=[
+                    "codarticolo", "descrizione", "anima", "copertura", "spire_reali",
+                    "velocita calcolata", "kg_ora", "spandex", "ciclo", "no_cicli",
+                    "ore_levata", "Divisore", "peso elastomero", "Peso spola",
+                    "programma ribobinatura S", "programma ribobinatura Z",
+                    "programma termofissaggio", "kw tempo", "kw percentuale",
+                    "fine validita", "totale_ore", "totale_kg"
+                ],
+                row_count=10  # Replaced max_rows with row_count
+            )
+            article_list_file.change(fn=upload_csv_file, inputs=article_list_file, outputs=article_list_content)
             save_article_list_button = gr.Button("Save `lista_articoli.csv`")
             save_article_list_status = gr.Textbox(label="Status", interactive=False)
             save_article_list_button.click(
-                fn=save_article_list,
+                fn=lambda df: save_csv_file(df, "lista_articoli.csv"),
                 inputs=article_list_content,
                 outputs=save_article_list_status
             )
@@ -600,13 +627,21 @@ with gr.Blocks() as demo:
         # Tab 4: Common Products
         with gr.TabItem("Upload Common Products (CSV)"):
             gr.Markdown("### Upload and Edit `new_orders.csv`")
-            common_products_file = gr.File(label="Upload `new_orders.csv`")
-            common_products_content = gr.TextArea(label="Edit `new_orders.csv` content", lines=20)
-            common_products_file.change(fn=upload_file, inputs=common_products_file, outputs=common_products_content)
+            common_products_file = gr.File(label="Upload `new_orders.csv`", type='filepath')
+            common_products_content = gr.Dataframe(
+                label="Edit `new_orders.csv` content",
+                datatype=["str"] * 5,  # Adjust based on your CSV columns
+                headers=[
+                    "cliente", "cod_articolo", "quantity", 
+                    "data inserimento", "data consegna"
+                ],
+                row_count=10  # Replaced max_rows with row_count
+            )
+            common_products_file.change(fn=upload_csv_file, inputs=common_products_file, outputs=common_products_content)
             save_common_products_button = gr.Button("Save `new_orders.csv`")
             save_common_products_status = gr.Textbox(label="Status", interactive=False)
             save_common_products_button.click(
-                fn=save_common_products,
+                fn=lambda df: save_csv_file(df, "new_orders.csv"),
                 inputs=common_products_content,
                 outputs=save_common_products_status
             )
@@ -614,13 +649,18 @@ with gr.Blocks() as demo:
         # Tab 5: Running Products
         with gr.TabItem("Upload Running Products (CSV)"):
             gr.Markdown("### Upload and Edit `running_products.csv`")
-            running_products_file = gr.File(label="Upload `running_products.csv`")
-            running_products_content = gr.TextArea(label="Edit `running_products.csv` content", lines=20)
-            running_products_file.change(fn=upload_file, inputs=running_products_file, outputs=running_products_content)
+            running_products_file = gr.File(label="Upload `running_products.csv`", type='filepath')
+            running_products_content = gr.Dataframe(
+                label="Edit `running_products.csv` content",
+                datatype=["str"] * 5,  # Adjust based on your CSV columns
+                headers=["column1", "column2", "column3", "column4", "column5"],  # Replace with actual headers
+                row_count=10  # Replaced max_rows with row_count
+            )
+            running_products_file.change(fn=upload_csv_file, inputs=running_products_file, outputs=running_products_content)
             save_running_products_button = gr.Button("Save `running_products.csv`")
             save_running_products_status = gr.Textbox(label="Status", interactive=False)
             save_running_products_button.click(
-                fn=save_running_products,
+                fn=lambda df: save_csv_file(df, "running_products.csv"),
                 inputs=running_products_content,
                 outputs=save_running_products_status
             )
@@ -664,7 +704,7 @@ with gr.Blocks() as demo:
             gr.Markdown("""
 Enter the cost factors for setup, load, and unload operations.
 Setup cost is fixed for all machines.
-Load and unload costs are the time units needed for a single person person to load a single machine with 256 fusi.""")
+Load and unload costs are the time units needed for a single person to load a single machine with 256 fusi.""")
             setup_cost = gr.Slider(label="Setup Cost", minimum=0, maximum=10, step=0.1, value=4)
             load_cost = gr.Slider(label="Load Cost", minimum=0, maximum=10, step=0.1, value=6)
             unload_cost = gr.Slider(label="Unload Cost", minimum=0, maximum=10, step=0.1, value=2)
@@ -675,19 +715,24 @@ Load and unload costs are the time units needed for a single person person to lo
             # Run the solver
             run_solver_button = gr.Button("Run Solver")
             run_solver_status = gr.Textbox(label="Solver Output", lines=10, interactive=False)
-            gantt_output = gr.Plot(label="Gantt Chart")
+            gantt_output = gr.Plot(label="Gantt Chart")  # Replaced gr.Plot with gr.Plotly
             run_solver_button.click(
                 fn=run_solver,
-                inputs=[horizon_days, broken_machines, maintenance, time_units_in_a_day, start_shift, end_shift, festive_days, num_operators_groups, num_operators_per_group, setup_cost, load_cost, unload_cost, max_seconds, second_run_seconds, run_ga],
+                inputs=[
+                    horizon_days, broken_machines, maintenance, time_units_in_a_day, 
+                    start_shift, end_shift, festive_days, num_operators_groups, 
+                    num_operators_per_group, setup_cost, load_cost, unload_cost, 
+                    max_seconds, second_run_seconds, run_ga
+                ],
                 outputs=[run_solver_status, gantt_output]
             )
 
     gr.Markdown("### Note:")
     gr.Markdown("""
-    - Ensure all required files are uploaded and saved before running the solver.
-    - The Gantt chart visualizes the scheduling of operations on machines over time.
-    - Time units are based on the solver's configuration (e.g., hours).
-    - Machines are 1-indexed.
+- Ensure all required files are uploaded and saved before running the solver.
+- The Gantt chart visualizes the scheduling of operations on machines over time.
+- Time units are based on the solver's configuration (e.g., hours).
+- Machines are 1-indexed.
     """)
 
 # Launch the Gradio app
