@@ -177,7 +177,9 @@ def solve(
                 valid = True
         if not valid:
             print("EMPTY DOMAIN FOR ARTICLE", prod.article)
-            raise ValueError(f"EMPTY DOMAIN FOR ARTICLE {prod.article}. This might mean that the horizon is too short for the dates provided for the product.")
+            raise ValueError(
+                f"EMPTY DOMAIN FOR ARTICLE {prod.article}. This might mean that the horizon is too short for the dates provided for the product."
+            )
 
         # generate worktime domain for p
         worktime_domain[p] = cp_model.Domain.FromIntervals(adjusted_intervals)
@@ -1112,12 +1114,18 @@ def solve(
             status = stat
             solver = solver_new
 
-    if status == cp_model.UNKNOWN or status == cp_model.MODEL_INVALID or status == cp_model.INFEASIBLE:
+    if (
+        status == cp_model.UNKNOWN
+        or status == cp_model.MODEL_INVALID
+        or status == cp_model.INFEASIBLE
+    ):
         print("ERROR : Solver status is unknown or model is invalid.")
         model_proto = model.Proto()
         variables = model_proto.variables
         constraints = model_proto.constraints
-        raise ValueError("Solver status is unknown or model is invalid.\n Hints => \n  Horizon days might be too short, try increasing it.\n  Input might be invalid.\nBreaking execution")
+        raise ValueError(
+            "Solver status is unknown or model is invalid.\n Hints => \n  Horizon days might be too short, try increasing it.\n  Input might be invalid.\nBreaking execution"
+        )
 
     """
         PLOTTING
@@ -1244,14 +1252,17 @@ def solve(
         )
 
         # Plot refinement
-        production_schedule = Schedule(refinement, invalid_intervals=prohibited_intervals)
+        production_schedule = Schedule(
+            refinement, invalid_intervals=prohibited_intervals
+        )
         # save production schedule string form to file
         with open(OUTPUT_REFINED_SCHEDULE, "w") as f:
             f.write(str(production_schedule))
 
     print("-+-+- Scheduling completed -+-+-")
-    
+
     return production_schedule
+
 
 if __name__ == "__main__":
     COMMON_P_PATH = "../data/new_orders.csv"
@@ -1298,15 +1309,13 @@ if __name__ == "__main__":
     if machine_velocities % 2 == 0:
         raise ValueError("Machine velocities must be odd numbers.")
 
-
-
     (
         common_products,
         running_products,
         article_to_machine_comp,
         base_setup_art_cost,
         base_load_art_cost,
-        base_unload_art_cost, 
+        base_unload_art_cost,
         base_levata_art_cost,
         standard_levate_art,
         kg_per_levata_art,
