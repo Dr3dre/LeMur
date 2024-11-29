@@ -58,7 +58,7 @@ The solution supports both a graphical user interface (GUI) for managing inputs 
 ### Dependencies
 Install the required Python packages:
 ```bash
-pip install ortools gradio matplotlib pandas plotly inspyred
+pip install ortools gradio matplotlib pandas plotly inspyred intervaltree
 ```
 
 ### Files
