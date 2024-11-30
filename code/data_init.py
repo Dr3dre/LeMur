@@ -1,11 +1,9 @@
 import math
-import random
-import copy
 import csv
 import json
+import pandas as pd
 from datetime import datetime
 from datetime import timedelta
-
 
 class Product (object) :
     '''
@@ -106,112 +104,74 @@ class Schedule(object):
     def __len__(self):
         return len(self.products)
 
+def seconds_to_time_units(seconds, time_units_in_a_day):
+    if time_units_in_a_day == 24 :
+        return seconds // (60*60)
+    elif time_units_in_a_day == 48 :
+        return seconds // (60*30)
+    elif time_units_in_a_day == 96 :
+        return seconds // (60*15)
+    else :
+        assert ValueError("Invalid choice for time units")
 
-def init_data(num_common_jobs, num_running_jobs, num_machines, num_articles, num_op_groups, horizon) :
-    """
-    Job data randomly generated
-    """
-    random.seed(123)
-    num_total_jobs = num_common_jobs + num_running_jobs
-
-    # Fake list of articles
-    articles = [a for a in range(num_articles)]
-
-    # Fake Machine - Job & Job - Machine compatibility
-    article_compatibility = {}
-    machine_compatibility = {}
-    for a in range(num_articles):
-        article_compatibility[a] = random.sample(list(range(num_machines)), random.randint(num_machines//2, num_machines))
-    for m in range(num_machines):
-        machine_compatibility[m] = [a for a in range(num_articles) if m in article_compatibility[a]]
-
-    # Fake costs
-    base_setup_cost = {}
-    base_load_cost = {}
-    base_unload_cost = {}
-    base_levata_cost = {}
-    for a in range(num_articles):
-        base_levata_cost[a] = 24*random.randint(2,4)
-        for m in article_compatibility[a]:
-            base_setup_cost[a,m] = 2
-            base_load_cost[a,m] = 3
-            base_unload_cost[a,m] = 3
-
-    # Fake specs
-    kg_per_levata = {}
-    for m in range(num_machines) :
-        for a in machine_compatibility[m] :
-            kg_per_levata[m,a] = random.randint(2, 5)
-    standard_levate = {}
-    for a in range(num_articles) :
-        standard_levate[a] = random.randint(2, 4)
-
-    # Initialize objects
-    common_products = []
-    product_id = 0
-    for _ in range(num_common_jobs) :
-        article = random.randint(0, len(articles)-1)
-        kg_request = random.randint(10, 40)
-        start_date = 0
-        due_date = horizon
-        common_products.append(Product(product_id, article, kg_request, start_date, due_date))
-        product_id += 1
-
+def get_prods_from_csv(running_products_path : str, common_products_path : str, now : datetime, time_units_in_a_day : int):
     running_products = []
-    avail_machines = [m for m in range(num_machines)]
-    avail_operators = num_op_groups-1
-    for _ in range(num_running_jobs): 
-        # choose an article for which there is at least one machine available
-        compatible_machines = 0
-        while compatible_machines == 0:
-            article = random.randint(0, len(articles)-1)
-            for m in article_compatibility[article]:
-                if m in avail_machines:
-                    compatible_machines += 1
-        start_date = 0
-        due_date = horizon
-        machine = random.choice(article_compatibility[article])
-        while machine not in avail_machines:
-            machine = random.choice(article_compatibility[article])
-        operator = avail_operators
-        velocity = 0
-        remaining_levate = random.randint(1, standard_levate[article])
-        kg_request = kg_per_levata[machine,article] * remaining_levate
-        current_op_type = random.randint(0, 3)
-        if current_op_type in [0,1,3] and avail_operators < 0 :
-            current_op_type = 2
-        remaining_time = 3 # Note that this can't exceed the amount of hours in a working day, or the GAP mechanism fails
-        running_products.append(RunningProduct(product_id, article, kg_request, start_date, due_date, machine, operator, velocity, remaining_levate, current_op_type, remaining_time))
-        product_id += 1
-        avail_machines.remove(machine)
-        avail_operators -= 1
+    common_products = []
+    base_id = 1
+    midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    '''
+    Initialize the RunningProduct objects
+    '''
+    running_products_df = pd.read_csv(running_products_path)
+    for _, row in running_products_df.iterrows():
+        # Gather Row Data
+        this_prod_id = base_id
+        kg_request = int(row['quantity'])
+        article = str(row['cod_articolo'])
+        machine = int(row['macchina'])
+        operator = int(row['operatore'])
+        velocity = int(row['velocità'])
+        remaining_levate = int(row['levate rimanenti ciclo'])
+        current_op_type = int(row['tipo operazione attuale'])
+        end_curr_op = pd.to_datetime(row['fine operazione attuale'])
+        start_date = 0  # As the product is already running, the start date can set to be 0
+        due_date = datetime.strptime('19-11-2025', '%d-%m-%Y')#pd.to_datetime(row['data consegna'])
 
+        # Adjust inputs to the scheduler input format (time units & other assumptions)
+        remaining_time = seconds_to_time_units((end_curr_op-now).total_seconds(), time_units_in_a_day)
+        remaining_time = int(max(0, remaining_time)) # if the remaining time is negative, set it to 0
 
-    return common_products, running_products, article_compatibility, machine_compatibility, base_setup_cost, base_load_cost, base_unload_cost, base_levata_cost, standard_levate, kg_per_levata
+        due_date = seconds_to_time_units((due_date-midnight).total_seconds(), time_units_in_a_day)
+        due_date = int(max(0, due_date))
 
-def date_hours_parser(start_date, due_date):
-    """
-    Parser for start and due date from strings to hours
-    """
-    # Parse input dates
-    start = datetime.strptime(start_date, "%Y-%m-%d")
-    due = datetime.strptime(due_date, "%Y-%m-%d")
+        running_products.append(RunningProduct(this_prod_id, article, kg_request, start_date, due_date, machine, operator, velocity, remaining_levate, current_op_type, remaining_time))
+        base_id += 1
+    '''
+    Initialize the CommonProduct objects
+    '''
+    running_products_df = pd.read_csv(common_products_path)
+    for _, row in running_products_df.iterrows() :
+        # Gather Row Data
+        this_prod_id = base_id
+        kg_request = int(row['quantity'])
+        article = str(row['cod_articolo'])
+        start_date = pd.to_datetime(row['data inserimento'])
+        due_date = datetime.strptime('19-11-2025', '%d-%m-%Y')#pd.to_datetime(row['data consegna'])
+
+        # Adjust inputs to the scheduler input format (time units & other assumptions)
+        start_date = seconds_to_time_units((start_date-midnight).total_seconds(), time_units_in_a_day)
+        start_date = int(max(0, start_date)) 
+        due_date = seconds_to_time_units((due_date-midnight).total_seconds(), time_units_in_a_day)
+        due_date = int(max(0, due_date))   
+
+        # Initialize instance of 'Product'
+        common_products.append(Product(this_prod_id, article, kg_request, start_date, due_date))
+        base_id += 1
     
-    # Get current date and time
-    current_datetime = datetime.now()
+    return running_products, common_products
 
-    # Calculate differences in hours
-    start_hours = int((start - current_datetime).total_seconds() // 3600)
-    due_hours = int((due - current_datetime).total_seconds() // 3600)
-
-    if start_hours < 0:
-        start_hours = 0
-
-    return start_hours, due_hours
-
-def init_csv_data(common_p_path: str, j_compatibility_path: str, m_compatibility_path: str, m_info_path: str, article_list_path: str, costs = (2,1,1), running_products =  {}):
+def init_csv_data(common_p_path: str, running_p_path : str, j_compatibility_path: str, m_info_path: str, article_list_path: str, costs = (2,1,1), now=datetime.now(), time_units_in_a_day=24):
     """
-
     - `costs:` a tuple representing the costs of the operation made by the human operators, cost expressed *per fuse*:
         - `base_setup_cost:` the cost of setting up a machine before a cicle (see 5)
         - `base_load_cost:` the cost of the load operation before a levata (see 6)
@@ -252,29 +212,30 @@ def init_csv_data(common_p_path: str, j_compatibility_path: str, m_compatibility
     10.`kg_per_levata[machine, article]: {(int,str): int}`
         See from "lista_articoli" the "kg_ora" and the "ore_levata", ASSUMING THAT the obtained data have been made in a 256 fuses machine
     
-"""
-    const_setup_cost, const_load_cost, const_unload_cost = costs    
+    """
 
-    # 1. common_products
-    with open(common_p_path, newline='') as csvfile:
-        
-        csv_data = csv.reader(csvfile, delimiter=',', quotechar='|')
-        common_products = []
-        str_out = ""
-        for idx, row in enumerate(csv_data):
-            if idx > 0:
-                str_out = str_out + ', '.join(row) 
-                str_out += '\n'
-                # print(f'start_date:  {row[3]} - type: {type(row[3])}')
-                start_date, due_date = date_hours_parser(row[3], row[4])
-                common_products.append(Product(idx, row[1], int(float(row[2])), start_date, due_date))
-    # 2. running_products
-    # there is nothing here for now
-
-    # 3. job_compatibility
+    '''
+    START DATA INITIALIZATION
+    '''
+    # 1. Get products from csv
+    running_products, common_products = get_prods_from_csv(running_p_path, common_p_path, now, time_units_in_a_day)
+    #common_products = []
+    # 2. extract job_compatibility from .json file
     job_compatibility = json.load(open(j_compatibility_path))
 
-    # 4. machine_compatibility
+    # 2.5 Update job_compatibility with articles in running_products (if not already present).
+    #     We assume that if a product is running, it can be
+    #     surely be produced by the machine it's running on
+    for prod in running_products:
+        # Add key to dictionary if not present and set the machine as the only compatible one
+        if prod.article not in job_compatibility.keys():
+            job_compatibility[prod.article] = [prod.machine[0]]
+        else :
+            # Add machine to the list of compatible machines if not already present
+            if prod.machine[0] not in job_compatibility[prod.article]:
+                job_compatibility[prod.article].append(prod.machine[0])
+    
+    # 3. machine_compatibility
     machine_compatibility = {}
     for a in job_compatibility:
         for m in job_compatibility[a]:
@@ -283,31 +244,31 @@ def init_csv_data(common_p_path: str, j_compatibility_path: str, m_compatibility
             machine_compatibility[m].append(a)
     print(len(machine_compatibility))
 
-    #check consistency between job_compatibility and machine_compatibility
+    # check consistency between job_compatibility and machine_compatibility
     for a in job_compatibility:
         for m in job_compatibility[a]:
             if a not in machine_compatibility[m]:
                 print(f'Inconsistency between job_compatibility and machine_compatibility: {a} not in {m}')
-
-    # 5-6-7. base_setup_cost, base_load_cost, base_unload_cost
-    base_setup_cost = {}
-    base_load_cost = {}
-    base_unload_cost = {}
-
+    
+    # Retrieve machine info from .json 
     m_info = json.load(open(m_info_path))
     fuses_machines_associations = {int(machine):m_info[machine]['n_fusi'] for machine in m_info}
 
+    # 4-5-6. base_setup_cost, base_load_cost, base_unload_cost
+    const_setup_cost, const_load_cost, const_unload_cost = costs    
+    base_setup_cost = {}
+    base_load_cost = {}
+    base_unload_cost = {}
     for a in job_compatibility:
         for m in fuses_machines_associations:
             base_setup_cost[a,int(m)] = int(math.ceil(float(const_setup_cost)))
             base_load_cost[a,int(m)] = int(math.ceil(float(const_load_cost) * float(fuses_machines_associations[m])))
             base_unload_cost[a,int(m)] = int(math.ceil(float(const_unload_cost) * float(fuses_machines_associations[m])))
 
-    # 8-9-10. base_levata_cost, standard_levate, kg_per_levata
+    # 7-8-9. base_levata_cost, standard_levate, kg_per_levata
     base_levata_cost = {}
     standard_levate = {}
     kg_per_levata = {}
-
     with open(article_list_path, newline='') as csvfile:
         csv_data = csv.reader(csvfile, delimiter=',', quotechar='"')
         for idx, row in enumerate(csv_data):
@@ -321,5 +282,6 @@ def init_csv_data(common_p_path: str, j_compatibility_path: str, m_compatibility
                     for m in job_compatibility[row[0]]:
                         print(f'kg_ora: {float(row[6])} - ore_levata: {float(row[10])} - fusi: {fuses_machines_associations[m]} - kg_per_levata: {int((float(row[10]) * float(row[6])) * float(fuses_machines_associations[m]) / 256.0)} - kg_ciclo: {int((float(row[10]) * float(row[6])) * float(fuses_machines_associations[m]) / 256.0) * int(float(row[9]))}')
                         kg_per_levata[m,row[0]] = int((float(row[10]) * float(row[6])) * float(fuses_machines_associations[m]) / 256.0)
-    # breakpoint()
-    return common_products, running_products, job_compatibility, machine_compatibility, base_setup_cost, base_load_cost, base_unload_cost, base_levata_cost, standard_levate, kg_per_levata
+    
+
+    return common_products, running_products, job_compatibility, base_setup_cost, base_load_cost, base_unload_cost, base_levata_cost, standard_levate, kg_per_levata
