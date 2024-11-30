@@ -46,13 +46,13 @@ def print_warning(warnings):
         print(f"Reference file => {LISTA_ARTICOLI_FULL_PATH}")
 
     if len(warnings['article_compatibility_warnings_1']) > 0 :
-        print("\nWARNING : Some articles were not compatible with the machine they're running on. Automatically adding machine to compatibility list")
+        print("\nERROR : Some articles were not compatible with the machine they're running on : Output will EXCLUDE orders including such articles")
         for (int_code, art, m) in warnings['article_compatibility_warnings_1'] :
             print(f" * Article {art} on machine {m} (Internal Code : {int_code})")
         print(f"Reference file => {ARTICLES_MACHINES_COMPATIBILITY_FULL_PATH}")
 
     if len(warnings['article_compatibility_warnings_2']) > 0 :
-        print("\nWARNING : Some articles were not present in the compatibility list at all. Automatically adding both the article with associated machine to compatibility list")
+        print("\nERROR : Some articles were not present in the compatibility list at all : Output will EXCLUDE orders including such articles")
         for (int_code, art, m) in warnings['article_compatibility_warnings_2'] :
             print(f" * Article {art} on machine {m} (Internal Code : {int_code})")
         print(f"Reference file : {ARTICLES_MACHINES_COMPATIBILITY_FULL_PATH}")
@@ -62,7 +62,6 @@ def print_warning(warnings):
         for int_code, art, m, prod_type in warnings['quantity_cast_warnings'] :
             print(f" * Article {art} ({prod_type} product) on machine {m} (Internal Code : {int_code})")
         print(f"Reference file : {STATO_MACCHINE_FULL_PATH} and {PIANIFICAZIONE_FULL_PATH}\n")
-
 
     if sum([len(w) for w in warnings.values()]) > 0 :
         print("\n=================================================================================")
@@ -98,6 +97,7 @@ def extract_current_status_from_xls (curr_status_path: str, curr_plan_path: str,
     '''
     Gather Info relative to machines and articles
     '''
+    
     # Retrieve machine info from .json 
     m_info = json.load(open(m_info_path))
     fuses_machines_associations = {int(machine):m_info[machine]['n_fusi'] for machine in m_info}
@@ -129,7 +129,7 @@ def extract_current_status_from_xls (curr_status_path: str, curr_plan_path: str,
         'quantity_cast_warnings' : [],
         'article_compatibility_warnings_1' : [],
         'article_compatibility_warnings_2' : []
-    }    
+    }
     for idx, row in running_prods_df.iterrows():
         '''
         Row Parse and Dict Updates
@@ -153,16 +153,12 @@ def extract_current_status_from_xls (curr_status_path: str, curr_plan_path: str,
         #     We assume that if a product is running, it can be
         #     surely be produced by the machine it's running on
         if article in article_compatibility.keys() and machine not in article_compatibility[article] :
-            article_compatibility[article].append(machine) # Add machine to the list of machines able to produce the article if not already present
             warnings['article_compatibility_warnings_1'].append((int_code, article, machine))
-        else :
-            if article not in article_compatibility.keys() :
-                article_compatibility[article] = [machine] # Create a new entry if article is not present in the compatibility list at all
-                warnings['article_compatibility_warnings_2'].append((int_code, article, machine))
-        # Update also the art_kg_per_levata dictionary with the new article-machine association if not already present
-        if (article, machine) not in art_kg_per_levata.keys() :
-            art_kg_per_levata[article, machine] = (art_kg_per_hour[article]*art_base_levata_cost[article]) * float(fuses_machines_associations[machine]) / 256.0
-
+            continue
+        elif article not in article_compatibility.keys() :
+            warnings['article_compatibility_warnings_2'].append((int_code, article, machine))
+            continue
+        
         '''
         Start Processing the current row
         '''
@@ -177,10 +173,25 @@ def extract_current_status_from_xls (curr_status_path: str, curr_plan_path: str,
         if is_actually_running and (row['data ora partenza'] < now < row['data ora fine']) :
             # Compute current percentage of levata completion
             levata_progress_percentage = max(0, (now.timestamp()-row['data ora partenza'].timestamp()) / (row['data ora fine'].timestamp()-row['data ora partenza'].timestamp()))
+        # Compute already produced Kg. until now
+        already_produced_kg = art_kg_per_levata[article, machine] * ((curr_levata-1)+levata_progress_percentage)
+
+        print(f"Article ({article}) on machine [{machine}]")
+        print(f"  * Internal Code : {int_code}")
+        if is_continuativo : print("  * This product is Instantiated as Continuativo")
+        print(f"  * Status : {int(curr_levata)} of {int(tot_levate)} levate, {int(remaining_levate)} to go ({int(curr_cycle_remaining_levate)} on current cycle)...")
+        print(f"  * Article ({article}) performs : {int(art_standard_levate[article])} levate x Cycle")
+        print(f">>>")
+        print(f"  * Total Quantity (in pianificazione) : {float(row['quantità']):.3f} Kg.")
+        print(f"  * Kg. per Levata : {art_kg_per_levata[article, machine]:.3f} Kg.")
+        print(f"  * Current levata progress : {int(levata_progress_percentage*100)}%")
+        print(f"  * Already Produced : {already_produced_kg:.3f} Kg.")
+        print(f">>>")
 
         # Handle running products
         if is_actually_running :
-            running_prod_kg = (curr_cycle_remaining_levate - levata_progress_percentage) * art_kg_per_levata[article, machine]
+            running_prod_kg = (curr_cycle_remaining_levate-levata_progress_percentage) * art_kg_per_levata[article, machine]
+            print(f"  * Instantiating Running prod. for ({int(curr_cycle_remaining_levate)}) levate : {running_prod_kg:.3f} Kg.")
             # Initialize a record for the running products dataframe
             running_prod_record = {
                 'cliente': client,
@@ -201,10 +212,12 @@ def extract_current_status_from_xls (curr_status_path: str, curr_plan_path: str,
         # If continuative, set quantity to 2000 - amount scheduled in running_products
         kg_for_continuative = KG_CONTINUATIVO - running_prod_record['quantity'] if is_actually_running else KG_CONTINUATIVO
         
-        if further_levate_to_schedule > 0 or (is_continuativo and kg_for_continuative > 0):
+        if int(further_levate_to_schedule) > 0 or (is_continuativo and kg_for_continuative > 0):
             # Get amount of Kg. to be scheduled for common product
             common_prod_kg = further_levate_to_schedule * art_kg_per_levata[article, machine] if not is_continuativo else kg_for_continuative
-
+            further_levate_to_schedule = further_levate_to_schedule if not is_continuativo else math.ceil(kg_for_continuative / art_kg_per_levata[article, machine])
+            print(f"  * Instantiating Common prod. for ({int(further_levate_to_schedule)}) levate : {common_prod_kg:.3f} Kg.")
+            
             # Initialize a record for the common products if it's the first time it's found
             if int_code not in common_prod_ids_so_far.keys() :
                 common_prod_ids_so_far[int_code] = len(common_products) # track position of common product in the list if it's the first time it's found
@@ -219,7 +232,7 @@ def extract_current_status_from_xls (curr_status_path: str, curr_plan_path: str,
             else :
                 # Update only the quantity of common product if it's already present in the list
                 common_products[common_prod_ids_so_far[int_code]]['quantity'] += common_prod_kg if not is_continuativo else 0.0                
-    
+        print("---")
     # Ensure asked quantities are at least the corresponding Kg. of 1 levata
     for idx, prod in enumerate(running_products+common_products) :
         min_valid_quantity = min([art_kg_per_levata[prod['cod_articolo'],m] for m in article_compatibility[prod['cod_articolo']]])
