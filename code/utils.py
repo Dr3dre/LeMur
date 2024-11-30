@@ -1,12 +1,11 @@
 
 from datetime import datetime
 
-def get_time_intervals (horizon_days, time_units_in_a_day, start_shift, end_shift, festive_days = []) :
+def get_time_intervals (horizon_days, time_units_in_a_day, start_shift, end_shift, festive_days = [], now=datetime.now()) :
     # Compute horizon
     horizon = horizon_days * time_units_in_a_day
 
     # Current time data
-    now = datetime.now()
     days_in_week = 7
     minutes_from_midnight = now.hour * 60 + now.minute # Current time in minutes from midnight
     current_day_of_week = now.weekday() # 0: Monday, 1: Tuesday, ..., 6: Sunday
