@@ -537,6 +537,64 @@ def check_solution_conformity(solution, args):
                     )
                     is_valid_solution = False
 
+
+    # CHECK FOR COSTS CONSISTENCY
+    gaps_cpy = copy.copy(args["gap_at_day"])
+    gaps_cpy.remove(1000000000) # Remove the placeholder value of 1000000000 (used in out of work days)
+    max_possible_gap = max(gaps_cpy)
+
+    for m, machine_queue in enumerate(solution):
+        for elem in machine_queue :
+            p = elem["p"]
+            c = elem["c"]
+            effective_levata_cost = args["base_levata_cost"][p] - args["velocity"][p,c] * args["velocity_step_size"][p]
+
+            if elem["fixed"] :
+                # Operations in the past must keep their costs to zero
+                if args["current_op_type"][p] > 0 and elem["setup_end"] - elem["setup_beg"] > 0 : 
+                    print(f"Fixed Cycle Violation :\n"
+                            f"    Job {p}, Cycle {c}, on machine {m+1} has Past non-zero setup cost"
+                    )
+                    is_valid_solution = False
+                if args["current_op_type"][p] > 1 and elem["load_end"][0] - elem["load_beg"][0] > 0 :
+                    print(f"Fixed Cycle Violation :\n"
+                            f"    Job {p}, Cycle {c}, on machine {m+1} has Past non-zero load cost"
+                    )
+                    is_valid_solution = False
+            else :
+                # Check for setup costs validity
+                if not (args["base_setup_cost"][p,m] <= (elem["setup_end"]-elem["setup_beg"]) <= (args["base_setup_cost"][p,m]+max_possible_gap)) :
+                    print(f"Setup Cost Violation :\n"
+                          f"    Job {p}, Cycle {c}, on machine {m+1} has invalid cost of ({elem['setup_end']-elem['setup_beg']})\n",
+                          f"    Min : {args['base_setup_cost'][p,m]}\n"
+                          f"    Max : {args['base_setup_cost'][p,m] + max_possible_gap}"
+                    )
+                    is_valid_solution = False
+                for l in range(len(elem["load_beg"])) :
+                    # Check for load costs validity
+                    if not (args["base_load_cost"][p,m] <= (elem["load_end"][l]-elem["load_beg"][l]) <= (args["base_load_cost"][p,m]+max_possible_gap)) :
+                        print(f"Load Cost Violation :\n"
+                              f"    Job {p}, Cycle {c}, Levata {l}, on machine {m+1} has invalid cost of ({elem['load_end'][l]-elem['load_beg'][l]})\n",
+                              f"    Min : {args['base_load_cost'][p,m]}\n"
+                              f"    Max : {args['base_load_cost'][p,m] + max_possible_gap}"
+                        )
+                        is_valid_solution = False
+                    # Check for levata costs validity
+                    if (elem["unload_beg"][l] - elem["load_end"][l]) < effective_levata_cost :
+                        print(f"Levata Cost Violation :\n"
+                              f"    Job {p}, Cycle {c}, Levata {l}, on machine {m+1} has invalid cost of ({elem['unload_beg'][l]-elem['load_end'][l]})\n",
+                              f"    Min : {effective_levata_cost}"
+                        )
+                        is_valid_solution = False
+                    # Check for unload costs validity
+                    if not (args["base_unload_cost"][p,m] <= (elem["unload_end"][l]-elem["unload_beg"][l]) <= (args["base_unload_cost"][p,m]+max_possible_gap)) :
+                        print(f"Unload Cost Violation :\n"
+                              f"    Job {p}, Cycle {c}, Levata {l}, on machine {m+1} has invalid cost of ({elem['unload_end'][l]-elem['unload_beg'][l]})\n",
+                              f"    Min : {args['base_unload_cost'][p,m]}\n"
+                              f"    Max : {args['base_unload_cost'][p,m] + max_possible_gap}"
+                        )
+                        is_valid_solution = False
+
     # LOOK FOR TIME WINDOW VIOLATIONS
     for m, machine_queue in enumerate(solution):
         for elem in machine_queue:
@@ -564,7 +622,6 @@ def check_solution_conformity(solution, args):
         for elem in machine_queue:
             p = elem["p"]
             c = elem["c"]
-
             if m not in args["prod_to_machine_comp"][p] :
                 print(f"Machine Assignment Violation :\n"
                       f"    Job {p}, Cycle {c}, on invalid machine {m+1}"
@@ -601,23 +658,6 @@ def check_solution_conformity(solution, args):
                 if m != args["machine_fixation"][p] :
                     print(f"Fixed Cycle Violation :\n"
                           f"    Job {p}, Cycle {c}, on machine {m+1} is not fixed"
-                    )
-                    is_valid_solution = False
-
-    # CHECK IF PAST OPERATIONS STILL HAVE ZERO COST
-    for m, machine_queue in enumerate(solution):
-        for elem in machine_queue:
-            p = elem["p"]
-            c = elem["c"]
-            if elem["fixed"] :
-                if args["current_op_type"][p] > 0 and elem["setup_end"] - elem["setup_beg"] > 0 : 
-                    print(f"Fixed Cycle Violation :\n"
-                            f"    Job {p}, Cycle {c}, on machine {m+1} has non-zero setup cost"
-                    )
-                    is_valid_solution = False
-                if args["current_op_type"][p] > 1 and elem["load_end"][0] - elem["load_beg"][0] > 0 :
-                    print(f"Fixed Cycle Violation :\n"
-                            f"    Job {p}, Cycle {c}, on machine {m+1} has non-zero load cost"
                     )
                     is_valid_solution = False
 
