@@ -37,8 +37,8 @@ ARTICLE_LIST_PATH = '../web_app/input/lista_articoli.csv'
 OUTPUT_SCHEDULE = '../output/schedule.txt'
 OUTPUT_REFINED_SCHEDULE = '../output/refined_schedule.txt'
 
-#now = datetime.now() 
-now = datetime.strptime('19-11-2024', '%d-%m-%Y').replace(hour=14, minute=30)
+now = datetime.now() 
+#now = datetime.strptime('19-11-2024', '%d-%m-%Y').replace(hour=14, minute=30)
 
 constraints = [] # list of constraints for debugging
 
