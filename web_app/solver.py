@@ -1,7 +1,7 @@
 from ortools.sat.python import cp_model
 import math
 
-from data_init import Product, RunningProduct, Schedule
+from data_init import Product, RunningProduct, Schedule, init_csv_data
 import os
 from ga_refiner import GA_Refiner
 
