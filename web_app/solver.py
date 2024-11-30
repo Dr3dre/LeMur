@@ -203,9 +203,16 @@ def solve(
             ]
         )
 
+    # Adjust remaining time for running products
+    # That's a corner case for when scheduling starts outside working hours
+    # And a running product is already in the middle of 'running'operation
+    for p, prod in all_products:
+        if isinstance(prod, RunningProduct) and prod.current_op_type == 2 and start_schedule > time_units_from_midnight:
+            prod.remaining_time = max(0, prod.remaining_time - (start_schedule-time_units_from_midnight))
+
     """
-        SETS
-        """
+    SETS
+    """
     # sets of running products requiring at hoc operations according to at which stage they're
     SETUP_EXCL = [
         (p, c)
