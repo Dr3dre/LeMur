@@ -19,23 +19,26 @@ INPUT DATA
 '''
 
 # timouts for solver
-MAKESPAN_SOLVER_TIMEOUT = 500
-CYCLE_OPTIM_SOLVER_TIMEOUT = 500
+MAKESPAN_SOLVER_TIMEOUT = 800
+CYCLE_OPTIM_SOLVER_TIMEOUT = 0
 GENETIC_REFINEMENT = True
 PLOT_GANTT = True
 
-USE_ADD_ELEMENT = False
+USE_ADD_ELEMENT = True
 
-COMMON_P_PATH = 'gestionale_to_scheduler_converter/output/common_products.csv'#'data/new_orders.csv'
-RUNNING_P_PATH = 'gestionale_to_scheduler_converter/output/running_products.csv'
-J_COMPATIBILITY_PATH = 'data/utils/articoli_macchine.json'
-M_COMPATIBILITY_PATH = 'data/utils/macchine_articoli.json'
-M_INFO_PATH = 'data/utils/macchine_info.json'
-ARTICLE_LIST_PATH = 'data/valid/lista_articoli.csv'
+COMMON_P_PATH = '../web_app/input/new_orders.csv'
+RUNNING_P_PATH = '../web_app/input/running_products.csv'
+J_COMPATIBILITY_PATH = '../web_app/input/articoli_macchine.json'
+M_COMPATIBILITY_PATH = '../web_app/input/macchine_articoli.json'
+M_INFO_PATH = '../web_app/input/macchine_info.json'
+ARTICLE_LIST_PATH = '../web_app/input/lista_articoli.csv'
 
 # output txt files
-OUTPUT_SCHEDULE = 'output/schedule.txt'
-OUTPUT_REFINED_SCHEDULE = 'output/refined_schedule.txt'
+OUTPUT_SCHEDULE = '../output/schedule.txt'
+OUTPUT_REFINED_SCHEDULE = '../output/refined_schedule.txt'
+
+#now = datetime.now() 
+now = datetime.strptime('19-11-2024', '%d-%m-%Y').replace(hour=14, minute=30)
 
 constraints = [] # list of constraints for debugging
 
@@ -54,7 +57,7 @@ machine_velocities = 1
 if machine_velocities % 2 == 0 : raise ValueError("Machine velocities must be odd numbers.")
     
 hour_resolution = 1 # 1: hours, 2: half-hours, 4: quarter-hours, ..., 60: minutes
-horizon_days = 300
+horizon_days = 120
 time_units_in_a_day = 24*hour_resolution   # 24 : hours, 48 : half-hours, 96 : quarter-hours, ..., 1440 : minutes
 horizon = horizon_days * time_units_in_a_day
 
@@ -75,8 +78,6 @@ costs=(
 
 # Variable referring to starting of scheduling time (can be defined customly for testing purposes)
 # There's no guarantees for it to work properly if setting now to future dates
-#now = datetime.now() 
-now = datetime.strptime('19-11-2024', '%d-%m-%Y')
 common_products, running_products, article_to_machine_comp, base_setup_art_cost, base_load_art_cost, base_unload_art_cost, base_levata_art_cost, standard_levate_art, kg_per_levata_art = init_csv_data(COMMON_P_PATH, RUNNING_P_PATH, J_COMPATIBILITY_PATH, M_INFO_PATH, ARTICLE_LIST_PATH, costs=costs, now=now, time_units_in_a_day=time_units_in_a_day)
 
 # Make joint tuples (for readability purp.)
@@ -173,6 +174,13 @@ for p, prod in all_products:
     else:
         max_cycles[p] =  max([math.ceil(prod.kg_request / (kg_per_levata[m,p] * standard_levate[p])) for m in prod_to_machine_comp[p]])
     best_kg_cycle[p] = max([math.ceil(kg_per_levata[m,p] * standard_levate[p]) for m in prod_to_machine_comp[p]])
+
+# Adjust remaining time for running products
+# That's a corner case for when scheduling starts outside working hours
+# And a running product is already in the middle of 'running'operation
+for p, prod in all_products:
+    if isinstance(prod, RunningProduct) and prod.current_op_type == 2 and start_schedule > time_units_from_midnight:
+        prod.remaining_time = max(0, prod.remaining_time - (start_schedule-time_units_from_midnight))
 
 '''
 SETS
