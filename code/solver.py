@@ -24,7 +24,7 @@ CYCLE_OPTIM_SOLVER_TIMEOUT = 500
 GENETIC_REFINEMENT = True
 PLOT_GANTT = True
 
-USE_ADD_ELEMENT = True
+USE_ADD_ELEMENT = False
 
 COMMON_P_PATH = 'gestionale_to_scheduler_converter/output/common_products.csv'#'data/new_orders.csv'
 RUNNING_P_PATH = 'gestionale_to_scheduler_converter/output/running_products.csv'

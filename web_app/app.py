@@ -1,3 +1,4 @@
+from datetime import datetime
 import functools
 import gradio as gr
 import pandas as pd
@@ -13,19 +14,20 @@ from data_init import init_csv_data, RunningProduct
 os.makedirs("input", exist_ok=True)
 os.makedirs("output", exist_ok=True)
 
+
 def upload_csv_file(file, columns):
     if file is not None:
         try:
             df = pd.read_csv(file.name)
-            
+
             # verify if the columns are at least the same as the ones in the csv file
             for col in columns:
                 if col not in df.columns:
                     return f"❌ Invalid CSV file. Please make sure it contains the following columns: {', '.join(columns)}"
-            
+
             # filter out columns that are not in the columns list
             df = df[columns]
-            
+
             return df
         except Exception as e:
             return f"Error reading CSV file: {str(e)}"
@@ -35,7 +37,7 @@ def upload_csv_file(file, columns):
 
 def save_csv_file(df, filename):
     try:
-        df.to_csv("input/"+filename, index=False)
+        df.to_csv("input/" + filename, index=False)
         return f"✅ `{filename}` saved successfully."
     except Exception as e:
         return f"❌ Error saving `{filename}`: {str(e)}"
@@ -52,34 +54,44 @@ def upload_file(file_path):
     else:
         raise "No file uploaded."
 
+
 def upload_article_machine_compatibility(file_path):
     # read the file and verify that it's a valid json file with "article_id" : [machine_id, ...] format
     content = upload_file(file_path)
     try:
         data = json.loads(content)
-        if not all(isinstance(k, str) and isinstance(v, list) and isinstance(i,int) for k, v in data.items() for i in v):
+        if not all(
+            isinstance(k, str) and isinstance(v, list) and isinstance(i, int)
+            for k, v in data.items()
+            for i in v
+        ):
             return "❌ Invalid JSON format. Please ensure the file is a dictionary with string keys and list values."
         return content
     except json.JSONDecodeError as e:
         return f"❌ JSON Decode Error: {str(e)}"
+
 
 def upload_machine_info(file_path):
     # read the file and verify that it's a valid json file with "machine_id" : { "n_fusi": int } format and remove any extra fields
     content = upload_file(file_path)
     try:
         data = json.loads(content)
-        if not all(isinstance(k, str) and isinstance(v, dict) and "n_fusi" in v for k, v in data.items()):
+        if not all(
+            isinstance(k, str) and isinstance(v, dict) and "n_fusi" in v
+            for k, v in data.items()
+        ):
             return "❌ Invalid JSON format. Please ensure the file is a dictionary with integer keys and 'n_fusi' values."
-        
+
         # remove any extra fields
         for k, v in data.items():
             data[k] = {"n_fusi": v["n_fusi"]}
-            
+
         content = json.dumps(data, indent=4)
-        
+
         return content
     except json.JSONDecodeError as e:
         return f"❌ JSON Decode Error: {str(e)}"
+
 
 def save_common_products(df):
     return save_csv_file(df, "input/new_orders.csv")
@@ -138,6 +150,7 @@ def run_solver(
     COMMON_P_PATH = "input/new_orders.csv"
     J_COMPATIBILITY_PATH = "input/articoli_macchine.json"
     M_INFO_PATH = "input/macchine_info.json"
+    RUNNING_P_PATH = "input/running_products.csv"
     ARTICLE_LIST_PATH = "input/lista_articoli.csv"
 
     # Parse inputs
@@ -158,8 +171,12 @@ def run_solver(
         )
 
     try:
-        load_cost = load_cost / 256  / num_operators_per_group      # Convert to cost per fuso
-        unload_cost = unload_cost / 256  / num_operators_per_group  # Convert to cost per fuso
+        load_cost = (
+            load_cost / 256 / num_operators_per_group
+        )  # Convert to cost per fuso
+        unload_cost = (
+            unload_cost / 256 / num_operators_per_group
+        )  # Convert to cost per fuso
     except Exception as e:
         return f"❌ Error processing load/unload costs: {str(e)}", None
 
@@ -193,7 +210,10 @@ def run_solver(
         return f"❌ Missing files: {', '.join(missing_files)}", None
 
     try:
-        # Initialize data
+        # Variable referring to starting of scheduling time (can be defined customly for testing purposes)
+        # There's no guarantees for it to work properly if setting now to future dates
+        # now = datetime.now()
+        now = datetime.strptime("19-11-2024", "%d-%m-%Y")
         (
             common_products,
             running_products,
@@ -206,12 +226,18 @@ def run_solver(
             kg_per_levata_art,
         ) = init_csv_data(
             COMMON_P_PATH,
+            RUNNING_P_PATH,
             J_COMPATIBILITY_PATH,
             M_INFO_PATH,
             ARTICLE_LIST_PATH,
             costs=(setup_cost, load_cost, unload_cost),
+            now=now,
+            time_units_in_a_day=time_units_in_a_day,
         )
+    except Exception as e:
+        return f"❌ Error initializing data: {str(e)}", None
 
+    try:
         # Solve the scheduling problem
         schedule = solve(
             common_products,
@@ -234,6 +260,7 @@ def run_solver(
             max_seconds,
             second_run_seconds,
             run_ga,
+            now
         )
 
         print("Generated valid schedule")
@@ -718,7 +745,9 @@ with gr.Blocks() as demo:
                 label="Upload `articoli_macchine.json`", type="filepath"
             )
             article_machine_content = gr.Code(
-                label="Edit `articoli_macchine.json` content", language="json", max_lines=20
+                label="Edit `articoli_macchine.json` content",
+                language="json",
+                max_lines=20,
             )
             article_machine_file.change(
                 fn=upload_article_machine_compatibility,
@@ -744,8 +773,8 @@ with gr.Blocks() as demo:
             )
             machine_info_file.change(
                 fn=upload_machine_info,
-                inputs=machine_info_file, 
-                outputs=machine_info_content
+                inputs=machine_info_file,
+                outputs=machine_info_content,
             )
             save_machine_info_button = gr.Button("Save `macchine_info.json`")
             save_machine_info_status = gr.Textbox(label="Status", interactive=False)
@@ -762,14 +791,19 @@ with gr.Blocks() as demo:
                 label="Upload `lista_articoli.csv`", type="filepath"
             )
             article_list_columns = [
-                    "codarticolo",
-                    "kg_ora",
-                    "no_cicli",
-                    "ore_levata",
-                ]
+                "codarticolo",
+                "kg_ora",
+                "no_cicli",
+                "ore_levata",
+            ]
             article_list_content = gr.Dataframe(
                 label="Edit `lista_articoli.csv` content",
-                datatype=["str","number","number","number"],  # Adjust based on your CSV columns
+                datatype=[
+                    "str",
+                    "number",
+                    "number",
+                    "number",
+                ],  # Adjust based on your CSV columns
                 headers=article_list_columns,
                 row_count=10,  # Replaced max_rows with row_count
             )
@@ -793,15 +827,21 @@ with gr.Blocks() as demo:
                 label="Upload `new_orders.csv`", type="filepath"
             )
             common_products_columns = [
-                    "cliente",
-                    "cod_articolo",
-                    "quantity",
-                    "data inserimento",
-                    "data consegna",
-                ]
+                "cliente",
+                "cod_articolo",
+                "quantity",
+                "data inserimento",
+                "data consegna",
+            ]
             common_products_content = gr.Dataframe(
                 label="Edit `new_orders.csv` content",
-                datatype=["str","str","number","date","date"],  # Adjust based on your CSV columns
+                datatype=[
+                    "str",
+                    "str",
+                    "number",
+                    "date",
+                    "date",
+                ],  # Adjust based on your CSV columns
                 headers=common_products_columns,
                 row_count=10,  # Replaced max_rows with row_count
             )
@@ -825,13 +865,37 @@ with gr.Blocks() as demo:
                 label="Upload `running_products.csv`", type="filepath"
             )
             running_products_columns = [
-                "EMPTY"
+                "cliente",
+                "macchina",
+                "cod_articolo",
+                "quantity",
+                "fine operazione attuale",
+                "data consegna",
+                "levate rimanenti ciclo",
+                "tipo operazione attuale",
+                "operatore",
             ]
             running_products_content = gr.Dataframe(
                 label="Edit `running_products.csv` content",
-                datatype=["str"],  # Adjust based on your CSV columns
+                datatype=[
+                    "str",
+                    "str",
+                    "str",
+                    "number",
+                    "date",
+                    "date",
+                    "number",
+                    "number",
+                    "number",
+                ],  # Adjust based on your CSV columns
                 headers=running_products_columns,
                 row_count=10,  # Replaced max_rows with row_count
+            )
+            gr.Markdown(
+                "The tipo operazione attuale can be 0-Setup, 1-Load, 2-machine running, 3-Unload"
+            )
+            gr.Markdown(
+                "The operatore is the operator number assigned to the operation (NOTE: it is 0-based, so we start from 0)"
             )
             running_products_file.change(
                 fn=functools.partial(upload_csv_file, columns=running_products_columns),

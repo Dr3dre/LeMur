@@ -102,8 +102,20 @@ python app.py
         - cod_articolo
         - quantity
         - data inserimento
-        - data consegna`
+        - data consegna
    - Example: `SCORTA, 4407DN, 472, 2025-04-20, 2025-08-06`
+2. **`running_orders.csv`**:
+   - Format: 
+         - cliente
+         - macchina
+         - cod_articolo
+         - quantity
+         - fine operazione attuale
+         - data consegna
+         - levate rimanenti ciclo
+         - tipo operazione attuale
+         - operatore
+   - Example: `SCORTA,1,2277DN mini,124.37,2024-12-01 03:30:00,2025-11-19,1,2,0,0`
 2. **`lista_articoli.csv`**:
    - Production data for each article:
         - codarticolo

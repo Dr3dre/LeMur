@@ -156,37 +156,133 @@ class Schedule(object):
         return len(self.products)
 
 
-def date_hours_parser(start_date, due_date):
+def seconds_to_time_units(seconds, time_units_in_a_day):
+    if time_units_in_a_day == 24:
+        return seconds // (60 * 60)
+    elif time_units_in_a_day == 48:
+        return seconds // (60 * 30)
+    elif time_units_in_a_day == 96:
+        return seconds // (60 * 15)
+    else:
+        assert ValueError("Invalid choice for time units")
+
+
+def get_prods_from_csv(
+    running_products_path: str,
+    common_products_path: str,
+    now: datetime,
+    time_units_in_a_day: int,
+):
     """
-    Parser for start and due date from strings to hours
+    Get the products from the csv files
+    
+    Args:
+    - `running_products_path`: path to the csv file containing the running products
+    - `common_products_path`: path to the csv file containing the common products
+    - `now`: current datetime
+    - `time_units_in_a_day`: number of time units in a day
+    
+    Returns:
+    - `running_products`: list of RunningProduct objects
+    - `common_products`: list of Product objects
     """
-    # Parse input dates
-    start = datetime.strptime(start_date, "%Y-%m-%d")
-    due = datetime.strptime(due_date, "%Y-%m-%d")
+    running_products = []
+    common_products = []
+    base_id = 1
+    midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    """
+    Initialize the RunningProduct objects
+    """
+    running_products_df = pd.read_csv(running_products_path)
+    for _, row in running_products_df.iterrows():
+        # Gather Row Data
+        this_prod_id = base_id
+        kg_request = int(row["quantity"])
+        article = str(row["cod_articolo"])
+        machine = int(row["macchina"])
+        operator = int(row["operatore"])
+        velocity = int(0)  # In this version of the scheduler, velocity is not used
+        remaining_levate = int(row["levate rimanenti ciclo"])
+        current_op_type = int(row["tipo operazione attuale"])
+        end_curr_op = pd.to_datetime(row["fine operazione attuale"])
+        start_date = (
+            0  # As the product is already running, the start date can set to be 0
+        )
+        due_date = pd.to_datetime(row["data consegna"])
 
-    # Get current date and time
-    current_datetime = datetime.now()
+        # Adjust inputs to the scheduler input format (time units & other assumptions)
+        remaining_time = seconds_to_time_units(
+            (end_curr_op - now).total_seconds(), time_units_in_a_day
+        )
+        remaining_time = int(
+            max(0, remaining_time)
+        )  # if the remaining time is negative, set it to 0
 
-    # Calculate differences in hours
-    start_hours = int((start - current_datetime).total_seconds() // 3600)
-    due_hours = int((due - current_datetime).total_seconds() // 3600)
+        due_date = seconds_to_time_units(
+            (due_date - midnight).total_seconds(), time_units_in_a_day
+        )
+        due_date = int(max(0, due_date))
 
-    if start_hours < 0:
-        start_hours = 0
+        running_products.append(
+            RunningProduct(
+                this_prod_id,
+                article,
+                kg_request,
+                start_date,
+                due_date,
+                machine,
+                operator,
+                velocity,
+                remaining_levate,
+                current_op_type,
+                remaining_time,
+            )
+        )
+        base_id += 1
+    """
+    Initialize the CommonProduct objects
+    """
+    running_products_df = pd.read_csv(common_products_path)
+    for _, row in running_products_df.iterrows():
+        # Gather Row Data
+        this_prod_id = base_id
+        kg_request = int(row["quantity"])
+        article = str(row["cod_articolo"])
+        start_date = pd.to_datetime(row["data inserimento"])
+        due_date = datetime.strptime(
+            "19-11-2025", "%d-%m-%Y"
+        )  # pd.to_datetime(row['data consegna'])
 
-    return start_hours, due_hours
+        # Adjust inputs to the scheduler input format (time units & other assumptions)
+        start_date = seconds_to_time_units(
+            (start_date - midnight).total_seconds(), time_units_in_a_day
+        )
+        start_date = int(max(0, start_date))
+        due_date = seconds_to_time_units(
+            (due_date - midnight).total_seconds(), time_units_in_a_day
+        )
+        due_date = int(max(0, due_date))
+
+        # Initialize instance of 'Product'
+        common_products.append(
+            Product(this_prod_id, article, kg_request, start_date, due_date)
+        )
+        base_id += 1
+
+    return running_products, common_products
 
 
 def init_csv_data(
     common_p_path: str,
+    running_p_path: str,
     j_compatibility_path: str,
     m_info_path: str,
     article_list_path: str,
     costs=(2, 1, 1),
-    running_products={},
+    now=datetime.now(),
+    time_units_in_a_day=24,
 ):
     """
-
     - `costs:` a tuple representing the costs of the operation made by the human operators, cost expressed *per fuse*:
         - `base_setup_cost:` the cost of setting up a machine before a cicle (see 5)
         - `base_load_cost:` the cost of the load operation before a levata (see 6)
@@ -205,6 +301,9 @@ def init_csv_data(
 
     3.`job_compatibility[article]: {str : [int]}`
         From "articoli_macchine.json" we retrieve the associations, is the dict containing which article goes on which machine
+
+    4.`machine_compatibility[machine]: {int: [str]}`
+        From "macchine_articoli.json" we retrieve the associations, is the dict containing which machine can produce which article
 
     5.`base_setup_cost[article, machine]: {(str,int) : float}`
         Costant taken from input, machine dependent (number of fuses)
@@ -225,64 +324,52 @@ def init_csv_data(
         See from "lista_articoli" the "kg_ora" and the "ore_levata", ASSUMING THAT the obtained data have been made in a 256 fuses machine
 
     """
+
+    """
+    START DATA INITIALIZATION
+    """
+    try:
+        # 1. Get products from csv
+        running_products, common_products = get_prods_from_csv(
+            running_p_path, common_p_path, now, time_units_in_a_day
+        )
+    except Exception as e:
+        raise ValueError(f"Error while reading csv files: {e}")
+    
+    try:
+        # common_products = []
+        # 2. extract job_compatibility from .json file
+        job_compatibility = json.load(open(j_compatibility_path))
+
+        # 2.5 Update job_compatibility with articles in running_products (if not already present).
+        #     We assume that if a product is running, it can be
+        #     surely be produced by the machine it's running on
+        for prod in running_products:
+            # Add key to dictionary if not present and set the machine as the only compatible one
+            if prod.article not in job_compatibility.keys():
+                raise ValueError(f"Article {prod.article} not found in job_compatibility")
+            else:
+                # Add machine to the list of compatible machines if not already present
+                if prod.machine[0] not in job_compatibility[prod.article]:
+                    raise ValueError(f"Machine {prod.machine[0]} not found in job_compatibility for article {prod.article}")
+                    
+    except Exception as e:
+        raise ValueError(f"Error while reading json files for job compatibility: {e}")
+
+    try:
+        # Retrieve machine info from .json
+        m_info = json.load(open(m_info_path))
+        fuses_machines_associations = {
+            int(machine): m_info[machine]["n_fusi"] for machine in m_info
+        }
+    except Exception as e:
+        raise ValueError(f"Error while reading json files for machine info: {e}")
+
+    # 4-5-6. base_setup_cost, base_load_cost, base_unload_cost
     const_setup_cost, const_load_cost, const_unload_cost = costs
-
-    # 1. common_products
-    with open(common_p_path, newline="") as csvfile:
-
-        csv_data = csv.reader(csvfile, delimiter=",", quotechar="|")
-        common_products = []
-        str_out = ""
-        for idx, row in enumerate(csv_data):
-            if idx > 0:
-                if row[1] == "":
-                    continue
-                str_out = str_out + ", ".join(row)
-                str_out += "\n"
-                # print(f'start_date:  {row[3]} - type: {type(row[3])}')
-                start_date, due_date = date_hours_parser(row[3], row[4])
-                common_products.append(
-                    Product(
-                        row[0] + "_" + row[1] + "_" + str(idx),
-                        row[1],
-                        int(float(row[2])),
-                        start_date,
-                        due_date,
-                    )
-                )
-    # 2. running_products
-    # there is nothing here for now
-
-    # 3. job_compatibility
-    job_compatibility = json.load(open(j_compatibility_path))
-
-    # 4. machine_compatibility
-    machine_compatibility = {}
-    for a in job_compatibility:
-        for m in job_compatibility[a]:
-            if m not in machine_compatibility:
-                machine_compatibility[m] = []
-            machine_compatibility[m].append(a)
-    print(len(machine_compatibility))
-
-    # check consistency between job_compatibility and machine_compatibility
-    for a in job_compatibility:
-        for m in job_compatibility[a]:
-            if a not in machine_compatibility[m]:
-                print(
-                    f"Inconsistency between job_compatibility and machine_compatibility: {a} not in {m}"
-                )
-
-    # 5-6-7. base_setup_cost, base_load_cost, base_unload_cost
     base_setup_cost = {}
     base_load_cost = {}
     base_unload_cost = {}
-
-    m_info = json.load(open(m_info_path))
-    fuses_machines_associations = {
-        int(machine): m_info[machine]["n_fusi"] for machine in m_info
-    }
-
     for a in job_compatibility:
         for m in fuses_machines_associations:
             base_setup_cost[a, int(m)] = int(math.ceil(float(const_setup_cost)))
@@ -297,31 +384,32 @@ def init_csv_data(
                 )
             )
 
-    # 8-9-10. base_levata_cost, standard_levate, kg_per_levata
-    base_levata_cost = {}
-    standard_levate = {}
-    kg_per_levata = {}
+    try:
+        # 8-9-10. base_levata_cost, standard_levate, kg_per_levata
+        base_levata_cost = {}
+        standard_levate = {}
+        kg_per_levata = {}
 
-    df = pd.read_csv(article_list_path)
+        df = pd.read_csv(article_list_path)
 
-    for idx, row in df.iterrows():
-        # row['codarticolo'] is the article code, row['ore_levata'] is the hours needed for a single "levata"
-        if pd.isna(row['codarticolo']):
-            continue
-        base_levata_cost[row['codarticolo']] = int(float(row['ore_levata']))
-        standard_levate[row['codarticolo']] = int(float(row['no_cicli']))
-        print(f"costo levata: {int(float(row['ore_levata']))}")
-        if row['codarticolo'] in job_compatibility:
-            for m in job_compatibility[row['codarticolo']]:
-                print(
-                    f"kg_ora: {float(row['kg_ora'])} - ore_levata: {float(row['ore_levata'])} - fusi: {fuses_machines_associations[m]} - kg_per_levata: {int((float(row['ore_levata']) * float(row['kg_ora'])) * float(fuses_machines_associations[m]) / 256.0)} - kg_ciclo: {int((float(row['ore_levata']) * float(row['kg_ora'])) * float(fuses_machines_associations[m]) / 256.0) * int(float(row['no_cicli']))}"
-                )
-                kg_per_levata[m, row['codarticolo']] = int(
-                    (float(row['ore_levata']) * float(row['kg_ora']))
-                    * float(fuses_machines_associations[m])
-                    / 256.0
-                )
-    # breakpoint()
+        for idx, row in df.iterrows():
+            # row['codarticolo'] is the article code, row['ore_levata'] is the hours needed for a single "levata"
+            if pd.isna(row['codarticolo']):
+                continue
+            base_levata_cost[row['codarticolo']] = int(float(row['ore_levata']))
+            standard_levate[row['codarticolo']] = int(float(row['no_cicli']))
+            
+            if row['codarticolo'] in job_compatibility:
+                for m in job_compatibility[row['codarticolo']]:
+                    kg_per_levata[m, row['codarticolo']] = int(
+                        (float(row['ore_levata']) * float(row['kg_ora']))
+                        * float(fuses_machines_associations[m])
+                        / 256.0
+                    )
+        # breakpoint()
+    except Exception as e:
+        raise ValueError(f"Error while reading csv files for article list: {e}")
+
     return (
         common_products,
         running_products,

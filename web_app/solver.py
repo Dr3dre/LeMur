@@ -2,7 +2,7 @@ from ortools.sat.python import cp_model
 import math
 
 from data_init import *
-from utils import *
+from utils import get_time_intervals
 import os
 from ga_refiner import GA_Refiner
 
@@ -11,11 +11,13 @@ INPUT DATA
 """
 
 # timouts for solver
-MAKESPAN_SOLVER_TIMEOUT = 60
+MAKESPAN_SOLVER_TIMEOUT = 600
 CYCLE_OPTIM_SOLVER_TIMEOUT = 60
 GENERATIONS = 250
 
-USE_ADD_ELEMENT = False
+LOGGING = True
+
+USE_ADD_ELEMENT = True
 
 # output txt files
 OUTPUT_SCHEDULE = "output/schedule.txt"
@@ -47,6 +49,7 @@ def solve(
     timeout=MAKESPAN_SOLVER_TIMEOUT,
     timeout_cycle=CYCLE_OPTIM_SOLVER_TIMEOUT,
     generations=GENERATIONS,
+    now=datetime.now(),
 ):
     """
     SOLVER
@@ -125,16 +128,9 @@ def solve(
 
     """
         DERIVED CONSTANTS
-        """
-    (
-        worktime_intervals,
-        prohibited_intervals,
-        gap_at_day,
-        time_units_from_midnight,
-        start_schedule,
-    ) = get_time_intervals(
-        horizon_days, time_units_in_a_day, start_shift, end_shift, festivities
-    )
+    """
+    worktime_intervals, prohibited_intervals, gap_at_day, time_units_from_midnight, start_schedule = get_time_intervals(horizon_days, time_units_in_a_day, start_shift, end_shift, festivities, now=now)
+
 
     # Velocity gears
     velocity_levels = list(
@@ -1058,7 +1054,7 @@ def solve(
     # Solve the model
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = timeout
-    # solver.parameters.log_search_progress = True
+    solver.parameters.log_search_progress = LOGGING
     solver.parameters.num_search_workers = os.cpu_count()
     # solver.parameters.add_lp_constraints_lazily = True
     # solver.parameters.stop_after_first_solution = True
@@ -1194,7 +1190,7 @@ def solve(
 
     """
         GENETIC REFINEMENT
-        """
+    """
     if generations > 0:
         # Dictionary of variables necessary to GA computation
         vars = {
@@ -1265,6 +1261,7 @@ def solve(
 
 if __name__ == "__main__":
     COMMON_P_PATH = "../data/new_orders.csv"
+    RUNNING_P_PATH = "input/running_products.csv"
     J_COMPATIBILITY_PATH = "../data/utils/articoli_macchine.json"
     M_INFO_PATH = "../data/utils/macchine_info.json"
     ARTICLE_LIST_PATH = "../data/valid/lista_articoli.csv"
@@ -1320,6 +1317,7 @@ if __name__ == "__main__":
         kg_per_levata_art,
     ) = init_csv_data(
         COMMON_P_PATH,
+        RUNNING_P_PATH,
         J_COMPATIBILITY_PATH,
         M_INFO_PATH,
         ARTICLE_LIST_PATH,
