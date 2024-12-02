@@ -8,41 +8,30 @@ Script to benchmark the solve time of the solver for incremental orders.
 """
 
 NUM_RUNS = 5
+HORIZONS = [ 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 320, 340, 360, 380, 400 ]
 
-def read_orders(file_path):
-    df = pd.read_csv(file_path)
-    return df
-
-
-def write_orders(file_path, orders, num_orders):
-    orders = orders[:num_orders]
-    df = pd.DataFrame(orders)
-    df.to_csv(file_path, index=False)
-
-
-def benchmark_solve(orders):
+def benchmark_solve():
     means = []
     stds = []
 
     # get the results from the previous run and start from the last order
     try:
-        df = pd.read_csv("incremental_orders/results.csv")
+        df = pd.read_csv("incremental_horizon/results.csv")
         means = df["mean"].tolist()
         stds = df["std_dev"].tolist()
-        start_index = len(means)+1
+        start_index = len(means)
     except Exception as e:
-        start_index = 1
+        start_index = 0
 
-    for i in tqdm(range(start_index, len(orders) + 1), desc="Running benchmarks"):
-        write_orders("incremental_orders/orders.csv", orders, i)
+    for i in tqdm(range(start_index, len(HORIZONS)), desc="Running benchmarks"):
         times = []
-        for j in tqdm(range(NUM_RUNS), desc=f"Running for {i} orders"):
+        for j in tqdm(range(NUM_RUNS), desc=f"Running for {HORIZONS[i]} horizon"):
             start_time = time.time()
 
             res = run_solver(
-                "incremental_orders/orders.csv",
-                "incremental_orders/running_products.csv",
-                120,
+                "incremental_horizon/new_orders.csv",
+                "incremental_horizon/running_products.csv",
+                HORIZONS[i],
                 "",
                 "",
                 24,
@@ -71,14 +60,13 @@ def benchmark_solve(orders):
 
         # write results to file
         df = pd.DataFrame(
-            {"mean": means, "std_dev": stds, "num_orders": list(range(1, i + 1))}
+            {"mean": means, "std_dev": stds, "horizon": HORIZONS[: i + 1]}
         )
         df.to_csv("incremental_orders/results.csv", index=False)
 
 
 def main():
-    orders = read_orders("incremental_orders/new_orders.csv")
-    benchmark_solve(orders)
+    benchmark_solve()
 
 
 if __name__ == "__main__":

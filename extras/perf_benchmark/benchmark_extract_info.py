@@ -1,6 +1,10 @@
 import re
 import matplotlib.pyplot as plt
 
+"""
+Extracts bounds and timestamps from the raw text output of the solver log.
+"""
+
 def extract_bounds_from_text(raw_text):
     # Regular expressions to extract data
     bound_pattern = re.compile(r"#[^ ]*\s+([\d.]+)s best:(\S+)\s+next:\[(\d+),(\d+)\]")

@@ -7,6 +7,8 @@ from solver import solve
 import os
 
 def run_solver(
+    p_path,
+    r_path,
     horizon_days,
     broken_machines,
     maintenance,
@@ -25,10 +27,10 @@ def run_solver(
     now=datetime.now(),
 ):
     # Paths to the files saved above
-    COMMON_P_PATH = "incremental_orders/orders.csv"
+    COMMON_P_PATH = p_path
     J_COMPATIBILITY_PATH = "../../web_app/input/articoli_macchine.json"
     M_INFO_PATH = "../../web_app/input/macchine_info.json"
-    RUNNING_P_PATH = "incremental_orders/running_products.csv"
+    RUNNING_P_PATH = r_path
     ARTICLE_LIST_PATH = "../../web_app/input/lista_articoli.csv"
 
     # Parse inputs
