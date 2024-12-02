@@ -19,8 +19,8 @@ INPUT DATA
 '''
 
 # timouts for solver
-MAKESPAN_SOLVER_TIMEOUT = 800
-CYCLE_OPTIM_SOLVER_TIMEOUT = 0
+MAKESPAN_SOLVER_TIMEOUT = 600
+CYCLE_OPTIM_SOLVER_TIMEOUT = 600
 GENETIC_REFINEMENT = True
 PLOT_GANTT = True
 
@@ -800,7 +800,7 @@ if __name__ == '__main__':
     solver.parameters.log_search_progress = True
     solver.parameters.num_search_workers = os.cpu_count()
     #solver.parameters.add_lp_constraints_lazily = True
-    solver.parameters.stop_after_first_solution = True
+    # solver.parameters.stop_after_first_solution = True
 
     model.Minimize(makespan)
     print("-----------------------------------------------------")
@@ -821,6 +821,7 @@ if __name__ == '__main__':
                 model.Add(KG_CYCLE[p,c] == solver.Value(KG_CYCLE[p,c]))
                 model.Add(ACTIVE_CYCLE[p,c] == solver.Value(ACTIVE_CYCLE[p,c]))
                 model.Add(SETUP_END[p,c] <= solver.Value(SETUP_END[p,c]))
+                model.Add(SETUP_BEG[p,c] == solver.Value(SETUP_BEG[p,c]))
                 for l in range(standard_levate[p]):
                     model.Add(LOAD_END[p,c,l] <= solver.Value(LOAD_END[p,c,l]))
                     model.Add(UNLOAD_END[p,c,l] <= solver.Value(UNLOAD_END[p,c,l]))
@@ -837,7 +838,7 @@ if __name__ == '__main__':
         solver_new.parameters.cp_model_presolve = False
         solver_new.parameters.log_search_progress = True
         solver_new.parameters.num_search_workers = os.cpu_count()
-        solver_new.parameters.stop_after_first_solution = True
+        # solver_new.parameters.stop_after_first_solution = True
         print("-----------------------------------------------------")
         print("Searching...")
         stat = solver_new.Solve(model)

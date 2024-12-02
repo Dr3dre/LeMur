@@ -1175,6 +1175,7 @@ def solve(
                 model.Add(KG_CYCLE[p, c] == solver.Value(KG_CYCLE[p, c]))
                 model.Add(ACTIVE_CYCLE[p, c] == solver.Value(ACTIVE_CYCLE[p, c]))
                 model.Add(SETUP_END[p, c] <= solver.Value(SETUP_END[p, c]))
+                model.Add(SETUP_BEG[p,c] == solver.Value(SETUP_BEG[p,c]))
                 for l in range(standard_levate[p]):
                     model.Add(LOAD_END[p, c, l] <= solver.Value(LOAD_END[p, c, l]))
                     model.Add(UNLOAD_END[p, c, l] <= solver.Value(UNLOAD_END[p, c, l]))
