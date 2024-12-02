@@ -8,12 +8,12 @@ from datetime import datetime
 
 # Customizable parameters
 POPULATION_SIZE = 100
-GENERATIONS = 250
+GENERATIONS = 300
 # penalty coefficient for unfeasible solutions, if GA returns too often an unfeasible solution, try to increase this value
 PENALTY_COEFFICIENT = 3
 
 # enable temperature profiling to adjust mutation probabilities over generations
-TEMPERATURE_PROFILING = True
+TEMPERATURE_PROFILING = False
 INITIAL_TEMP = 0.95
 GOAL_TEMP = 0.5
 MIDPOINT = int(GENERATIONS / 2) # midpoint of the sigmoid function expressed in generations
@@ -22,9 +22,9 @@ STEEPNESS = 0.1 # steepness of the sigmoid function
 RAND_SEED = int(datetime.now().timestamp()) # set fixed seed for reproducibility
 
 # Output parameters
-OUTPUT_LOSS_PLOT = "plots/loss_plot.png"
-OUTPUT_TEMP_PROFILE_PLOT = "plots/temperature_profile.png"
-PLOT_METRICS = False
+OUTPUT_LOSS_PLOT = "../plots/loss_plot.png"
+OUTPUT_TEMP_PROFILE_PLOT = "../plots/temperature_profile.png"
+PLOT_METRICS = True
 
 class GA_Refiner:
     def __init__(self, seed=RAND_SEED):

@@ -17,17 +17,20 @@ args = parser.parse_args()
 '''
 INPUT DATA
 '''
+#now = datetime.now() 
+now = datetime.strptime('25-11-2024', '%d-%m-%Y').replace(hour=8, minute=00)
 
 # timouts for solver
-MAKESPAN_SOLVER_TIMEOUT = 800
+MAKESPAN_SOLVER_TIMEOUT = 1000
 CYCLE_OPTIM_SOLVER_TIMEOUT = 0
 GENETIC_REFINEMENT = True
+
 PLOT_GANTT = True
-
 USE_ADD_ELEMENT = True
+STOP_AT_FIRST_FEASIBLE = False
 
-COMMON_P_PATH = '../web_app/input/new_orders.csv'
-RUNNING_P_PATH = '../web_app/input/running_products.csv'
+COMMON_P_PATH = '../extras/output/common_products.csv'
+RUNNING_P_PATH = '../extras/output/running_products.csv'
 J_COMPATIBILITY_PATH = '../web_app/input/articoli_macchine.json'
 M_COMPATIBILITY_PATH = '../web_app/input/macchine_articoli.json'
 M_INFO_PATH = '../web_app/input/macchine_info.json'
@@ -36,9 +39,6 @@ ARTICLE_LIST_PATH = '../web_app/input/lista_articoli.csv'
 # output txt files
 OUTPUT_SCHEDULE = '../output/schedule.txt'
 OUTPUT_REFINED_SCHEDULE = '../output/refined_schedule.txt'
-
-now = datetime.now() 
-#now = datetime.strptime('19-11-2024', '%d-%m-%Y').replace(hour=14, minute=30)
 
 constraints = [] # list of constraints for debugging
 
@@ -57,7 +57,7 @@ machine_velocities = 1
 if machine_velocities % 2 == 0 : raise ValueError("Machine velocities must be odd numbers.")
     
 hour_resolution = 1 # 1: hours, 2: half-hours, 4: quarter-hours, ..., 60: minutes
-horizon_days = 120
+horizon_days = 125
 time_units_in_a_day = 24*hour_resolution   # 24 : hours, 48 : half-hours, 96 : quarter-hours, ..., 1440 : minutes
 horizon = horizon_days * time_units_in_a_day
 
@@ -800,7 +800,7 @@ if __name__ == '__main__':
     solver.parameters.log_search_progress = True
     solver.parameters.num_search_workers = os.cpu_count()
     #solver.parameters.add_lp_constraints_lazily = True
-    solver.parameters.stop_after_first_solution = True
+    if STOP_AT_FIRST_FEASIBLE : solver.parameters.stop_after_first_solution = True
 
     model.Minimize(makespan)
     print("-----------------------------------------------------")
@@ -837,7 +837,7 @@ if __name__ == '__main__':
         solver_new.parameters.cp_model_presolve = False
         solver_new.parameters.log_search_progress = True
         solver_new.parameters.num_search_workers = os.cpu_count()
-        solver_new.parameters.stop_after_first_solution = True
+        if STOP_AT_FIRST_FEASIBLE : solver_new.parameters.stop_after_first_solution = True
         print("-----------------------------------------------------")
         print("Searching...")
         stat = solver_new.Solve(model)
@@ -969,6 +969,23 @@ if __name__ == '__main__':
                 f.write(str(refined_schedule))
             # Plot refined schedule
             if PLOT_GANTT : plot_gantt_chart_1(refined_schedule, max_cycles, num_machines, horizon, prohibited_intervals, time_units_from_midnight)
+
+            # # Store daily levate counts of refined schedule
+            # daily_levate_counts = [0 for _ in range(horizon_days)]
+            # for p, prod in refinement:
+            #     for c in prod.cycle_end.keys():
+            #         for l in range(prod.num_levate[c]):
+            #             unload_beg_day = prod.unload_beg[c,l] // time_units_in_a_day
+            #             daily_levate_counts[unload_beg_day] += 1
+            # import pandas as pd
+            # # Now create a DateTimeIndex starting from 25-Nov-2024 and having horizon_days length
+            # s = pd.to_datetime('2024-11-25')  # Starting date (25-Nov-2024)
+            # d_idx = pd.date_range(start=s, periods=horizon_days, freq='D')
+            # # Create a pandas series with daily levate counts and associate it with the date_index
+            # daily_levate_series = pd.Series(daily_levate_counts, index=d_idx)
+            # # Store the daily levate counts to a CSV file
+            # print(daily_levate_series)
+            # daily_levate_series.to_csv('../extras/data/Gantt/25-11-2024_counts_solver.csv', header=True)
 
     else:
         model_proto = model.Proto()
