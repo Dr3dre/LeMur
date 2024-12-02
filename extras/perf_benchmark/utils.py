@@ -1,10 +1,9 @@
 from datetime import datetime
 import sys
-sys.path.append('../..')
+sys.path.append('..\\..\\web_app')
 
-from web_app.data_init import init_csv_data
-from web_app.gantt import plot_gantt_chart
-from web_app.solver import solve
+from data_init import init_csv_data
+from solver import solve
 import os
 
 def run_solver(
@@ -26,7 +25,7 @@ def run_solver(
     now=datetime.now(),
 ):
     # Paths to the files saved above
-    COMMON_P_PATH = "incremental_orders/new_orders.csv"
+    COMMON_P_PATH = "incremental_orders/orders.csv"
     J_COMPATIBILITY_PATH = "../../web_app/input/articoli_macchine.json"
     M_INFO_PATH = "../../web_app/input/macchine_info.json"
     RUNNING_P_PATH = "incremental_orders/running_products.csv"
@@ -143,57 +142,8 @@ def run_solver(
         print("Generated valid schedule")
         # Convert the schedule to a string to display
         schedule_str = str(schedule)
-
-        # Prepare data for plotting
-        # Build max_cycles
-        max_cycles = {}
-        for p, prod in schedule.products:
-            if prod.setup_beg:
-                max_cycle = max(prod.setup_beg.keys())
-                max_cycles[prod.id] = max_cycle + 1  # Assuming cycles are zero-indexed
-            else:
-                max_cycles[prod.id] = 0
-
-        # Get num_machines
-        used_machines = set()
-        for p, prod in schedule.products:
-            for c in prod.setup_beg.keys():
-                used_machines.add(prod.machine[c])
-        num_machines = len(used_machines)
-
-        # Calculate horizon
-        horizon = 0
-        for p, prod in schedule.products:
-            for c in prod.setup_beg.keys():
-                horizon = max(horizon, prod.cycle_end[c])
-                # Also consider unload_end times
-                for l in range(prod.num_levate[c]):
-                    if (c, l) in prod.unload_end.keys():
-                        horizon = max(horizon, prod.unload_end[c, l])
-
-        # Define prohibited_intervals (if available), otherwise set to empty list
-        prohibited_intervals = (
-            schedule.invalid_intervals if hasattr(schedule, "invalid_intervals") else []
-        )
-
-        # Define time_units_from_midnight (if available), otherwise set to 0
-        time_units_from_midnight = 0  # Update as per your requirements
-
-        print("Generating Gantt chart")
-
-        # Call the plotting function
-        fig = plot_gantt_chart(
-            production_schedule=schedule,
-            max_cycles=max_cycles,
-            num_machines=num_machines,
-            horizon=horizon,
-            prohibited_intervals=prohibited_intervals,
-            time_units_from_midnight=time_units_from_midnight,
-        )
-
-        print("Generated Gantt chart")
-        # Return the schedule and the Gantt chart figure
-        return schedule_str, fig
+        
+        return schedule_str
 
     except Exception as e:
         return f"❌ An error occurred during solving: {str(e)}", None

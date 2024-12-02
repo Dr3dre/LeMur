@@ -196,7 +196,7 @@ def get_prods_from_csv(
     running_products_df = pd.read_csv(running_products_path)
     for _, row in running_products_df.iterrows():
         # Gather Row Data
-        this_prod_id = base_id
+        this_prod_id = row["cliente"]+"_"+row["cod_articolo"]+"_"+str(base_id)
         kg_request = int(row["quantity"])
         article = str(row["cod_articolo"])
         machine = int(row["macchina"])
@@ -245,7 +245,7 @@ def get_prods_from_csv(
     running_products_df = pd.read_csv(common_products_path)
     for _, row in running_products_df.iterrows():
         # Gather Row Data
-        this_prod_id = base_id
+        this_prod_id = row["cliente"]+"_"+row["cod_articolo"]+"_"+str(base_id)
         kg_request = int(row["quantity"])
         article = str(row["cod_articolo"])
         start_date = pd.to_datetime(row["data inserimento"])

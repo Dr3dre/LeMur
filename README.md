@@ -15,19 +15,12 @@ The solution supports both a graphical user interface (GUI) for managing inputs 
     - `app.py`: The entry point for the web application.
     - Supporting Python files:
         - `data_init.py`: Handles data preprocessing and initialization.
-        - `solver.py`: Contains the main optimization solver logic.
+        - `solver.py`: Contains the main optimization solver logic. You can also play aroung with the solver by directly running this file.
         - `ga_refiner.py`: Implements genetic algorithm-based refinement for schedules.
         - `ga_utils.py`: Utility functions for evolutionary algorithms.
         - `utils.py`: General helper functions.
-- **code/**: Contains the core solver logic and supporting files.
-    - `solver.py`: Main solver logic for scheduling problems.
-    - Supporting Python files:
-        - `data_init.py`: Data preprocessing and initialization.
-        - `ga_refiner.py`: Genetic algorithm-based refinement for schedules.
-        - `ga_utils.py`: Utility functions for evolutionary algorithms.
-        - `utils.py`: General helper functions.
-        - `data_plotting.py`: Functions for generating Gantt charts.
 - **data/**: Contains script to process the data provided from Lemur to generate the required input files and simulate orders.
+- **extras/**: Additional files for testing, data pre-processing and performance benchmarking.
 
 ---
 
@@ -119,7 +112,7 @@ python app.py
 2. **`lista_articoli.csv`**:
    - Production data for each article:
         - codarticolo
-        - kg_ora
+        - kg_ora (for a macine with 256 fusi)
         - no_cicli
         - ore_levata
    - Example: `10353ZF, 1.87, 2, 96.0`

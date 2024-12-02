@@ -16,10 +16,12 @@ MAKESPAN_SOLVER_TIMEOUT = 600
 CYCLE_OPTIM_SOLVER_TIMEOUT = 60
 GENERATIONS = 250
 
-LOGGING = True
+LOGGING = False
 
 USE_ADD_ELEMENT = True
 PRESOLVE_SECOND_SEARCH = True
+
+STOP_AT_FIRST_SOLUTION = False
 
 # output txt files
 OUTPUT_SCHEDULE = "output/schedule.txt"
@@ -1154,7 +1156,7 @@ def solve(
     solver.parameters.log_search_progress = LOGGING
     solver.parameters.num_search_workers = os.cpu_count()
     # solver.parameters.add_lp_constraints_lazily = True
-    # solver.parameters.stop_after_first_solution = True
+    solver.parameters.stop_after_first_solution = STOP_AT_FIRST_SOLUTION
 
     model.Minimize(makespan)
     print("-----------------------------------------------------")
@@ -1198,7 +1200,6 @@ def solve(
         solver_new.parameters.cp_model_presolve = PRESOLVE_SECOND_SEARCH
         solver_new.parameters.log_search_progress = LOGGING
         solver_new.parameters.num_search_workers = os.cpu_count()
-        # solver_new.parameters.stop_after_first_solution = True
         print("-----------------------------------------------------")
         print("Searching...")
         stat = solver_new.Solve(model)

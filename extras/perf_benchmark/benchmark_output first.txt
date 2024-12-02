@@ -1,348 +1,44 @@
-#Bound  51.61s best:inf   next:[2049,2848] no_lp (initial_propagation)
-#Model  51.90s var:55967/56307 constraints:112116/117478
-#Model  59.71s var:55965/56307 constraints:112078/117478
-#Model  60.95s var:55964/56307 constraints:112059/117478
-#Model  61.81s var:55963/56307 constraints:112039/117478
-#Model  62.34s var:55962/56307 constraints:112020/117478
-#Model  63.24s var:55961/56307 constraints:112001/117478
-#Model  63.58s var:55960/56307 constraints:111982/117478
-#Model  63.78s var:55956/56307 constraints:111904/117478
-#Model  75.04s var:55955/56307 constraints:111882/117478
-#Model  75.25s var:55950/56307 constraints:111772/117478
-#Model  75.52s var:55949/56307 constraints:111750/117478
-#Model  79.22s var:55948/56307 constraints:111733/117478
-#Model  81.89s var:55944/56307 constraints:111665/117478
-#Model  82.13s var:55942/56307 constraints:111631/117478
-#Model  82.39s var:55941/56307 constraints:111614/117478
-#Model 118.12s var:55940/56307 constraints:111597/117478
-#Model 118.55s var:55939/56307 constraints:111576/117478
-#Model 127.95s var:55938/56307 constraints:111555/117478
-#Model 131.25s var:55937/56307 constraints:111534/117478
-#Model 131.68s var:55936/56307 constraints:111513/117478
-#Model 132.08s var:55935/56307 constraints:111491/117478
-#Model 149.54s var:55934/56307 constraints:111469/117478
-#Model 154.24s var:55933/56307 constraints:111447/117478
-#Model 157.40s var:55932/56307 constraints:111430/117478
-#Model 157.91s var:55928/56307 constraints:111346/117478
-#Model 162.43s var:55927/56307 constraints:111324/117478
-#Model 164.53s var:55926/56307 constraints:111302/117478
-#Model 165.12s var:55918/56307 constraints:111126/117478
-#Model 165.74s var:55911/56307 constraints:110975/117478
-#Model 166.40s var:55905/56307 constraints:110849/117478
-#Model 178.09s var:55904/56307 constraints:110827/117478
-#Model 179.20s var:55896/56307 constraints:110651/117478
-#Model 180.55s var:55888/56307 constraints:110481/117478
-#Model 207.35s var:55876/56307 constraints:110456/117478
-#1     292.71s best:2848  next:[2049,2847] no_lp (fixed_bools=890/102272)
-#Model 294.43s var:55869/56307 constraints:110442/117478
-#2     298.02s best:2847  next:[2049,2846] no_lp (fixed_bools=899/102288)
-#Model 300.70s var:55866/56307 constraints:110436/117478
-#3     301.97s best:2846  next:[2049,2845] no_lp (fixed_bools=904/102312)
-#Model 305.14s var:55851/56307 constraints:110406/117478
-#4     310.62s best:2845  next:[2049,2844] no_lp (fixed_bools=922/102323)
-#5     313.07s best:2844  next:[2049,2843] no_lp (fixed_bools=940/102343)
-#Model 313.76s var:55836/56307 constraints:110376/117478
-#Model 317.30s var:55800/56307 constraints:110304/117478
-#6     317.96s best:2843  next:[2049,2842] no_lp (fixed_bools=980/102345)
-#Model 321.53s var:55771/56307 constraints:110246/117478
-#7     322.66s best:2842  next:[2049,2841] no_lp (fixed_bools=1014/102351)
-#8     324.97s best:2841  next:[2049,2840] no_lp (fixed_bools=1058/102373)
-#Model 326.60s var:55742/56307 constraints:110188/117478
-#9     327.17s best:2824  next:[2049,2823] no_lp (fixed_bools=1417/102391)
-#10    329.36s best:2823  next:[2049,2822] no_lp (fixed_bools=1499/102402)
-#Model 330.56s var:55413/56307 constraints:109415/117478
-#11    332.66s best:2822  next:[2049,2821] no_lp (fixed_bools=1532/102416)
-#Model 334.88s var:55329/56307 constraints:109219/117478
-#12    335.69s best:2821  next:[2049,2820] no_lp (fixed_bools=1568/102449)
-#13    338.13s best:2820  next:[2049,2819] no_lp (fixed_bools=1644/102463)
-#Model 339.45s var:55312/56307 constraints:109185/117478
-#14    340.69s best:2819  next:[2049,2818] no_lp (fixed_bools=1721/102481)
-#15    344.21s best:2818  next:[2049,2817] no_lp (fixed_bools=1778/102501)
-#Model 344.21s var:55243/56307 constraints:109047/117478
-#16    347.14s best:2817  next:[2049,2816] no_lp (fixed_bools=1805/102511)
-#Model 349.57s var:55208/56307 constraints:108977/117478
-#17    350.32s best:2800  next:[2049,2799] no_lp (fixed_bools=2416/102526)
-#18    352.90s best:2799  next:[2049,2798] no_lp (fixed_bools=2540/102545)
-#Model 354.85s var:54881/56307 constraints:108323/117478
-#19    355.23s best:2798  next:[2049,2797] no_lp (fixed_bools=2544/102560)
-#20    357.58s best:2797  next:[2049,2796] no_lp (fixed_bools=2577/102564)
-#Model 359.90s var:54816/56307 constraints:108193/117478
-#21    359.98s best:2796  next:[2049,2795] no_lp (fixed_bools=2587/102574)
-#22    362.32s best:2795  next:[2049,2794] no_lp (fixed_bools=2625/102590)
-#Model 365.18s var:54799/56307 constraints:108159/117478
-#23    367.64s best:2794  next:[2049,2793] no_lp (fixed_bools=2690/102600)
-#24    370.84s best:2793  next:[2049,2792] no_lp (fixed_bools=2736/102616)
-#Model 371.33s var:54751/56307 constraints:108063/117478
-#25    373.71s best:2776  next:[2049,2775] no_lp (fixed_bools=3472/102627)
-#26    375.93s best:2775  next:[2049,2774] no_lp (fixed_bools=3636/102630)
-#Model 377.85s var:54363/56307 constraints:107287/117478
-#27    380.20s best:2774  next:[2049,2773] no_lp (fixed_bools=3668/102647)
-#28    382.62s best:2773  next:[2049,2772] no_lp (fixed_bools=3709/102654)
-#Model 384.38s var:54274/56307 constraints:107109/117478
-#29    384.99s best:2772  next:[2049,2771] no_lp (fixed_bools=3748/102664)
-#30    388.06s best:2771  next:[2049,2770] no_lp (fixed_bools=3861/102681)
-#31    390.37s best:2770  next:[2049,2769] no_lp (fixed_bools=3949/102686)
-#Model 390.86s var:54244/56307 constraints:107049/117478
-#32    392.55s best:2769  next:[2049,2768] no_lp (fixed_bools=3979/102695)
-#33    395.49s best:2752  next:[2049,2751] no_lp (fixed_bools=4488/102707)
-#Model 397.16s var:54137/56307 constraints:106835/117478
-#34    397.69s best:2751  next:[2049,2750] no_lp (fixed_bools=4644/102722)
-#35    400.44s best:2750  next:[2049,2749] no_lp (fixed_bools=4661/102735)
-#36    402.71s best:2749  next:[2049,2748] no_lp (fixed_bools=4682/102738)
-#Model 404.56s var:53809/56307 constraints:106179/117478
-#37    404.96s best:2748  next:[2049,2747] no_lp (fixed_bools=4711/102761)
-#38    407.34s best:2747  next:[2049,2746] no_lp (fixed_bools=4818/102766)
-#39    412.42s best:2746  next:[2049,2745] no_lp (fixed_bools=4862/102776)
-#Model 412.53s var:53793/56307 constraints:106147/117478
-#40    414.81s best:2745  next:[2049,2744] no_lp (fixed_bools=4898/102786)
-#41    417.10s best:2728  next:[2049,2727] no_lp (fixed_bools=5673/102805)
-#42    419.42s best:2727  next:[2049,2726] no_lp (fixed_bools=5813/102813)
-#Model 421.15s var:53714/56307 constraints:105989/117478
-#43    421.58s best:2726  next:[2049,2725] no_lp (fixed_bools=5835/102822)
-#44    423.78s best:2725  next:[2049,2724] no_lp (fixed_bools=5861/102832)
-#45    426.20s best:2724  next:[2049,2723] no_lp (fixed_bools=5901/102848)
-#46    428.53s best:2723  next:[2049,2722] no_lp (fixed_bools=5946/102864)
-#Model 429.86s var:53262/56307 constraints:105085/117478
-#47    430.85s best:2722  next:[2049,2721] no_lp (fixed_bools=5993/102876)
-#48    433.30s best:2721  next:[2049,2720] no_lp (fixed_bools=6037/102885)
-#49    435.86s best:2680  next:[2049,2679] no_lp (fixed_bools=7605/102893)
-#50    438.09s best:2679  next:[2049,2678] no_lp (fixed_bools=7813/102905)
-#Model 438.58s var:53201/56307 constraints:104963/117478
-#51    440.23s best:2678  next:[2049,2677] no_lp (fixed_bools=7823/102914)
-#52    442.42s best:2677  next:[2049,2676] no_lp (fixed_bools=7861/102930)
-#53    444.59s best:2676  next:[2049,2675] no_lp (fixed_bools=7900/102941)
-#54    447.37s best:2675  next:[2049,2674] no_lp (fixed_bools=7979/102961)
-#Model 447.64s var:52308/56307 constraints:103177/117478
-#55    451.04s best:2674  next:[2049,2673] no_lp (fixed_bools=8048/102980)
-#56    453.25s best:2673  next:[2049,2672] no_lp (fixed_bools=8111/102989)
-#57    455.12s best:2656  next:[2049,2655] no_lp (fixed_bools=8778/102995)
-#58    456.90s best:2655  next:[2049,2654] no_lp (fixed_bools=8927/103011)
-#Model 457.09s var:52213/56307 constraints:102987/117478
-#59    458.89s best:2654  next:[2049,2653] no_lp (fixed_bools=8962/103025)
-#60    460.71s best:2653  next:[2049,2652] no_lp (fixed_bools=9011/103041)
-#61    462.76s best:2652  next:[2049,2651] no_lp (fixed_bools=9086/103045)
-#62    464.89s best:2651  next:[2049,2650] no_lp (fixed_bools=9169/103055)
-#Model 466.99s var:51771/56307 constraints:102103/117478
-#63    467.59s best:2650  next:[2049,2649] no_lp (fixed_bools=9230/103077)
-#64    469.82s best:2649  next:[2049,2648] no_lp (fixed_bools=9263/103096)
-#65    472.97s best:2632  next:[2049,2631] no_lp (fixed_bools=9934/103111)
-#66    475.02s best:2631  next:[2049,2630] no_lp (fixed_bools=10072/103117)
-#Model 476.61s var:51661/56307 constraints:101883/117478
-#67    477.12s best:2630  next:[2049,2629] no_lp (fixed_bools=10081/103123)
-#68    479.21s best:2629  next:[2049,2628] no_lp (fixed_bools=10124/103131)
-#69    481.36s best:2628  next:[2049,2627] no_lp (fixed_bools=10143/103133)
-#70    483.69s best:2627  next:[2049,2626] no_lp (fixed_bools=10192/103155)
-#Model 486.33s var:51258/56307 constraints:101077/117478
-#71    486.75s best:2626  next:[2049,2625] no_lp (fixed_bools=10261/103177)
-#72    489.49s best:2625  next:[2049,2624] no_lp (fixed_bools=10308/103193)
-#73    492.20s best:2608  next:[2049,2607] no_lp (fixed_bools=11066/103216)
-#74    494.32s best:2607  next:[2049,2606] no_lp (fixed_bools=11226/103219)
-#Model 495.77s var:51194/56307 constraints:100949/117478
-#75    496.56s best:2606  next:[2049,2605] no_lp (fixed_bools=11260/103227)
-#76    498.73s best:2605  next:[2049,2604] no_lp (fixed_bools=11303/103235)
-#77    500.93s best:2604  next:[2049,2603] no_lp (fixed_bools=11341/103239)
-#78    503.29s best:2603  next:[2049,2602] no_lp (fixed_bools=11451/103316)
-#79    505.54s best:2602  next:[2049,2601] no_lp (fixed_bools=11543/103327)
-#Model 505.87s var:50716/56307 constraints:99993/117478
-#80    507.61s best:2601  next:[2049,2600] no_lp (fixed_bools=11583/103332)
-#81    509.63s best:2584  next:[2049,2583] no_lp (fixed_bools=12102/103355)
-#82    511.84s best:2583  next:[2049,2582] no_lp (fixed_bools=12257/103364)
-#83    514.26s best:2582  next:[2049,2581] no_lp (fixed_bools=12262/103392)
-#84    516.51s best:2581  next:[2049,2580] no_lp (fixed_bools=12279/103395)
-#Model 516.67s var:50579/56307 constraints:99719/117478
-#85    518.83s best:2580  next:[2049,2579] no_lp (fixed_bools=12313/103400)
-#86    520.92s best:2579  next:[2049,2578] no_lp (fixed_bools=12416/103405)
-#87    523.12s best:2578  next:[2049,2577] no_lp (fixed_bools=12460/103410)
-#88    525.26s best:2577  next:[2049,2576] no_lp (fixed_bools=12500/103412)
-#89    527.36s best:2560  next:[2049,2559] no_lp (fixed_bools=13277/103420)
-#Model 527.67s var:50235/56307 constraints:99031/117478
-#90    529.48s best:2559  next:[2049,2558] no_lp (fixed_bools=13418/103429)
-#91    531.58s best:2558  next:[2049,2557] no_lp (fixed_bools=13436/103439)
-#92    534.40s best:2557  next:[2049,2556] no_lp (fixed_bools=13463/103456)
-#93    536.80s best:2556  next:[2049,2555] no_lp (fixed_bools=13500/103465)
-#Model 538.83s var:49710/56307 constraints:97981/117478
-#94    539.12s best:2555  next:[2049,2554] no_lp (fixed_bools=13542/103478)
-#95    541.39s best:2554  next:[2049,2553] no_lp (fixed_bools=13588/103485)
-#96    543.83s best:2553  next:[2049,2552] no_lp (fixed_bools=13639/103500)
-#97    547.12s best:2512  next:[2049,2511] no_lp (fixed_bools=15211/103512)
-#Model 550.19s var:49661/56307 constraints:97883/117478
-#98    551.78s best:2511  next:[2049,2510] no_lp (fixed_bools=15424/103534)
-#99    554.21s best:2510  next:[2049,2509] no_lp (fixed_bools=15438/103540)
-#100   558.00s best:2509  next:[2049,2508] no_lp (fixed_bools=15476/103561)
-#101   560.47s best:2508  next:[2049,2507] no_lp (fixed_bools=15514/103568)
-#Model 561.12s var:48752/56307 constraints:96066/117478
-#102   563.76s best:2507  next:[2049,2506] no_lp (fixed_bools=15593/103580)
-#103   566.46s best:2506  next:[2049,2505] no_lp (fixed_bools=15660/103586)
-#104   569.21s best:2505  next:[2049,2504] no_lp (fixed_bools=15725/103598)
-#Model 571.84s var:48683/56307 constraints:95928/117478
-#105   572.11s best:2488  next:[2049,2487] no_lp (fixed_bools=16393/103610)
-#106   575.13s best:2487  next:[2049,2486] no_lp (fixed_bools=16537/103626)
-#107   578.73s best:2486  next:[2049,2485] no_lp (fixed_bools=16574/103640)
-#108   581.15s best:2485  next:[2049,2484] no_lp (fixed_bools=16619/103659)
-#Model 582.90s var:48294/56307 constraints:95150/117478
-#109   585.00s best:2484  next:[2049,2483] no_lp (fixed_bools=16694/103682)
-#110   588.66s best:2483  next:[2049,2482] no_lp (fixed_bools=16777/103691)
-#111   591.16s best:2482  next:[2049,2481] no_lp (fixed_bools=16838/103710)
-#112   594.13s best:2481  next:[2049,2480] no_lp (fixed_bools=16870/103722)
-#Model 594.56s var:48162/56307 constraints:94886/117478
-#113   596.20s best:2464  next:[2049,2463] no_lp (fixed_bools=17541/103729)
-#114   598.25s best:2463  next:[2049,2462] no_lp (fixed_bools=17675/103735)
-#115   600.43s best:2462  next:[2049,2461] no_lp (fixed_bools=17689/103744)
-#116   603.79s best:2461  next:[2049,2460] no_lp (fixed_bools=17728/103779)
-#Model 606.60s var:47764/56307 constraints:94090/117478
-#117   609.22s best:2460  next:[2049,2459] no_lp (fixed_bools=17739/103794)
-#118   611.90s best:2459  next:[2049,2458] no_lp (fixed_bools=17787/103808)
-#119   614.59s best:2458  next:[2049,2457] no_lp (fixed_bools=17857/103814)
-#120   617.25s best:2457  next:[2049,2456] no_lp (fixed_bools=17906/103826)
-#Model 618.45s var:47682/56307 constraints:93926/117478
-#121   620.16s best:2440  next:[2049,2439] no_lp (fixed_bools=18665/103854)
-#122   622.44s best:2439  next:[2049,2438] no_lp (fixed_bools=18828/103869)
-#123   624.78s best:2438  next:[2049,2437] no_lp (fixed_bools=18861/103879)
-#124   627.51s best:2437  next:[2049,2436] no_lp (fixed_bools=18900/103893)
-#125   629.87s best:2436  next:[2049,2435] no_lp (fixed_bools=18939/103904)
-#Model 630.52s var:47246/56307 constraints:93054/117478
-#126   632.41s best:2435  next:[2049,2434] no_lp (fixed_bools=19055/103907)
-#127   635.00s best:2434  next:[2049,2433] no_lp (fixed_bools=19162/103931)
-#128   637.54s best:2433  next:[2049,2432] no_lp (fixed_bools=19194/103935)
-#129   640.08s best:2416  next:[2049,2415] no_lp (fixed_bools=19712/103945)
-#Model 642.99s var:47076/56307 constraints:92714/117478
-#130   646.47s best:2415  next:[2049,2414] no_lp (fixed_bools=19872/103970)
-#131   649.50s best:2414  next:[2049,2413] no_lp (fixed_bools=19878/103991)
-#132   652.94s best:2413  next:[2049,2412] no_lp (fixed_bools=19896/104001)
-#Model 656.05s var:46692/56307 constraints:91946/117478
-#133   657.18s best:2412  next:[2049,2411] no_lp (fixed_bools=19933/104022)
-#134   659.91s best:2411  next:[2049,2410] no_lp (fixed_bools=20172/104029)
-#135   663.08s best:2410  next:[2049,2409] no_lp (fixed_bools=20218/104041)
-#136   666.12s best:2409  next:[2049,2408] no_lp (fixed_bools=20255/104057)
-#137   669.12s best:2392  next:[2049,2391] no_lp (fixed_bools=21027/104070)
-#Model 669.12s var:46676/56307 constraints:91914/117478
-#138   671.25s best:2391  next:[2049,2390] no_lp (fixed_bools=21173/104083)
-#139   673.58s best:2390  next:[2049,2389] no_lp (fixed_bools=21194/104102)
-#140   676.31s best:2389  next:[2049,2388] no_lp (fixed_bools=21219/104115)
-#141   678.73s best:2388  next:[2049,2387] no_lp (fixed_bools=21260/104119)
-#142   681.56s best:2387  next:[2049,2386] no_lp (fixed_bools=21306/104137)
-#Model 682.02s var:46083/56307 constraints:90727/117478
-#143   683.89s best:2386  next:[2049,2385] no_lp (fixed_bools=21352/104141)
-#144   686.19s best:2385  next:[2049,2384] no_lp (fixed_bools=21404/104149)
-#145   688.98s best:2344  next:[2049,2343] no_lp (fixed_bools=22986/104153)
-#146   691.30s best:2343  next:[2049,2342] no_lp (fixed_bools=23189/104169)
-#147   693.65s best:2342  next:[2049,2341] no_lp (fixed_bools=23201/104176)
-#Model 694.93s var:46016/56307 constraints:90593/117478
-#148   696.19s best:2341  next:[2049,2340] no_lp (fixed_bools=23239/104178)
-#149   698.45s best:2340  next:[2049,2339] no_lp (fixed_bools=23273/104190)
-#150   701.16s best:2339  next:[2049,2338] no_lp (fixed_bools=23354/104197)
-#151   703.60s best:2338  next:[2049,2337] no_lp (fixed_bools=23422/104205)
-#152   705.96s best:2337  next:[2049,2336] no_lp (fixed_bools=23484/104213)
-#153   708.08s best:2320  next:[2049,2319] no_lp (fixed_bools=24147/104219)
-#Model 708.29s var:45106/56307 constraints:88775/117478
-#154   710.34s best:2319  next:[2049,2318] no_lp (fixed_bools=24293/104236)
-#155   712.55s best:2318  next:[2049,2317] no_lp (fixed_bools=24325/104247)
-#156   715.01s best:2317  next:[2049,2316] no_lp (fixed_bools=24366/104264)
-#157   717.67s best:2316  next:[2049,2315] no_lp (fixed_bools=24442/104274)
-#158   720.09s best:2315  next:[2049,2314] no_lp (fixed_bools=24520/104291)
-#Model 721.46s var:44597/56307 constraints:87757/117478
-#159   722.48s best:2314  next:[2049,2313] no_lp (fixed_bools=24577/104306)
-#160   724.70s best:2313  next:[2049,2312] no_lp (fixed_bools=24603/104320)
-#161   727.73s best:2296  next:[2049,2295] no_lp (fixed_bools=25269/104333)
-#162   730.29s best:2295  next:[2049,2294] no_lp (fixed_bools=25408/104347)
-#163   732.83s best:2294  next:[2049,2293] no_lp (fixed_bools=25420/104363)
-#Model 734.44s var:44473/56307 constraints:87509/117478
-#164   736.01s best:2293  next:[2049,2292] no_lp (fixed_bools=25459/104370)
-#165   738.88s best:2292  next:[2049,2291] no_lp (fixed_bools=25471/104404)
-#166   741.84s best:2291  next:[2049,2290] no_lp (fixed_bools=25523/104416)
-#167   744.19s best:2290  next:[2049,2289] no_lp (fixed_bools=25596/104435)
-#168   747.05s best:2289  next:[2049,2288] no_lp (fixed_bools=25652/104466)
-#Model 747.93s var:44057/56307 constraints:86677/117478
-#169   749.87s best:2272  next:[2049,2271] no_lp (fixed_bools=26421/104485)
-#170   752.41s best:2271  next:[2049,2270] no_lp (fixed_bools=26587/104497)
-#171   754.96s best:2270  next:[2049,2269] no_lp (fixed_bools=26625/104509)
-#172   757.75s best:2269  next:[2049,2268] no_lp (fixed_bools=26669/104526)
-#173   761.39s best:2268  next:[2049,2267] no_lp (fixed_bools=26716/104544)
-#Model 763.13s var:43618/56307 constraints:85799/117478
-#174   766.60s best:2267  next:[2049,2266] no_lp (fixed_bools=26832/104557)
-#175   769.63s best:2266  next:[2049,2265] no_lp (fixed_bools=26936/104569)
-#176   772.66s best:2265  next:[2049,2264] no_lp (fixed_bools=26979/104590)
-#177   774.94s best:2248  next:[2049,2247] no_lp (fixed_bools=27498/104607)
-#178   777.15s best:2247  next:[2049,2246] no_lp (fixed_bools=27659/104624)
-#Model 777.15s var:43448/56307 constraints:85458/117478
-#179   779.40s best:2246  next:[2049,2245] no_lp (fixed_bools=27674/104631)
-#180   782.19s best:2245  next:[2049,2244] no_lp (fixed_bools=27693/104639)
-#181   784.99s best:2244  next:[2049,2243] no_lp (fixed_bools=27732/104655)
-#182   787.75s best:2243  next:[2049,2242] no_lp (fixed_bools=27839/104678)
-#Model 789.57s var:43063/56307 constraints:84688/117478
-#183   791.03s best:2242  next:[2049,2241] no_lp (fixed_bools=27891/104690)
-#184   794.52s best:2241  next:[2049,2240] no_lp (fixed_bools=27928/104709)
-#185   796.77s best:2224  next:[2049,2223] no_lp (fixed_bools=28705/104717)
-#Model 802.54s var:42984/56307 constraints:84530/117478
-#186   804.56s best:2223  next:[2049,2222] no_lp (fixed_bools=28850/104749)
-#187   807.21s best:2222  next:[2049,2221] no_lp (fixed_bools=28872/104765)
-#188   809.86s best:2221  next:[2049,2220] no_lp (fixed_bools=28910/104775)
-#189   812.70s best:2220  next:[2049,2219] no_lp (fixed_bools=28944/104791)
-#Model 815.44s var:42523/56307 constraints:83608/117478
-#190   817.09s best:2219  next:[2049,2218] no_lp (fixed_bools=28993/104803)
-#191   820.85s best:2218  next:[2049,2217] no_lp (fixed_bools=29045/104830)
-#192   824.77s best:2217  next:[2049,2216] no_lp (fixed_bools=29100/104852)
-#193   827.02s best:2176  next:[2049,2175] no_lp (fixed_bools=30698/104873)
-#Model 828.06s var:42471/56307 constraints:83503/117478
-#194   829.04s best:2175  next:[2049,2174] no_lp (fixed_bools=30910/104878)
-#195   831.43s best:2174  next:[2049,2173] no_lp (fixed_bools=30923/104883)
-#196   833.90s best:2173  next:[2049,2172] no_lp (fixed_bools=30964/104895)
-#197   837.89s best:2172  next:[2049,2171] no_lp (fixed_bools=31006/104919)
-#198   840.81s best:2171  next:[2049,2170] no_lp (fixed_bools=31090/104924)
-#Model 840.81s var:41564/56307 constraints:81689/117478
-#199   843.72s best:2170  next:[2049,2169] no_lp (fixed_bools=31157/104934)
-#200   846.59s best:2169  next:[2049,2168] no_lp (fixed_bools=31225/104954)
-#201   848.69s best:2152  next:[2049,2151] no_lp (fixed_bools=31902/104970)
-#202   851.35s best:2151  next:[2049,2150] no_lp (fixed_bools=32058/104977)
-#203   853.55s best:2150  next:[2049,2149] no_lp (fixed_bools=32091/105003)
-#Model 854.16s var:41466/56307 constraints:81493/117478
-#204   855.71s best:2149  next:[2049,2148] no_lp (fixed_bools=32138/105012)
-#205   859.92s best:2148  next:[2049,2147] no_lp (fixed_bools=32216/105020)
-#206   863.15s best:2147  next:[2049,2146] no_lp (fixed_bools=32304/105038)
-#207   865.49s best:2146  next:[2049,2145] no_lp (fixed_bools=32371/105064)
-#Model 867.15s var:41004/56307 constraints:80569/117478
-#208   867.94s best:2145  next:[2049,2144] no_lp (fixed_bools=32403/105077)
-#209   872.88s best:2128  next:[2049,2127] no_lp (fixed_bools=33074/105115)
-#210   874.89s best:2127  next:[2049,2126] no_lp (fixed_bools=33212/105129)
-#211   876.87s best:2126  next:[2049,2125] no_lp (fixed_bools=33229/105139)
-#212   879.00s best:2125  next:[2049,2124] no_lp (fixed_bools=33269/105148)
-#Model 880.59s var:40900/56307 constraints:80361/117478
-#213   881.20s best:2124  next:[2049,2123] no_lp (fixed_bools=33285/105160)
-#214   885.49s best:2123  next:[2049,2122] no_lp (fixed_bools=33335/105176)
-#215   888.72s best:2122  next:[2049,2121] no_lp (fixed_bools=33409/105200)
-#216   891.04s best:2121  next:[2049,2120] no_lp (fixed_bools=33468/105215)
-#217   893.65s best:2104  next:[2049,2103] no_lp (fixed_bools=34233/105234)
-#Model 893.99s var:40489/56307 constraints:79541/117478
-#218   895.95s best:2103  next:[2049,2102] no_lp (fixed_bools=34395/105247)
-#219   897.92s best:2102  next:[2049,2101] no_lp (fixed_bools=34431/105261)
-#220   900.10s best:2101  next:[2049,2100] no_lp (fixed_bools=34476/105275)
-#221   902.53s best:2100  next:[2049,2099] no_lp (fixed_bools=34523/105284)
-#222   904.86s best:2099  next:[2049,2098] no_lp (fixed_bools=34642/105296)
-#223   907.49s best:2098  next:[2049,2097] no_lp (fixed_bools=34740/105309)
-#Model 908.00s var:39971/56307 constraints:78510/117478
-#224   910.98s best:2097  next:[2049,2096] no_lp (fixed_bools=34776/105347)
-#225   913.21s best:2080  next:[2049,2079] no_lp (fixed_bools=35295/105366)
-#226   915.34s best:2079  next:[2049,2078] no_lp (fixed_bools=35447/105374)
-#227   917.52s best:2078  next:[2049,2077] no_lp (fixed_bools=35469/105381)
-#228   920.44s best:2077  next:[2049,2076] no_lp (fixed_bools=35492/105401)
-#Model 921.57s var:39822/56307 constraints:78212/117478
-#229   923.29s best:2076  next:[2049,2075] no_lp (fixed_bools=35532/105415)
-#230   927.94s best:2075  next:[2049,2074] no_lp (fixed_bools=35641/105434)
-#231   933.48s best:2074  next:[2049,2073] no_lp (fixed_bools=35691/105459)
-#Model 935.12s var:39470/56307 constraints:77516/117478
-#232   939.76s best:2073  next:[2049,2072] no_lp (fixed_bools=35741/105468)
-#Model 948.53s var:39391/56307 constraints:77358/117478
-#233   949.64s best:2056  next:[2049,2055] no_lp (fixed_bools=36520/105497)
-#234   951.92s best:2055  next:[2049,2054] no_lp (fixed_bools=36666/105505)
-#235   954.50s best:2054  next:[2049,2053] no_lp (fixed_bools=36690/105523)
-#236   956.96s best:2053  next:[2049,2052] no_lp (fixed_bools=36718/105530)
-#237   960.07s best:2052  next:[2049,2051] no_lp (fixed_bools=36763/105552)
-#238   963.08s best:2051  next:[2049,2050] no_lp (fixed_bools=36815/105562)
-#Model 963.30s var:39009/56307 constraints:76595/117478
-#239   975.41s best:2050  next:[2049,2049] no_lp (fixed_bools=36867/105598)
-#Model 976.37s var:38871/56307 constraints:76320/117478
-#240   978.06s best:2049  next:[]         no_lp (fixed_bools=36919/105604)
-#Done  978.09s no_lp
-#Model 988.71s var:38848/56307 constraints:76166/117478
-#Done  989.08s quick_restart_no_lp
-#Model 999.77s var:38833/56307 constraints:76136/117478
+#Bound  32.47s best:inf   next:[2025,2872] probing_no_lp (initial_propagation)
+#Model  32.63s var:56857/57210 constraints:113912/119300
+#Model  32.83s var:56854/57210 constraints:113906/119300
+#Model  33.08s var:56852/57210 constraints:113902/119300
+#Model  33.34s var:56838/57210 constraints:113613/119300
+#Model  33.46s var:56774/57210 constraints:112287/119300
+#Model  34.42s var:56772/57210 constraints:112279/119300
+#Model  36.27s var:56771/57210 constraints:112258/119300
+#Model  44.29s var:56759/57210 constraints:112236/119300
+#Model  44.51s var:56757/57210 constraints:112234/119300
+#Model  45.93s var:56747/57210 constraints:112214/119300
+#Model  47.56s var:56729/57210 constraints:112196/119300
+#1     218.50s best:2032  next:[2025,2031] objective_shaving_no_lp (vars=41556 csts=83073)
+#Model 219.18s var:38869/57210 constraints:76206/119300
+#Model 220.30s var:38867/57210 constraints:76202/119300
+#Model 220.85s var:38865/57210 constraints:76198/119300
+#Model 223.66s var:38846/57210 constraints:76160/119300
+#Model 224.77s var:38767/57210 constraints:76002/119300
+#Model 227.20s var:38748/57210 constraints:75964/119300
+#Model 228.47s var:38729/57210 constraints:75926/119300
+#2     344.90s best:2031  next:[2025,2030] no_lp (fixed_bools=36321/103981)
+#Model 346.17s var:38727/57210 constraints:75921/119300
+#3     348.53s best:2030  next:[2025,2029] no_lp (fixed_bools=36327/103995)
+#Model 350.14s var:38712/57210 constraints:75891/119300
+#4     357.91s best:2029  next:[2025,2028] no_lp (fixed_bools=36361/104007)
+#Model 359.07s var:38697/57210 constraints:75861/119300
+#Model 361.25s var:38696/57210 constraints:75859/119300
+#5     362.71s best:2028  next:[2025,2027] no_lp (fixed_bools=36394/104019)
+#Model 363.20s var:38691/57210 constraints:75849/119300
+#Model 365.21s var:38678/57210 constraints:75823/119300
+#6     371.86s best:2027  next:[2025,2026] no_lp (fixed_bools=36436/104036)
+#Model 372.97s var:38677/57210 constraints:75821/119300
+#7     375.20s best:2026  next:[2025,2025] no_lp (fixed_bools=36464/104054)
+#Model 375.73s var:38664/57210 constraints:75795/119300
+#Model 378.54s var:38643/57210 constraints:75645/119300
+#Model 380.69s var:38631/57210 constraints:75621/119300
+#Model 392.53s var:38630/57210 constraints:75619/119300
+#Model 394.83s var:38625/57210 constraints:75609/119300
+#Model 423.92s var:38624/57210 constraints:75607/119300
+#Model 426.34s var:38615/57210 constraints:75589/119300
+#8     435.97s best:2025  next:[]         no_lp (fixed_bools=36561/104106)
+#Done  435.99s no_lp
+#Model 436.97s var:38614/57210 constraints:75587/119300
+#Done  436.99s probing_no_lp

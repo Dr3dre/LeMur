@@ -305,7 +305,7 @@ with gr.Blocks() as demo:
             max_seconds = gr.Slider(
                 label="Max Seconds for makespan minimization",
                 minimum=30,
-                maximum=60 * 100,
+                maximum=60 * 60,
                 step=1,
                 value=60,
             )
@@ -313,7 +313,7 @@ with gr.Blocks() as demo:
             second_run_seconds = gr.Slider(
                 label="Max seconds for compactness refinement",
                 minimum=0,
-                maximum=60 * 100,
+                maximum=60 * 60,
                 step=1,
                 value=60,
             )
@@ -321,7 +321,7 @@ with gr.Blocks() as demo:
             run_ga = gr.Slider(
                 label="Genetic refinement number of generations",
                 minimum=0,
-                maximum=500,
+                maximum=1000,
                 step=1,
                 value=250,
             )
