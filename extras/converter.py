@@ -13,10 +13,10 @@ DATA_DI_RIFERIMENTO = '25-11-2024'                      # Date representing sche
 STATO_MACCHINE_FILE = 'Stato_Macchine_25-11-2024.xlsx'
 PIANIFICAZIONE_FILE = 'Pianificazione_25-11-2024.xlsx'
 # Kg of cycle 'continuativo' when found one
-KG_CONTINUATIVO = 10000  # Better to keep this as low as possible (very haevy on computation)
-MAX_DAYS_DELAY = 40 # due date for a product which is found to be already late with respect to its due date
+KG_CONTINUATIVO = 3000     # Better to keep this as low as possible (very haevy on computation)
+MAX_DAYS_DELAY = 60         # due date for a product which is found to be already late with respect to its due date
 MAX_DAYS_CONTINUATIVO = 365 # continuative productions have maximum this quantity of days to be completed
-MAX_DAYS_MISSING = 365 # missing due dates are set to this value (1 year in the future)
+MAX_DAYS_MISSING = 365      # missing due dates are set to this value (1 year in the future)
 
 # File containing additional common products coming outside 'pianificazione' (if any)
 # Such file will be merged into the common products output file
@@ -151,7 +151,7 @@ def row_parser(row, art_standard_levate, now) :
     # Check if article is continuative
     is_continuativo = True if row['N° levate ord'] == 'C' else False
     # In the case data di consegna refers to the past (we're having a delay)
-    due_date = row['data di consegna'] if row['data di consegna'] < now else (now+timedelta(days=MAX_DAYS_DELAY))
+    due_date = row['data di consegna'] if row['data di consegna'] > now else (now+timedelta(days=MAX_DAYS_DELAY))
     # Assuming N° levate att. is one indexed (minimum value is 1) correct it
     curr_levata = max(1, int(row['N° levate att.']))
     # In case of continuative productions, set the total number of levate to the standard value
@@ -413,6 +413,13 @@ def extract_current_status_from_xls (curr_status_path: str, curr_plan_path: str,
     common_prod_columns = list(common_products[0].keys()) if len(common_products) > 0 else []
     running_products = pd.DataFrame(running_products, columns=running_prod_columns) if len(running_prod_columns) > 0 else None
     common_products = pd.DataFrame(common_products, columns=common_prod_columns) if len(common_prod_columns) > 0 else None
+
+    # sort running_products by 'macchina' and 'data consegna' for readability
+    if running_products is not None:
+        running_products = running_products.sort_values(by=['macchina']).reset_index(drop=True)
+    # sort common_products by 'data consegna' for readability
+    if common_products is not None:
+        common_products = common_products.sort_values(by=['data consegna']).reset_index(drop=True)
 
     print_warning(warnings)
 
