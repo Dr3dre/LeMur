@@ -9,6 +9,7 @@ Script to benchmark the solve time of the solver for incremental orders.
 
 NUM_RUNS = 5
 
+
 def read_orders(file_path):
     df = pd.read_csv(file_path)
     return df
@@ -29,7 +30,7 @@ def benchmark_solve(orders):
         df = pd.read_csv("incremental_orders/results.csv")
         means = df["mean"].tolist()
         stds = df["std_dev"].tolist()
-        start_index = len(means)+1
+        start_index = len(means) + 1
     except Exception as e:
         start_index = 1
 
@@ -39,6 +40,8 @@ def benchmark_solve(orders):
         for j in tqdm(range(NUM_RUNS), desc=f"Running for {i} orders"):
             start_time = time.time()
 
+            print()
+            print()
             res = run_solver(
                 "incremental_orders/orders.csv",
                 "incremental_orders/running_products.csv",
@@ -58,10 +61,10 @@ def benchmark_solve(orders):
                 0,
                 0,
             )
-            print(res)
 
             end_time = time.time()
             times.append(end_time - start_time)
+
         # compute std deviation and mean of times
         mean = sum(times) / len(times)
         std_dev = (sum([(t - mean) ** 2 for t in times]) / len(times)) ** 0.5

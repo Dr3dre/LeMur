@@ -1,10 +1,12 @@
 from datetime import datetime
 import sys
-sys.path.append('..\\..\\web_app')
+
+sys.path.append("..\\..\\web_app")
 
 from data_init import init_csv_data
 from solver import solve
 import os
+
 
 def run_solver(
     p_path,
@@ -37,18 +39,12 @@ def run_solver(
     try:
         broken_machines = [int(x) for x in broken_machines.split(",") if x.strip()]
     except ValueError:
-        return (
-            "❌ Invalid input for Broken Machines. Please enter a comma-separated list of integers.",
-            None,
-        )
+        raise "❌ Invalid input for Broken Machines. Please enter a comma-separated list of integers."
 
     try:
         festive_days = [int(x) for x in festive_days.split(",") if x.strip()]
     except ValueError:
-        return (
-            "❌ Invalid input for Festive Days. Please enter a comma-separated list of integers.",
-            None,
-        )
+        raise "❌ Invalid input for Festive Days. Please enter a comma-separated list of integers."
 
     try:
         load_cost = (
@@ -58,7 +54,7 @@ def run_solver(
             unload_cost / 256 / num_operators_per_group
         )  # Convert to cost per fuso
     except Exception as e:
-        return f"❌ Error processing load/unload costs: {str(e)}", None
+        raise f"❌ Error processing load/unload costs: {str(e)}"
 
     try:
         maintenance = [
@@ -67,10 +63,7 @@ def run_solver(
             if x.strip()
         ]
     except ValueError:
-        return (
-            "❌ Invalid input for Maintenance. Please enter a comma-separated list of tuples like (1,78,2), (3,10,3).",
-            None,
-        )
+        raise "❌ Invalid input for Maintenance. Please enter a comma-separated list of tuples like (1,78,2), (3,10,3)."
 
     maintenance_schedule = {}
     for machine, day, duration in maintenance:
@@ -87,7 +80,7 @@ def run_solver(
     ]
     missing_files = [f for f in required_files if not os.path.exists(f)]
     if missing_files:
-        return f"❌ Missing files: {', '.join(missing_files)}", None
+        raise f"❌ Missing files: {', '.join(missing_files)}"
 
     try:
         # Variable referring to starting of scheduling time (can be defined customly for testing purposes)
@@ -113,39 +106,35 @@ def run_solver(
             time_units_in_a_day=time_units_in_a_day,
         )
     except Exception as e:
-        return f"❌ Error initializing data: {str(e)}", None
+        raise f"❌ Error initializing data: {str(e)}"
 
-    try:
-        # Solve the scheduling problem
-        schedule = solve(
-            common_products,
-            running_products,
-            article_to_machine_comp,
-            base_setup_art_cost,
-            base_load_art_cost,
-            base_unload_art_cost,
-            base_levata_art_cost,
-            standard_levate_art,
-            kg_per_levata_art,
-            broken_machines,
-            maintenance_schedule,
-            num_operators_groups,
-            festive_days,
-            horizon_days,
-            time_units_in_a_day,
-            start_shift,
-            end_shift,
-            max_seconds,
-            second_run_seconds,
-            run_ga,
-            now,
-        )
+    # Solve the scheduling problem
+    schedule = solve(
+        common_products,
+        running_products,
+        article_to_machine_comp,
+        base_setup_art_cost,
+        base_load_art_cost,
+        base_unload_art_cost,
+        base_levata_art_cost,
+        standard_levate_art,
+        kg_per_levata_art,
+        broken_machines,
+        maintenance_schedule,
+        num_operators_groups,
+        festive_days,
+        horizon_days,
+        time_units_in_a_day,
+        start_shift,
+        end_shift,
+        max_seconds,
+        second_run_seconds,
+        run_ga,
+        now,
+    )
 
-        print("Generated valid schedule")
-        # Convert the schedule to a string to display
-        schedule_str = str(schedule)
-        
-        return schedule_str
+    print("Generated valid schedule")
+    # Convert the schedule to a string to display
+    schedule_str = str(schedule)
 
-    except Exception as e:
-        return f"❌ An error occurred during solving: {str(e)}", None
+    return schedule_str

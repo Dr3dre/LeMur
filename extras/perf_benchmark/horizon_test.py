@@ -8,30 +8,35 @@ Script to benchmark the solve time of the solver for incremental orders.
 """
 
 NUM_RUNS = 5
-HORIZONS = [ 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 320, 340, 360, 380, 400 ]
+HORIZONS = [ 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 320, 340, 360 ]
 
 def benchmark_solve():
     means = []
     stds = []
+
+    horizons = []
 
     # get the results from the previous run and start from the last order
     try:
         df = pd.read_csv("incremental_horizon/results.csv")
         means = df["mean"].tolist()
         stds = df["std_dev"].tolist()
-        start_index = len(means)
+        hor = df["horizon"].tolist()
+        horizons = [x for x in HORIZONS if x not in hor]
     except Exception as e:
-        start_index = 0
+        horizons = HORIZONS
 
-    for i in tqdm(range(start_index, len(HORIZONS)), desc="Running benchmarks"):
+    for i in tqdm(range(0, len(horizons)), desc="Running benchmarks"):
         times = []
-        for j in tqdm(range(NUM_RUNS), desc=f"Running for {HORIZONS[i]} horizon"):
+        for j in tqdm(range(NUM_RUNS), desc=f"Running for {horizons[i]} horizon"):
             start_time = time.time()
 
+            print()
+            print()
             res = run_solver(
                 "incremental_horizon/new_orders.csv",
                 "incremental_horizon/running_products.csv",
-                HORIZONS[i],
+                horizons[i],
                 "",
                 "",
                 24,
@@ -47,7 +52,6 @@ def benchmark_solve():
                 0,
                 0,
             )
-            print(res)
 
             end_time = time.time()
             times.append(end_time - start_time)
@@ -60,9 +64,9 @@ def benchmark_solve():
 
         # write results to file
         df = pd.DataFrame(
-            {"mean": means, "std_dev": stds, "horizon": HORIZONS[: i + 1]}
+            {"mean": means, "std_dev": stds, "horizon": horizons[: i + 1]}
         )
-        df.to_csv("incremental_orders/results.csv", index=False)
+        df.to_csv("incremental_horizon/results.csv", index=False)
 
 
 def main():
