@@ -274,7 +274,6 @@ class GA_Refiner:
             #     decreases with a sigmoid function, allowing other minor mutations to be performed more often
 
             if TEMPERATURE_PROFILING:
-                print (len(args["temperature"]), args["curr_generation"])
                 if random.random() < args["temperature"][args["curr_generation"]]:
                     mutation_choice = random.choice([0, 1])
                     if mutation_choice == 0:
