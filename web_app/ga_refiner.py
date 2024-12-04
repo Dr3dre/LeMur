@@ -68,7 +68,7 @@ class GA_Refiner:
         # number of machines in the input space
         args["temperature"] = [
             temperature_profile(t, MIDPOINT, STEEPNESS, INITIAL_TEMP, GOAL_TEMP)
-            for t in range(GENERATIONS + 1)
+            for t in range(args["generations"] + 1)
         ]
         if PLOT_METRICS and TEMPERATURE_PROFILING:
             visualize_temperature_profile(
@@ -274,6 +274,7 @@ class GA_Refiner:
             #     decreases with a sigmoid function, allowing other minor mutations to be performed more often
 
             if TEMPERATURE_PROFILING:
+                print (len(args["temperature"]), args["curr_generation"])
                 if random.random() < args["temperature"][args["curr_generation"]]:
                     mutation_choice = random.choice([0, 1])
                     if mutation_choice == 0:
