@@ -60,7 +60,7 @@ class GA_Refiner:
         ga.replacer = ec.replacers.comma_replacement
 
         MIDPOINT = int(
-            args["generations"] / 2
+            (args["generations"] if "generations" in args else GENERATIONS) / 2
         )  # midpoint of the sigmoid function expressed in generations
 
         # Probability of applying _compact_and_shift mutation
@@ -68,12 +68,12 @@ class GA_Refiner:
         # number of machines in the input space
         args["temperature"] = [
             temperature_profile(t, MIDPOINT, STEEPNESS, INITIAL_TEMP, GOAL_TEMP)
-            for t in range(args["generations"] + 1)
+            for t in range((args["generations"] if "generations" in args else GENERATIONS) + 1)
         ]
         if PLOT_METRICS and TEMPERATURE_PROFILING:
             visualize_temperature_profile(
                 temperature_profile,
-                (0, GENERATIONS + 1),
+                (0, (args["generations"] if "generations" in args else GENERATIONS) + 1),
                 OUTPUT_TEMP_PROFILE_PLOT,
                 midpoint=MIDPOINT,
                 steepness=STEEPNESS,
