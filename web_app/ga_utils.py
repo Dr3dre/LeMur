@@ -135,7 +135,7 @@ def adapt_args(products, args) :
     args["scheduled_maintenances"] = {(m-1) : [(beg, beg+length) for beg, length in scheduled_maintenances[m]] for m in scheduled_maintenances.keys()}
     # correct prod-to-machine compatibility
     prod_to_machine_comp = copy.copy(args["prod_to_machine_comp"])
-    args["prod_to_machine_comp"] = {p: [m-1 for m in prod_to_machine_comp[p]] for p in prod_to_machine_comp.keys()}
+    args["prod_to_machine_comp"] = {(p,c): [m-1 for m in prod_to_machine_comp[p] if args["fuses_machines_associations"][m] == args["fuses_machines_associations"][prod.machine[c]]] for p, prod in products for c in prod.machine.keys()}    
     # correct setup base costs
     base_setup_cost = copy.copy(args["base_setup_cost"])
     args["base_setup_cost"] = {(p,m-1) : base_setup_cost[(p,m)] for (p,m) in base_setup_cost.keys()}
@@ -622,7 +622,7 @@ def check_solution_conformity(solution, args):
         for elem in machine_queue:
             p = elem["p"]
             c = elem["c"]
-            if m not in args["prod_to_machine_comp"][p] :
+            if m not in args["prod_to_machine_comp"][p,c] :
                 print(f"Machine Assignment Violation :\n"
                       f"    Job {p}, Cycle {c}, on invalid machine {m+1}"
                 )

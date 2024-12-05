@@ -414,6 +414,7 @@ def init_csv_data(
         common_products,
         running_products,
         job_compatibility,
+        fuses_machines_associations,
         base_setup_cost,
         base_load_cost,
         base_unload_cost,

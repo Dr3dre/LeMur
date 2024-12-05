@@ -124,6 +124,7 @@ def solve(
     common_products,
     running_products,
     article_to_machine_comp,
+    fuses_machines_associations,
     base_setup_art_cost,
     base_load_art_cost,
     base_unload_art_cost,
@@ -1292,6 +1293,7 @@ def solve(
         vars = {
             # machine info
             "num_machines": num_machines,
+            "fuses_machines_associations": fuses_machines_associations,
             "broken_machines": broken_machines,
             "scheduled_maintenances": scheduled_maintenances,
             "velocity_step_size": velocity_step_size,
@@ -1356,11 +1358,11 @@ def solve(
 
 
 if __name__ == "__main__":
-    COMMON_P_PATH = "../data/new_orders.csv"
+    COMMON_P_PATH = "input/new_orders.csv"
     RUNNING_P_PATH = "input/running_products.csv"
-    J_COMPATIBILITY_PATH = "../data/utils/articoli_macchine.json"
-    M_INFO_PATH = "../data/utils/macchine_info.json"
-    ARTICLE_LIST_PATH = "../data/valid/lista_articoli.csv"
+    J_COMPATIBILITY_PATH = "input/articoli_macchine.json"
+    M_INFO_PATH = "input/macchine_info.json"
+    ARTICLE_LIST_PATH = "input/lista_articoli.csv"
 
     broken_machines = []  # put here the number of the broken machines
     scheduled_maintenances = {
@@ -1373,7 +1375,7 @@ if __name__ == "__main__":
     ]
 
     hour_resolution = 1  # 1: hours, 2: half-hours, 4: quarter-hours, ..., 60: minutes
-    horizon_days = 1000
+    horizon_days = 200
     time_units_in_a_day = (
         24 * hour_resolution
     )  # 24 : hours, 48 : half-hours, 96 : quarter-hours, ..., 1440 : minutes
@@ -1405,6 +1407,7 @@ if __name__ == "__main__":
         common_products,
         running_products,
         article_to_machine_comp,
+        fuses_machines_associations,
         base_setup_art_cost,
         base_load_art_cost,
         base_unload_art_cost,
@@ -1424,6 +1427,7 @@ if __name__ == "__main__":
         common_products,
         running_products,
         article_to_machine_comp,
+        fuses_machines_associations,
         base_setup_art_cost,
         base_load_art_cost,
         base_unload_art_cost,

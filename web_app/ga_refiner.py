@@ -419,7 +419,7 @@ class GA_Refiner:
         # pick compatible machine according to the selected cycle on source machine
         target_machine_candidates = [
             m
-            for m in args["prod_to_machine_comp"][source_cycle["p"]]
+            for m in args["prod_to_machine_comp"][source_cycle["p"], source_cycle["c"]]
             if m != source_machine_idx and m not in args["broken_machines"]
         ]
         if len(target_machine_candidates) == 0:
@@ -500,7 +500,7 @@ class GA_Refiner:
         # pick compatible machine according to the selected cycle on source machine
         target_machine_candidates = [
             m
-            for m in args["prod_to_machine_comp"][source_cycle["p"]]
+            for m in args["prod_to_machine_comp"][source_cycle["p"], source_cycle["c"]]
             if (m != source_machine_idx)
             and (m not in args["broken_machines"])
             and not (
@@ -518,7 +518,7 @@ class GA_Refiner:
         target_candidates_pos = [
             pos
             for pos, cycle in enumerate(target_machine)
-            if source_machine_idx in args["prod_to_machine_comp"][cycle["p"]]
+            if source_machine_idx in args["prod_to_machine_comp"][cycle["p"], cycle["c"]]
             and not target_machine[pos]["fixed"]
         ]
         if len(target_candidates_pos) == 0:
