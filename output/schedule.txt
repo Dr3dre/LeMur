@@ -1,0 +1,648 @@
+Production Schedule:
+Product : INTERNAL_2011DN mini_27 - Article : 2011DN mini - Request : 2984 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 2, 1: 2, 2: 2, 3: 2, 4: 2, 5: 2, 6: 2, 7: 2, 8: 2, 9: 2}
+    Cycle 0 :
+        Machine   : 63:
+        Velocity  : 0
+        Cycle End : 805
+        Setup     : (57, 61) COST: 4 GAP: 0
+            Levata [0] : LOAD(2024-12-07 13:00:00.235385, 2024-12-07 16:00:00.235400, COST: 3 GAP: 0) UNLOAD(2024-12-23 09:00:00.235403, 2024-12-23 10:00:00.235406, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2024-12-23 10:00:00.235426, 2024-12-23 13:00:00.235430, COST: 3 GAP: 0) UNLOAD(2025-01-07 12:00:00.235432, 2025-01-07 13:00:00.235435, COST: 1 GAP: 0)
+    Cycle 1 :
+        Machine   : 9:
+        Velocity  : 0
+        Cycle End : 4524
+        Setup     : (3733, 3753) COST: 4 GAP: 16
+            Levata [0] : LOAD(2025-05-10 09:00:00.235448, 2025-05-10 12:00:00.235451, COST: 3 GAP: 0) UNLOAD(2025-05-27 08:00:00.235454, 2025-05-27 09:00:00.235457, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-05-27 09:00:00.235466, 2025-05-27 12:00:00.235469, COST: 3 GAP: 0) UNLOAD(2025-06-11 11:00:00.235471, 2025-06-11 12:00:00.235474, COST: 1 GAP: 0)
+    Cycle 2 :
+        Machine   : 7:
+        Velocity  : 0
+        Cycle End : 874
+        Setup     : (128, 132) COST: 4 GAP: 0
+            Levata [0] : LOAD(2024-12-10 12:00:00.235485, 2024-12-10 15:00:00.235488, COST: 3 GAP: 0) UNLOAD(2024-12-25 14:00:00.235491, 2024-12-25 15:00:00.235493, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2024-12-25 15:00:00.235502, 2024-12-26 10:00:00.235505, COST: 3 GAP: 16) UNLOAD(2025-01-10 09:00:00.235508, 2025-01-10 10:00:00.235510, COST: 1 GAP: 0)
+    Cycle 3 :
+        Machine   : 4:
+        Velocity  : 0
+        Cycle End : 4141
+        Setup     : (3372, 3376) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-04-24 16:00:00.235521, 2025-04-25 11:00:00.235524, COST: 3 GAP: 16) UNLOAD(2025-05-10 10:00:00.235527, 2025-05-10 11:00:00.235529, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-05-10 11:00:00.235538, 2025-05-10 14:00:00.235541, COST: 3 GAP: 0) UNLOAD(2025-05-26 12:00:00.235544, 2025-05-26 13:00:00.235546, COST: 1 GAP: 0)
+    Cycle 4 :
+        Machine   : 65:
+        Velocity  : 0
+        Cycle End : 945
+        Setup     : (36, 40) COST: 4 GAP: 0
+            Levata [0] : LOAD(2024-12-13 09:00:00.235557, 2024-12-13 12:00:00.235560, COST: 3 GAP: 0) UNLOAD(2024-12-28 11:00:00.235562, 2024-12-28 12:00:00.235565, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2024-12-28 12:00:00.235574, 2024-12-28 15:00:00.235576, COST: 3 GAP: 0) UNLOAD(2025-01-13 08:00:00.235579, 2025-01-13 09:00:00.235582, COST: 1 GAP: 0)
+    Cycle 5 :
+        Machine   : 63:
+        Velocity  : 0
+        Cycle End : 4641
+        Setup     : (3872, 3876) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-05-15 12:00:00.235592, 2025-05-15 15:00:00.235595, COST: 3 GAP: 0) UNLOAD(2025-05-30 15:00:00.235598, 2025-05-30 16:00:00.235601, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-05-30 16:00:00.235609, 2025-05-31 11:00:00.235612, COST: 3 GAP: 16) UNLOAD(2025-06-16 08:00:00.235615, 2025-06-16 09:00:00.235618, COST: 1 GAP: 0)
+    Cycle 6 :
+        Machine   : 48:
+        Velocity  : 0
+        Cycle End : 946
+        Setup     : (181, 201) COST: 4 GAP: 16
+            Levata [0] : LOAD(2024-12-13 09:00:00.235628, 2024-12-13 12:00:00.235631, COST: 3 GAP: 0) UNLOAD(2024-12-28 12:00:00.235634, 2024-12-28 13:00:00.235637, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2024-12-28 13:00:00.235645, 2024-12-28 16:00:00.235648, COST: 3 GAP: 0) UNLOAD(2025-01-13 09:00:00.235651, 2025-01-13 10:00:00.235654, COST: 1 GAP: 0)
+    Cycle 7 :
+        Machine   : 12:
+        Velocity  : 0
+        Cycle End : 4744
+        Setup     : (3998, 4018) COST: 4 GAP: 16
+            Levata [0] : LOAD(2025-05-21 10:00:00.235664, 2025-05-21 13:00:00.235667, COST: 3 GAP: 0) UNLOAD(2025-06-05 12:00:00.235670, 2025-06-05 13:00:00.235673, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-06-05 13:00:00.235681, 2025-06-05 16:00:00.235684, COST: 3 GAP: 0) UNLOAD(2025-06-20 15:00:00.235687, 2025-06-20 16:00:00.235689, COST: 1 GAP: 0)
+    Cycle 8 :
+        Machine   : 66:
+        Velocity  : 0
+        Cycle End : 877
+        Setup     : (112, 132) COST: 4 GAP: 16
+            Levata [0] : LOAD(2024-12-10 15:00:00.235700, 2024-12-11 10:00:00.235703, COST: 3 GAP: 16) UNLOAD(2024-12-26 09:00:00.235705, 2024-12-26 10:00:00.235708, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2024-12-26 10:00:00.235717, 2024-12-26 13:00:00.235720, COST: 3 GAP: 0) UNLOAD(2025-01-10 12:00:00.235722, 2025-01-10 13:00:00.235725, COST: 1 GAP: 0)
+    Cycle 9 :
+        Machine   : 10:
+        Velocity  : 0
+        Cycle End : 4669
+        Setup     : (3896, 3900) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-05-16 12:00:00.235735, 2025-05-16 15:00:00.235738, COST: 3 GAP: 0) UNLOAD(2025-06-02 09:00:00.235741, 2025-06-02 10:00:00.235744, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-06-02 10:00:00.235752, 2025-06-02 13:00:00.235755, COST: 3 GAP: 0) UNLOAD(2025-06-17 12:00:00.235758, 2025-06-17 13:00:00.235761, COST: 1 GAP: 0)
+
+Product : SCORTA_31002DN1_28 - Article : 31002DN1 - Request : 336 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 2, 1: 1}
+    Cycle 0 :
+        Machine   : 26:
+        Velocity  : 0
+        Cycle End : 4718
+        Setup     : (4568, 4572) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-06-13 12:00:00.235775, 2025-06-13 14:00:00.235778, COST: 2 GAP: 0) UNLOAD(2025-06-16 12:00:00.235781, 2025-06-16 13:00:00.235784, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-06-16 13:00:00.235792, 2025-06-16 15:00:00.235795, COST: 2 GAP: 0) UNLOAD(2025-06-19 13:00:00.235798, 2025-06-19 14:00:00.235801, COST: 1 GAP: 0)
+    Cycle 1 :
+        Machine   : 6:
+        Velocity  : 0
+        Cycle End : 4761
+        Setup     : (4668, 4672) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-06-17 16:00:00.235811, 2025-06-18 10:00:00.235814, COST: 2 GAP: 16) UNLOAD(2025-06-21 08:00:00.235817, 2025-06-21 09:00:00.235820, COST: 1 GAP: 0)
+
+Product : SCORTA_2277DN mini_29 - Article : 2277DN mini - Request : 426 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 2, 1: 2}
+    Cycle 0 :
+        Machine   : 11:
+        Velocity  : 0
+        Cycle End : 4691
+        Setup     : (3824, 3828) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-05-13 12:00:00.235832, 2025-05-13 15:00:00.235836, COST: 3 GAP: 0) UNLOAD(2025-05-31 11:00:00.235838, 2025-05-31 12:00:00.235841, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-05-31 12:00:00.235850, 2025-05-31 15:00:00.235853, COST: 3 GAP: 0) UNLOAD(2025-06-18 10:00:00.235856, 2025-06-18 11:00:00.235859, COST: 1 GAP: 0)
+    Cycle 1 :
+        Machine   : 9:
+        Velocity  : 0
+        Cycle End : 3225
+        Setup     : (2336, 2340) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-03-12 12:00:00.235869, 2025-03-12 15:00:00.235872, COST: 3 GAP: 0) UNLOAD(2025-03-31 08:00:00.235875, 2025-03-31 09:00:00.235877, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-03-31 09:00:00.235886, 2025-03-31 12:00:00.235889, COST: 3 GAP: 0) UNLOAD(2025-04-18 08:00:00.235892, 2025-04-18 09:00:00.235895, COST: 1 GAP: 0)
+
+Product : INTERNAL_2271DN 20700 mini_30 - Article : 2271DN 20700 mini - Request : 1842 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 2, 1: 2, 2: 2, 3: 2, 4: 2, 5: 2}
+    Cycle 0 :
+        Machine   : 64:
+        Velocity  : 0
+        Cycle End : 2124
+        Setup     : (896, 900) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-01-11 12:00:00.235908, 2025-01-11 15:00:00.235911, COST: 3 GAP: 0) UNLOAD(2025-02-05 15:00:00.235914, 2025-02-05 16:00:00.235917, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-02-05 16:00:00.235926, 2025-02-06 11:00:00.235928, COST: 3 GAP: 16) UNLOAD(2025-03-03 11:00:00.235931, 2025-03-03 12:00:00.235934, COST: 1 GAP: 0)
+    Cycle 1 :
+        Machine   : 64:
+        Velocity  : 0
+        Cycle End : 3396
+        Setup     : (2144, 2148) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-03-04 12:00:00.235945, 2025-03-04 15:00:00.235948, COST: 3 GAP: 0) UNLOAD(2025-03-29 15:00:00.235950, 2025-03-29 16:00:00.235953, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-03-29 16:00:00.235962, 2025-03-31 11:00:00.235965, COST: 3 GAP: 40) UNLOAD(2025-04-25 11:00:00.235968, 2025-04-25 12:00:00.235971, COST: 1 GAP: 0)
+    Cycle 2 :
+        Machine   : 61:
+        Velocity  : 0
+        Cycle End : 1381
+        Setup     : (153, 157) COST: 4 GAP: 0
+            Levata [0] : LOAD(2024-12-11 13:00:00.235981, 2024-12-11 16:00:00.235984, COST: 3 GAP: 0) UNLOAD(2025-01-06 08:00:00.235987, 2025-01-06 09:00:00.235989, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-01-06 09:00:00.235998, 2025-01-06 12:00:00.236001, COST: 3 GAP: 0) UNLOAD(2025-01-31 12:00:00.236004, 2025-01-31 13:00:00.236007, COST: 1 GAP: 0)
+    Cycle 3 :
+        Machine   : 3:
+        Velocity  : 0
+        Cycle End : 1406
+        Setup     : (12, 16) COST: 4 GAP: 0
+            Levata [0] : LOAD(2024-12-12 14:00:00.236017, 2024-12-13 09:00:00.236020, COST: 3 GAP: 16) UNLOAD(2025-01-07 09:00:00.236023, 2025-01-07 10:00:00.236025, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-01-07 10:00:00.236034, 2025-01-07 13:00:00.236037, COST: 3 GAP: 0) UNLOAD(2025-02-01 13:00:00.236040, 2025-02-01 14:00:00.236042, COST: 1 GAP: 0)
+    Cycle 4 :
+        Machine   : 47:
+        Velocity  : 0
+        Cycle End : 4768
+        Setup     : (3536, 3540) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-05-01 12:00:00.236053, 2025-05-01 15:00:00.236056, COST: 3 GAP: 0) UNLOAD(2025-05-27 11:00:00.236059, 2025-05-27 12:00:00.236061, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-05-27 12:00:00.236070, 2025-05-27 15:00:00.236073, COST: 3 GAP: 0) UNLOAD(2025-06-21 15:00:00.236076, 2025-06-21 16:00:00.236078, COST: 1 GAP: 0)
+    Cycle 5 :
+        Machine   : 5:
+        Velocity  : 0
+        Cycle End : 4740
+        Setup     : (3468, 3472) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-04-28 16:00:00.236090, 2025-04-29 11:00:00.236093, COST: 3 GAP: 16) UNLOAD(2025-05-24 15:00:00.236096, 2025-05-24 16:00:00.236099, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-05-24 16:00:00.236108, 2025-05-26 11:00:00.236111, COST: 3 GAP: 40) UNLOAD(2025-06-20 11:00:00.236114, 2025-06-20 12:00:00.236117, COST: 1 GAP: 0)
+
+Product : INTERNAL_2271DN 20000 mini_31 - Article : 2271DN 20000 mini - Request : 1717 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 2, 1: 2, 2: 2, 3: 1}
+    Cycle 0 :
+        Machine   : 8:
+        Velocity  : 0
+        Cycle End : 4718
+        Setup     : (3464, 3468) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-04-28 12:00:00.236131, 2025-04-28 15:00:00.236134, COST: 3 GAP: 0) UNLOAD(2025-05-24 12:00:00.236136, 2025-05-24 13:00:00.236139, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-05-24 13:00:00.236148, 2025-05-24 16:00:00.236151, COST: 3 GAP: 0) UNLOAD(2025-06-19 13:00:00.236154, 2025-06-19 14:00:00.236157, COST: 1 GAP: 0)
+    Cycle 1 :
+        Machine   : 2:
+        Velocity  : 0
+        Cycle End : 4762
+        Setup     : (3488, 3492) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-04-29 12:00:00.236167, 2025-04-29 15:00:00.236170, COST: 3 GAP: 0) UNLOAD(2025-05-26 08:00:00.236173, 2025-05-26 09:00:00.236176, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-05-26 09:00:00.236184, 2025-05-26 12:00:00.236187, COST: 3 GAP: 0) UNLOAD(2025-06-21 09:00:00.236190, 2025-06-21 10:00:00.236193, COST: 1 GAP: 0)
+    Cycle 2 :
+        Machine   : 62:
+        Velocity  : 0
+        Cycle End : 4765
+        Setup     : (3492, 3496) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-04-29 16:00:00.236204, 2025-04-30 11:00:00.236207, COST: 3 GAP: 16) UNLOAD(2025-05-26 11:00:00.236210, 2025-05-26 12:00:00.236213, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-05-26 12:00:00.236221, 2025-05-26 15:00:00.236224, COST: 3 GAP: 0) UNLOAD(2025-06-21 12:00:00.236227, 2025-06-21 13:00:00.236230, COST: 1 GAP: 0)
+    Cycle 3 :
+        Machine   : 66:
+        Velocity  : 0
+        Cycle End : 4717
+        Setup     : (4088, 4092) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-05-24 12:00:00.236240, 2025-05-24 15:00:00.236243, COST: 3 GAP: 0) UNLOAD(2025-06-19 12:00:00.236246, 2025-06-19 13:00:00.236249, COST: 1 GAP: 0)
+
+Product : DUELEGS_X23-3399S+ZF_32 - Article : X23-3399S+ZF - Request : 1553 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 3, 1: 3, 2: 3, 3: 3, 4: 3}
+    Cycle 0 :
+        Machine   : 45:
+        Velocity  : 0
+        Cycle End : 4569
+        Setup     : (3680, 3684) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-05-07 12:00:00.236261, 2025-05-07 14:00:00.236264, COST: 2 GAP: 0) UNLOAD(2025-05-19 15:00:00.236267, 2025-05-19 16:00:00.236270, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-05-19 16:00:00.236279, 2025-05-20 10:00:00.236282, COST: 2 GAP: 16) UNLOAD(2025-05-31 14:00:00.236285, 2025-05-31 15:00:00.236288, COST: 1 GAP: 0)
+            Levata [2] : LOAD(2025-05-31 15:00:00.236296, 2025-06-02 09:00:00.236299, COST: 2 GAP: 40) UNLOAD(2025-06-13 08:00:00.236302, 2025-06-13 09:00:00.236305, COST: 1 GAP: 0)
+    Cycle 1 :
+        Machine   : 36:
+        Velocity  : 0
+        Cycle End : 874
+        Setup     : (11, 15) COST: 4 GAP: 0
+            Levata [0] : LOAD(2024-12-07 10:00:00.236315, 2024-12-07 12:00:00.236318, COST: 2 GAP: 0) UNLOAD(2024-12-18 08:00:00.236321, 2024-12-18 09:00:00.236324, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2024-12-18 09:00:00.236332, 2024-12-18 11:00:00.236335, COST: 2 GAP: 0) UNLOAD(2024-12-30 12:00:00.236338, 2024-12-30 13:00:00.236340, COST: 1 GAP: 0)
+            Levata [2] : LOAD(2024-12-30 13:00:00.236350, 2024-12-30 15:00:00.236353, COST: 2 GAP: 0) UNLOAD(2025-01-10 09:00:00.236356, 2025-01-10 10:00:00.236359, COST: 1 GAP: 0)
+    Cycle 2 :
+        Machine   : 28:
+        Velocity  : 0
+        Cycle End : 4761
+        Setup     : (3969, 3973) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-05-19 13:00:00.236370, 2025-05-19 15:00:00.236373, COST: 2 GAP: 0) UNLOAD(2025-05-30 09:00:00.236376, 2025-05-30 10:00:00.236379, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-05-30 10:00:00.236387, 2025-05-30 12:00:00.236390, COST: 2 GAP: 0) UNLOAD(2025-06-10 08:00:00.236393, 2025-06-10 09:00:00.236396, COST: 1 GAP: 0)
+            Levata [2] : LOAD(2025-06-10 09:00:00.236405, 2025-06-10 11:00:00.236407, COST: 2 GAP: 0) UNLOAD(2025-06-21 08:00:00.236410, 2025-06-21 09:00:00.236413, COST: 1 GAP: 0)
+    Cycle 3 :
+        Machine   : 46:
+        Velocity  : 0
+        Cycle End : 3729
+        Setup     : (2912, 2916) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-04-05 12:00:00.236423, 2025-04-05 14:00:00.236426, COST: 2 GAP: 0) UNLOAD(2025-04-16 08:00:00.236429, 2025-04-16 09:00:00.236432, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-04-16 09:00:00.236440, 2025-04-16 11:00:00.236443, COST: 2 GAP: 0) UNLOAD(2025-04-28 08:00:00.236446, 2025-04-28 09:00:00.236449, COST: 1 GAP: 0)
+            Levata [2] : LOAD(2025-04-28 09:00:00.236457, 2025-04-28 11:00:00.236460, COST: 2 GAP: 0) UNLOAD(2025-05-09 08:00:00.236463, 2025-05-09 09:00:00.236466, COST: 1 GAP: 0)
+    Cycle 4 :
+        Machine   : 21:
+        Velocity  : 0
+        Cycle End : 4665
+        Setup     : (3848, 3852) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-05-14 12:00:00.236476, 2025-05-14 14:00:00.236479, COST: 2 GAP: 0) UNLOAD(2025-05-26 13:00:00.236482, 2025-05-26 14:00:00.236485, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-05-26 14:00:00.236493, 2025-05-26 16:00:00.236496, COST: 2 GAP: 0) UNLOAD(2025-06-06 10:00:00.236499, 2025-06-06 11:00:00.236502, COST: 1 GAP: 0)
+            Levata [2] : LOAD(2025-06-06 11:00:00.236511, 2025-06-06 13:00:00.236514, COST: 2 GAP: 0) UNLOAD(2025-06-17 08:00:00.236517, 2025-06-17 09:00:00.236520, COST: 1 GAP: 0)
+
+Product : INTERNAL_2270S+ZN 19800_33 - Article : 2270S+ZN 19800 - Request : 2000 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 2, 1: 2, 2: 2, 3: 2, 4: 2, 5: 2, 6: 2, 7: 1}
+    Cycle 0 :
+        Machine   : 15:
+        Velocity  : 0
+        Cycle End : 849
+        Setup     : (15, 35) COST: 4 GAP: 16
+            Levata [0] : LOAD(2024-12-06 11:00:00.236534, 2024-12-06 13:00:00.236538, COST: 2 GAP: 0) UNLOAD(2024-12-23 08:00:00.236540, 2024-12-23 09:00:00.236544, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2024-12-23 09:00:00.236554, 2024-12-23 11:00:00.236557, COST: 2 GAP: 0) UNLOAD(2025-01-09 08:00:00.236560, 2025-01-09 09:00:00.236562, COST: 1 GAP: 0)
+    Cycle 1 :
+        Machine   : 14:
+        Velocity  : 0
+        Cycle End : 1017
+        Setup     : (132, 136) COST: 4 GAP: 0
+            Levata [0] : LOAD(2024-12-13 12:00:00.236574, 2024-12-13 14:00:00.236577, COST: 2 GAP: 0) UNLOAD(2024-12-30 09:00:00.236579, 2024-12-30 10:00:00.236582, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2024-12-30 10:00:00.236591, 2024-12-30 12:00:00.236594, COST: 2 GAP: 0) UNLOAD(2025-01-16 08:00:00.236596, 2025-01-16 09:00:00.236599, COST: 1 GAP: 0)
+    Cycle 2 :
+        Machine   : 33:
+        Velocity  : 0
+        Cycle End : 1018
+        Setup     : (158, 178) COST: 4 GAP: 16
+            Levata [0] : LOAD(2024-12-13 14:00:00.236613, 2024-12-13 16:00:00.236616, COST: 2 GAP: 0) UNLOAD(2024-12-30 11:00:00.236619, 2024-12-30 12:00:00.236621, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2024-12-30 12:00:00.236630, 2024-12-30 14:00:00.236633, COST: 2 GAP: 0) UNLOAD(2025-01-16 09:00:00.236636, 2025-01-16 10:00:00.236638, COST: 1 GAP: 0)
+    Cycle 3 :
+        Machine   : 16:
+        Velocity  : 0
+        Cycle End : 4593
+        Setup     : (3707, 3711) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-05-09 09:00:00.236649, 2025-05-09 11:00:00.236652, COST: 2 GAP: 0) UNLOAD(2025-05-27 15:00:00.236655, 2025-05-27 16:00:00.236657, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-05-27 16:00:00.236666, 2025-05-28 10:00:00.236669, COST: 2 GAP: 16) UNLOAD(2025-06-14 08:00:00.236672, 2025-06-14 09:00:00.236675, COST: 1 GAP: 0)
+    Cycle 4 :
+        Machine   : 21:
+        Velocity  : 0
+        Cycle End : 945
+        Setup     : (64, 108) COST: 4 GAP: 40
+            Levata [0] : LOAD(2024-12-09 12:00:00.236685, 2024-12-09 14:00:00.236688, COST: 2 GAP: 0) UNLOAD(2024-12-26 12:00:00.236691, 2024-12-26 13:00:00.236694, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2024-12-26 13:00:00.236702, 2024-12-26 15:00:00.236705, COST: 2 GAP: 0) UNLOAD(2025-01-13 08:00:00.236708, 2025-01-13 09:00:00.236711, COST: 1 GAP: 0)
+    Cycle 5 :
+        Machine   : 13:
+        Velocity  : 0
+        Cycle End : 4571
+        Setup     : (3728, 3732) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-05-09 12:00:00.236724, 2025-05-09 14:00:00.236727, COST: 2 GAP: 0) UNLOAD(2025-05-27 12:00:00.236730, 2025-05-27 13:00:00.236733, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-05-27 13:00:00.236742, 2025-05-27 15:00:00.236745, COST: 2 GAP: 0) UNLOAD(2025-06-13 10:00:00.236747, 2025-06-13 11:00:00.236750, COST: 1 GAP: 0)
+    Cycle 6 :
+        Machine   : 18:
+        Velocity  : 0
+        Cycle End : 4401
+        Setup     : (3584, 3588) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-05-03 12:00:00.236760, 2025-05-03 14:00:00.236763, COST: 2 GAP: 0) UNLOAD(2025-05-20 10:00:00.236766, 2025-05-20 11:00:00.236769, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-05-20 11:00:00.236777, 2025-05-20 13:00:00.236780, COST: 2 GAP: 0) UNLOAD(2025-06-06 08:00:00.236783, 2025-06-06 09:00:00.236786, COST: 1 GAP: 0)
+    Cycle 7 :
+        Machine   : 34:
+        Velocity  : 0
+        Cycle End : 4666
+        Setup     : (4256, 4260) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-05-31 12:00:00.236796, 2025-05-31 14:00:00.236799, COST: 2 GAP: 0) UNLOAD(2025-06-17 09:00:00.236802, 2025-06-17 10:00:00.236804, COST: 1 GAP: 0)
+
+Product : SCORTA_7034ZN_34 - Article : 7034ZN - Request : 666 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 2, 1: 2, 2: 1}
+    Cycle 0 :
+        Machine   : 25:
+        Velocity  : 0
+        Cycle End : 4666
+        Setup     : (4167, 4187) COST: 4 GAP: 16
+            Levata [0] : LOAD(2025-05-28 11:00:00.236817, 2025-05-28 13:00:00.236820, COST: 2 GAP: 0) UNLOAD(2025-06-07 12:00:00.236823, 2025-06-07 13:00:00.236826, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-06-07 13:00:00.236834, 2025-06-07 15:00:00.236837, COST: 2 GAP: 0) UNLOAD(2025-06-17 09:00:00.236840, 2025-06-17 10:00:00.236843, COST: 1 GAP: 0)
+    Cycle 1 :
+        Machine   : 17:
+        Velocity  : 0
+        Cycle End : 4545
+        Setup     : (4043, 4047) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-05-22 15:00:00.236853, 2025-05-23 09:00:00.236856, COST: 2 GAP: 16) UNLOAD(2025-06-02 11:00:00.236859, 2025-06-02 12:00:00.236862, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-06-02 12:00:00.236870, 2025-06-02 14:00:00.236873, COST: 2 GAP: 0) UNLOAD(2025-06-12 08:00:00.236876, 2025-06-12 09:00:00.236879, COST: 1 GAP: 0)
+    Cycle 2 :
+        Machine   : 35:
+        Velocity  : 0
+        Cycle End : 4715
+        Setup     : (4472, 4476) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-06-09 14:00:00.236891, 2025-06-09 16:00:00.236894, COST: 2 GAP: 0) UNLOAD(2025-06-19 10:00:00.236897, 2025-06-19 11:00:00.236900, COST: 1 GAP: 0)
+
+Product : INTERNAL_X23-13097V8ZF_35 - Article : X23-13097V8ZF - Request : 716 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 3, 1: 1}
+    Cycle 0 :
+        Machine   : 20:
+        Velocity  : 0
+        Cycle End : 4762
+        Setup     : (4376, 4380) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-06-05 12:00:00.236913, 2025-06-05 14:00:00.236916, COST: 2 GAP: 0) UNLOAD(2025-06-10 12:00:00.236919, 2025-06-10 13:00:00.236922, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-06-10 13:00:00.236931, 2025-06-10 15:00:00.236934, COST: 2 GAP: 0) UNLOAD(2025-06-16 09:00:00.236937, 2025-06-16 10:00:00.236940, COST: 1 GAP: 0)
+            Levata [2] : LOAD(2025-06-16 10:00:00.236948, 2025-06-16 12:00:00.236951, COST: 2 GAP: 0) UNLOAD(2025-06-21 09:00:00.236954, 2025-06-21 10:00:00.236956, COST: 1 GAP: 0)
+    Cycle 1 :
+        Machine   : 30:
+        Velocity  : 0
+        Cycle End : 4545
+        Setup     : (4424, 4428) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-06-07 12:00:00.236967, 2025-06-07 14:00:00.236970, COST: 2 GAP: 0) UNLOAD(2025-06-12 08:00:00.236973, 2025-06-12 09:00:00.236975, COST: 1 GAP: 0)
+
+Product : SANYLEG_X23-4491DF366_36 - Article : X23-4491DF366 - Request : 424 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 3, 1: 2}
+    Cycle 0 :
+        Machine   : 71:
+        Velocity  : 0
+        Cycle End : 4767
+        Setup     : (4400, 4404) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-06-06 12:00:00.236987, 2025-06-06 14:00:00.236990, COST: 2 GAP: 0) UNLOAD(2025-06-11 12:00:00.236993, 2025-06-11 13:00:00.236995, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-06-11 13:00:00.237004, 2025-06-11 15:00:00.237007, COST: 2 GAP: 0) UNLOAD(2025-06-16 13:00:00.237010, 2025-06-16 14:00:00.237012, COST: 1 GAP: 0)
+            Levata [2] : LOAD(2025-06-16 14:00:00.237021, 2025-06-16 16:00:00.237024, COST: 2 GAP: 0) UNLOAD(2025-06-21 14:00:00.237027, 2025-06-21 15:00:00.237030, COST: 1 GAP: 0)
+    Cycle 1 :
+        Machine   : 69:
+        Velocity  : 0
+        Cycle End : 4599
+        Setup     : (4236, 4240) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-06-02 13:00:00.237044, 2025-06-02 15:00:00.237047, COST: 2 GAP: 0) UNLOAD(2025-06-09 13:00:00.237050, 2025-06-09 14:00:00.237052, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-06-09 14:00:00.237061, 2025-06-09 16:00:00.237064, COST: 2 GAP: 0) UNLOAD(2025-06-14 14:00:00.237067, 2025-06-14 15:00:00.237070, COST: 1 GAP: 0)
+
+Product : FGP_31003DN220274 dm84_37 - Article : 31003DN220274 dm84 - Request : 231 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 3}
+    Cycle 0 :
+        Machine   : 37:
+        Velocity  : 0
+        Cycle End : 4548
+        Setup     : (4352, 4356) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-06-04 12:00:00.237083, 2025-06-04 14:00:00.237086, COST: 2 GAP: 0) UNLOAD(2025-06-06 14:00:00.237089, 2025-06-06 15:00:00.237092, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-06-06 15:00:00.237100, 2025-06-07 09:00:00.237103, COST: 2 GAP: 16) UNLOAD(2025-06-10 08:00:00.237106, 2025-06-10 09:00:00.237109, COST: 1 GAP: 0)
+            Levata [2] : LOAD(2025-06-10 09:00:00.237119, 2025-06-10 11:00:00.237122, COST: 2 GAP: 0) UNLOAD(2025-06-12 11:00:00.237125, 2025-06-12 12:00:00.237128, COST: 1 GAP: 0)
+
+Product : DUELEGS_X23-4493S+ZF_38 - Article : X23-4493S+ZF - Request : 1732 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 3, 1: 3, 2: 3, 3: 3, 4: 2}
+    Cycle 0 :
+        Machine   : 19:
+        Velocity  : 0
+        Cycle End : 4694
+        Setup     : (3992, 3996) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-05-21 10:00:00.237142, 2025-05-21 12:00:00.237145, COST: 2 GAP: 0) UNLOAD(2025-05-30 12:00:00.237148, 2025-05-30 13:00:00.237151, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-05-30 13:00:00.237160, 2025-05-30 15:00:00.237163, COST: 2 GAP: 0) UNLOAD(2025-06-09 11:00:00.237166, 2025-06-09 12:00:00.237169, COST: 1 GAP: 0)
+            Levata [2] : LOAD(2025-06-09 12:00:00.237179, 2025-06-09 14:00:00.237182, COST: 2 GAP: 0) UNLOAD(2025-06-18 13:00:00.237185, 2025-06-18 14:00:00.237187, COST: 1 GAP: 0)
+    Cycle 1 :
+        Machine   : 27:
+        Velocity  : 0
+        Cycle End : 4644
+        Setup     : (3969, 3973) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-05-19 13:00:00.237198, 2025-05-19 15:00:00.237201, COST: 2 GAP: 0) UNLOAD(2025-05-28 14:00:00.237204, 2025-05-28 15:00:00.237207, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-05-28 15:00:00.237215, 2025-05-29 09:00:00.237218, COST: 2 GAP: 16) UNLOAD(2025-06-07 09:00:00.237221, 2025-06-07 10:00:00.237224, COST: 1 GAP: 0)
+            Levata [2] : LOAD(2025-06-07 10:00:00.237232, 2025-06-07 12:00:00.237235, COST: 2 GAP: 0) UNLOAD(2025-06-16 11:00:00.237238, 2025-06-16 12:00:00.237241, COST: 1 GAP: 0)
+    Cycle 2 :
+        Machine   : 22:
+        Velocity  : 0
+        Cycle End : 4691
+        Setup     : (3996, 4000) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-05-20 16:00:00.237251, 2025-05-21 10:00:00.237254, COST: 2 GAP: 16) UNLOAD(2025-05-30 09:00:00.237257, 2025-05-30 10:00:00.237259, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-05-30 10:00:00.237268, 2025-05-30 12:00:00.237271, COST: 2 GAP: 0) UNLOAD(2025-06-09 08:00:00.237274, 2025-06-09 09:00:00.237277, COST: 1 GAP: 0)
+            Levata [2] : LOAD(2025-06-09 09:00:00.237285, 2025-06-09 11:00:00.237288, COST: 2 GAP: 0) UNLOAD(2025-06-18 10:00:00.237291, 2025-06-18 11:00:00.237293, COST: 1 GAP: 0)
+    Cycle 3 :
+        Machine   : 24:
+        Velocity  : 0
+        Cycle End : 4596
+        Setup     : (3922, 3926) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-05-17 14:00:00.237303, 2025-05-17 16:00:00.237306, COST: 2 GAP: 0) UNLOAD(2025-05-26 15:00:00.237309, 2025-05-26 16:00:00.237312, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-05-26 16:00:00.237320, 2025-05-27 10:00:00.237323, COST: 2 GAP: 16) UNLOAD(2025-06-05 09:00:00.237326, 2025-06-05 10:00:00.237329, COST: 1 GAP: 0)
+            Levata [2] : LOAD(2025-06-05 10:00:00.237337, 2025-06-05 12:00:00.237340, COST: 2 GAP: 0) UNLOAD(2025-06-14 11:00:00.237343, 2025-06-14 12:00:00.237346, COST: 1 GAP: 0)
+    Cycle 4 :
+        Machine   : 26:
+        Velocity  : 0
+        Cycle End : 4523
+        Setup     : (4064, 4068) COST: 4 GAP: 0
+            Levata [0] : LOAD(2025-05-23 12:00:00.237356, 2025-05-23 14:00:00.237359, COST: 2 GAP: 0) UNLOAD(2025-06-02 08:00:00.237362, 2025-06-02 09:00:00.237364, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2025-06-02 09:00:00.237373, 2025-06-02 11:00:00.237376, COST: 2 GAP: 0) UNLOAD(2025-06-11 10:00:00.237379, 2025-06-11 11:00:00.237382, COST: 1 GAP: 0)
+
+Product : SCORTA_2277DN mini_1 - Article : 2277DN mini - Request : 124 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 1}
+    Cycle 0 :
+        Machine   : 1:
+        Velocity  : 0
+        Cycle End : 34
+        Setup     : (11, 11) COST: 0 GAP: 0
+            Levata [0] : LOAD(2024-12-05 11:00:00.237396, 2024-12-05 11:00:00.237399, COST: 0 GAP: 0) UNLOAD(2024-12-06 09:00:00.237402, 2024-12-06 10:00:00.237405, COST: 1 GAP: 0)
+
+Product : INTERNAL_2011DN mini_2 - Article : 2011DN mini - Request : 157 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 1}
+    Cycle 0 :
+        Machine   : 3:
+        Velocity  : 0
+        Cycle End : 12
+        Setup     : (11, 11) COST: 0 GAP: 0
+            Levata [0] : LOAD(2024-12-05 11:00:00.237417, 2024-12-05 11:00:00.237420, COST: 0 GAP: 0) UNLOAD(2024-12-05 11:00:00.237423, 2024-12-05 12:00:00.237426, COST: 1 GAP: 0)
+
+Product : INTERNAL_2011DN mini_3 - Article : 2011DN mini - Request : 255 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 2}
+    Cycle 0 :
+        Machine   : 4:
+        Velocity  : 0
+        Cycle End : 518
+        Setup     : (11, 11) COST: 0 GAP: 0
+            Levata [0] : LOAD(2024-12-05 11:00:00.237438, 2024-12-05 11:00:00.237441, COST: 0 GAP: 0) UNLOAD(2024-12-11 10:00:00.237444, 2024-12-11 11:00:00.237447, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2024-12-11 11:00:00.237455, 2024-12-11 14:00:00.237458, COST: 3 GAP: 0) UNLOAD(2024-12-26 13:00:00.237461, 2024-12-26 14:00:00.237464, COST: 1 GAP: 0)
+
+Product : INTERNAL_2011DN mini_4 - Article : 2011DN mini - Request : 276 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 2}
+    Cycle 0 :
+        Machine   : 5:
+        Velocity  : 0
+        Cycle End : 637
+        Setup     : (11, 11) COST: 0 GAP: 0
+            Levata [0] : LOAD(2024-12-05 11:00:00.237478, 2024-12-05 11:00:00.237481, COST: 0 GAP: 0) UNLOAD(2024-12-16 09:00:00.237483, 2024-12-16 10:00:00.237486, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2024-12-16 10:00:00.237495, 2024-12-16 13:00:00.237498, COST: 3 GAP: 0) UNLOAD(2024-12-31 12:00:00.237501, 2024-12-31 13:00:00.237503, COST: 1 GAP: 0)
+
+Product : INTERNAL_2011DN mini_5 - Article : 2011DN mini - Request : 309 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 2}
+    Cycle 0 :
+        Machine   : 8:
+        Velocity  : 0
+        Cycle End : 472
+        Setup     : (11, 11) COST: 0 GAP: 0
+            Levata [0] : LOAD(2024-12-05 11:00:00.237515, 2024-12-05 11:00:00.237518, COST: 0 GAP: 0) UNLOAD(2024-12-09 12:00:00.237520, 2024-12-09 13:00:00.237523, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2024-12-09 13:00:00.237532, 2024-12-09 16:00:00.237535, COST: 3 GAP: 0) UNLOAD(2024-12-24 15:00:00.237537, 2024-12-24 16:00:00.237540, COST: 1 GAP: 0)
+
+Product : INTERNAL_2011DN mini_6 - Article : 2011DN mini - Request : 212 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 2}
+    Cycle 0 :
+        Machine   : 9:
+        Velocity  : 0
+        Cycle End : 441
+        Setup     : (11, 11) COST: 0 GAP: 0
+            Levata [0] : LOAD(2024-12-05 11:00:00.237551, 2024-12-05 11:00:00.237554, COST: 0 GAP: 0) UNLOAD(2024-12-07 12:00:00.237557, 2024-12-07 13:00:00.237560, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2024-12-07 13:00:00.237568, 2024-12-07 16:00:00.237571, COST: 3 GAP: 0) UNLOAD(2024-12-23 08:00:00.237574, 2024-12-23 09:00:00.237577, COST: 1 GAP: 0)
+
+Product : INTERNAL_2271DN 20700 mini_7 - Article : 2271DN 20700 mini - Request : 157 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 1}
+    Cycle 0 :
+        Machine   : 10:
+        Velocity  : 0
+        Cycle End : 57
+        Setup     : (11, 11) COST: 0 GAP: 0
+            Levata [0] : LOAD(2024-12-05 11:00:00.237588, 2024-12-05 11:00:00.237591, COST: 0 GAP: 0) UNLOAD(2024-12-07 08:00:00.237594, 2024-12-07 09:00:00.237596, COST: 1 GAP: 0)
+
+Product : INTERNAL_2271DN 20700 mini_8 - Article : 2271DN 20700 mini - Request : 248 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 2}
+    Cycle 0 :
+        Machine   : 11:
+        Velocity  : 0
+        Cycle End : 709
+        Setup     : (11, 11) COST: 0 GAP: 0
+            Levata [0] : LOAD(2024-12-05 11:00:00.237608, 2024-12-05 11:00:00.237611, COST: 0 GAP: 0) UNLOAD(2024-12-07 16:00:00.237613, 2024-12-09 09:00:00.237616, COST: 1 GAP: 40)
+            Levata [1] : LOAD(2024-12-09 09:00:00.237625, 2024-12-09 12:00:00.237628, COST: 3 GAP: 0) UNLOAD(2025-01-03 12:00:00.237630, 2025-01-03 13:00:00.237633, COST: 1 GAP: 0)
+
+Product : INTERNAL_2271DN 20000 mini_9 - Article : 2271DN 20000 mini - Request : 282 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 1}
+    Cycle 0 :
+        Machine   : 12:
+        Velocity  : 0
+        Cycle End : 33
+        Setup     : (11, 11) COST: 0 GAP: 0
+            Levata [0] : LOAD(2024-12-05 11:00:00.237645, 2024-12-05 11:00:00.237648, COST: 0 GAP: 0) UNLOAD(2024-12-06 08:00:00.237650, 2024-12-06 09:00:00.237653, COST: 1 GAP: 0)
+
+Product : DUELEGS_X23-3399S+ZF_10 - Article : X23-3399S+ZF - Request : 110 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 1}
+    Cycle 0 :
+        Machine   : 13:
+        Velocity  : 0
+        Cycle End : 36
+        Setup     : (11, 11) COST: 0 GAP: 0
+            Levata [0] : LOAD(2024-12-05 11:00:00.237664, 2024-12-05 11:00:00.237667, COST: 0 GAP: 0) UNLOAD(2024-12-06 11:00:00.237670, 2024-12-06 12:00:00.237673, COST: 1 GAP: 0)
+
+Product : SCORTA_7034ZN_11 - Article : 7034ZN - Request : 166 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 1}
+    Cycle 0 :
+        Machine   : 17:
+        Velocity  : 0
+        Cycle End : 57
+        Setup     : (11, 11) COST: 0 GAP: 0
+            Levata [0] : LOAD(2024-12-05 11:00:00.237687, 2024-12-05 11:00:00.237690, COST: 0 GAP: 0) UNLOAD(2024-12-07 08:00:00.237692, 2024-12-07 09:00:00.237695, COST: 1 GAP: 0)
+
+Product : INTERNAL_X23-13097V8ZF_12 - Article : X23-13097V8ZF - Request : 337 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 2}
+    Cycle 0 :
+        Machine   : 19:
+        Velocity  : 0
+        Cycle End : 345
+        Setup     : (11, 11) COST: 0 GAP: 0
+            Levata [0] : LOAD(2024-12-05 11:00:00.237707, 2024-12-05 11:00:00.237710, COST: 0 GAP: 0) UNLOAD(2024-12-14 10:00:00.237713, 2024-12-14 11:00:00.237715, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2024-12-14 11:00:00.237726, 2024-12-14 13:00:00.237729, COST: 2 GAP: 0) UNLOAD(2024-12-19 08:00:00.237732, 2024-12-19 09:00:00.237734, COST: 1 GAP: 0)
+
+Product : INTERNAL_X23-13097V8ZF_13 - Article : X23-13097V8ZF - Request : 259 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 2}
+    Cycle 0 :
+        Machine   : 20:
+        Velocity  : 0
+        Cycle End : 297
+        Setup     : (11, 11) COST: 0 GAP: 0
+            Levata [0] : LOAD(2024-12-05 11:00:00.237746, 2024-12-05 11:00:00.237749, COST: 0 GAP: 0) UNLOAD(2024-12-12 11:00:00.237752, 2024-12-12 12:00:00.237755, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2024-12-12 12:00:00.237763, 2024-12-12 14:00:00.237766, COST: 2 GAP: 0) UNLOAD(2024-12-17 08:00:00.237769, 2024-12-17 09:00:00.237772, COST: 1 GAP: 0)
+
+Product : SANYLEG_X23-4491DF366_14 - Article : X23-4491DF366 - Request : 205 Kg - Start Date : 0 - Due Date : 8664
+	Levate: {0: 2}
+    Cycle 0 :
+        Machine   : 22:
+        Velocity  : 0
+        Cycle End : 393
+        Setup     : (11, 11) COST: 0 GAP: 0
+            Levata [0] : LOAD(2024-12-05 11:00:00.237782, 2024-12-05 11:00:00.237785, COST: 0 GAP: 0) UNLOAD(2024-12-14 14:00:00.237788, 2024-12-14 15:00:00.237791, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2024-12-14 15:00:00.237799, 2024-12-16 09:00:00.237802, COST: 2 GAP: 40) UNLOAD(2024-12-21 08:00:00.237805, 2024-12-21 09:00:00.237808, COST: 1 GAP: 0)
+
+Product : FGP_31003DN220274 dm84_15 - Article : 31003DN220274 dm84 - Request : 220 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 2}
+    Cycle 0 :
+        Machine   : 23:
+        Velocity  : 0
+        Cycle End : 276
+        Setup     : (11, 11) COST: 0 GAP: 0
+            Levata [0] : LOAD(2024-12-05 11:00:00.237819, 2024-12-05 11:00:00.237822, COST: 0 GAP: 0) UNLOAD(2024-12-13 16:00:00.237825, 2024-12-14 09:00:00.237828, COST: 1 GAP: 16)
+            Levata [1] : LOAD(2024-12-14 09:00:00.237836, 2024-12-14 11:00:00.237839, COST: 2 GAP: 0) UNLOAD(2024-12-16 11:00:00.237842, 2024-12-16 12:00:00.237845, COST: 1 GAP: 0)
+
+Product : FOCENZA FACTORY_4424ZN/F_16 - Article : 4424ZN/F - Request : 229 Kg - Start Date : 0 - Due Date : 9000
+	Levate: {0: 1}
+    Cycle 0 :
+        Machine   : 24:
+        Velocity  : 0
+        Cycle End : 111
+        Setup     : (11, 11) COST: 0 GAP: 0
+            Levata [0] : LOAD(2024-12-05 11:00:00.237861, 2024-12-05 11:00:00.237864, COST: 0 GAP: 0) UNLOAD(2024-12-09 14:00:00.237866, 2024-12-09 15:00:00.237869, COST: 1 GAP: 0)
+
+Product : DUELEGS_X23-4493S+ZF_17 - Article : X23-4493S+ZF - Request : 183 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 2}
+    Cycle 0 :
+        Machine   : 25:
+        Velocity  : 0
+        Cycle End : 445
+        Setup     : (11, 11) COST: 0 GAP: 0
+            Levata [0] : LOAD(2024-12-05 11:00:00.237881, 2024-12-05 11:00:00.237884, COST: 0 GAP: 0) UNLOAD(2024-12-13 15:00:00.237887, 2024-12-13 16:00:00.237890, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2024-12-13 16:00:00.237898, 2024-12-14 10:00:00.237901, COST: 2 GAP: 16) UNLOAD(2024-12-23 12:00:00.237904, 2024-12-23 13:00:00.237907, COST: 1 GAP: 0)
+
+Product : INTERNAL_2270S+ZN mini 19800_18 - Article : 2270S+ZN mini 19800 - Request : 148 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 2}
+    Cycle 0 :
+        Machine   : 26:
+        Velocity  : 0
+        Cycle End : 444
+        Setup     : (11, 11) COST: 0 GAP: 0
+            Levata [0] : LOAD(2024-12-05 11:00:00.237921, 2024-12-05 11:00:00.237924, COST: 0 GAP: 0) UNLOAD(2024-12-06 13:00:00.237927, 2024-12-06 14:00:00.237930, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2024-12-06 14:00:00.237938, 2024-12-06 16:00:00.237941, COST: 2 GAP: 0) UNLOAD(2024-12-23 11:00:00.237944, 2024-12-23 12:00:00.237947, COST: 1 GAP: 0)
+
+Product : INTERNAL_2270S+ZN mini 19800_19 - Article : 2270S+ZN mini 19800 - Request : 188 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 2}
+    Cycle 0 :
+        Machine   : 27:
+        Velocity  : 0
+        Cycle End : 616
+        Setup     : (11, 11) COST: 0 GAP: 0
+            Levata [0] : LOAD(2024-12-05 11:00:00.237958, 2024-12-05 11:00:00.237961, COST: 0 GAP: 0) UNLOAD(2024-12-13 12:00:00.237964, 2024-12-13 13:00:00.237967, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2024-12-13 13:00:00.237988, 2024-12-13 15:00:00.237996, COST: 2 GAP: 0) UNLOAD(2024-12-30 15:00:00.238004, 2024-12-30 16:00:00.238009, COST: 1 GAP: 0)
+
+Product : INTERNAL_2270S+ZN mini 19800_20 - Article : 2270S+ZN mini 19800 - Request : 236 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 2}
+    Cycle 0 :
+        Machine   : 28:
+        Velocity  : 0
+        Cycle End : 681
+        Setup     : (11, 11) COST: 0 GAP: 0
+            Levata [0] : LOAD(2024-12-05 11:00:00.238024, 2024-12-05 11:00:00.238027, COST: 0 GAP: 0) UNLOAD(2024-12-16 08:00:00.238030, 2024-12-16 09:00:00.238033, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2024-12-16 09:00:00.238048, 2024-12-16 11:00:00.238051, COST: 2 GAP: 0) UNLOAD(2025-01-02 08:00:00.238054, 2025-01-02 09:00:00.238057, COST: 1 GAP: 0)
+
+Product : INTERNAL_13007ZF 903C 14000_21 - Article : 13007ZF 903C 14000 - Request : 266 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 2}
+    Cycle 0 :
+        Machine   : 29:
+        Velocity  : 0
+        Cycle End : 395
+        Setup     : (11, 11) COST: 0 GAP: 0
+            Levata [0] : LOAD(2024-12-05 11:00:00.238068, 2024-12-05 11:00:00.238071, COST: 0 GAP: 0) UNLOAD(2024-12-16 12:00:00.238074, 2024-12-16 13:00:00.238077, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2024-12-16 13:00:00.238085, 2024-12-16 15:00:00.238088, COST: 2 GAP: 0) UNLOAD(2024-12-21 10:00:00.238091, 2024-12-21 11:00:00.238094, COST: 1 GAP: 0)
+
+Product : INTERNAL_ManilaS+ZN1_22 - Article : ManilaS+ZN1 - Request : 126 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 1}
+    Cycle 0 :
+        Machine   : 34:
+        Velocity  : 0
+        Cycle End : 58
+        Setup     : (11, 11) COST: 0 GAP: 0
+            Levata [0] : LOAD(2024-12-05 11:00:00.238105, 2024-12-05 11:00:00.238108, COST: 0 GAP: 0) UNLOAD(2024-12-07 09:00:00.238111, 2024-12-07 10:00:00.238113, COST: 1 GAP: 0)
+
+Product : RADICI_2275S+ZN-B10A 11400_23 - Article : 2275S+ZN-B10A 11400 - Request : 437 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 2}
+    Cycle 0 :
+        Machine   : 35:
+        Velocity  : 0
+        Cycle End : 322
+        Setup     : (11, 11) COST: 0 GAP: 0
+            Levata [0] : LOAD(2024-12-05 11:00:00.238141, 2024-12-05 11:00:00.238144, COST: 0 GAP: 0) UNLOAD(2024-12-12 08:00:00.238147, 2024-12-12 09:00:00.238149, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2024-12-12 09:00:00.238157, 2024-12-12 11:00:00.238160, COST: 2 GAP: 0) UNLOAD(2024-12-18 09:00:00.238163, 2024-12-18 10:00:00.238166, COST: 1 GAP: 0)
+
+Product : INTERNAL_X23-4489DN_24 - Article : X23-4489DN - Request : 936 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 5}
+    Cycle 0 :
+        Machine   : 39:
+        Velocity  : 0
+        Cycle End : 399
+        Setup     : (11, 11) COST: 0 GAP: 0
+            Levata [0] : LOAD(2024-12-05 11:00:00.238177, 2024-12-05 11:00:00.238180, COST: 0 GAP: 0) UNLOAD(2024-12-12 10:00:00.238182, 2024-12-12 11:00:00.238185, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2024-12-12 11:00:00.238193, 2024-12-12 13:00:00.238196, COST: 2 GAP: 0) UNLOAD(2024-12-14 13:00:00.238199, 2024-12-14 14:00:00.238201, COST: 1 GAP: 0)
+            Levata [2] : LOAD(2024-12-14 14:00:00.238210, 2024-12-14 16:00:00.238213, COST: 2 GAP: 0) UNLOAD(2024-12-16 16:00:00.238215, 2024-12-17 09:00:00.238218, COST: 1 GAP: 16)
+            Levata [3] : LOAD(2024-12-17 09:00:00.238226, 2024-12-17 11:00:00.238229, COST: 2 GAP: 0) UNLOAD(2024-12-19 11:00:00.238232, 2024-12-19 12:00:00.238235, COST: 1 GAP: 0)
+            Levata [4] : LOAD(2024-12-19 12:00:00.238243, 2024-12-19 14:00:00.238246, COST: 2 GAP: 0) UNLOAD(2024-12-21 14:00:00.238248, 2024-12-21 15:00:00.238251, COST: 1 GAP: 0)
+
+Product : SANYLEG_33001DN2_25 - Article : 33001DN2 - Request : 116 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 1}
+    Cycle 0 :
+        Machine   : 41:
+        Velocity  : 0
+        Cycle End : 35
+        Setup     : (11, 11) COST: 0 GAP: 0
+            Levata [0] : LOAD(2024-12-05 11:00:00.238266, 2024-12-05 11:00:00.238269, COST: 0 GAP: 0) UNLOAD(2024-12-06 10:00:00.238271, 2024-12-06 11:00:00.238274, COST: 1 GAP: 0)
+
+Product : GIZETA_7036ZN_26 - Article : 7036ZN - Request : 295 Kg - Start Date : 0 - Due Date : 8376
+	Levate: {0: 2}
+    Cycle 0 :
+        Machine   : 44:
+        Velocity  : 0
+        Cycle End : 395
+        Setup     : (11, 11) COST: 0 GAP: 0
+            Levata [0] : LOAD(2024-12-05 11:00:00.238286, 2024-12-05 11:00:00.238289, COST: 0 GAP: 0) UNLOAD(2024-12-14 11:00:00.238291, 2024-12-14 12:00:00.238294, COST: 1 GAP: 0)
+            Levata [1] : LOAD(2024-12-14 12:00:00.238302, 2024-12-14 14:00:00.238305, COST: 2 GAP: 0) UNLOAD(2024-12-21 10:00:00.238308, 2024-12-21 11:00:00.238311, COST: 1 GAP: 0)
+
